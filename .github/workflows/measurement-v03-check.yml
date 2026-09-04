@@ -1,0 +1,52 @@
+name: Measurement v0.3 Static Check
+
+on:
+  pull_request:
+    paths:
+      - 'benchmark/**'
+      - '.github/workflows/reasoning-benchmark-v03.yml'
+      - '.github/workflows/measurement-v03-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate Python syntax
+        run: python -m py_compile benchmark/pilot.py benchmark/zai_adapter.py benchmark/run_v03.py
+
+      - name: Validate benchmark JSON
+        run: |
+          python -m json.tool benchmark/pilot_cases.json >/dev/null
+          python -m json.tool benchmark/stress_cases_v03.json >/dev/null
+
+      - name: Validate stress-suite structure
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          cases = json.loads(Path('benchmark/stress_cases_v03.json').read_text())
+          assert len(cases) == 6, len(cases)
+          ids = [c['case_id'] for c in cases]
+          assert len(ids) == len(set(ids)), ids
+          for c in cases:
+              assert c['expected_mode']
+              assert c['turns']
+              assert c['evaluation_profile']['protocol_dimensions']
+              assert c['evaluation_profile']['outcome_dimensions']
+              for t in c['turns']:
+                  assert t['agent_input']
+                  assert 'judge_reference' in t
+          print('validated', len(cases), 'stress cases')
+          PY
