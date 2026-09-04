@@ -20,14 +20,21 @@ with `DIRECT`, `COMPACT`, and `FULL` reasoning modes selected according to the d
 
 ## Project status
 
-The operating protocol is specified, but its value as an agent controller is still an empirical hypothesis.
+The operating protocol is specified, but its value as an agent controller remains an empirical hypothesis.
 
-The project therefore maintains two coupled systems:
+Pilot 001 successfully executed end-to-end against Z.AI `glm-5.1`. It produced encouraging directional signals—especially for Compact reasoning—but also exposed evaluator ceiling saturation and an Adaptive routing error. Measurement v0.3 therefore hardens the evaluator before the project scales to a larger benchmark.
+
+See:
+
+- `docs/PILOT_001_RESULTS.md` — exact Pilot 001 provenance and results;
+- `docs/MEASUREMENT_V0_3.md` — evaluator changes motivated by those results.
+
+The project maintains two coupled systems:
 
 1. **Reasoning engine** — the controller and its governing principles.
 2. **Evaluation engine** — adversarial benchmarks intended to falsify or refine the controller.
 
-Do not treat benchmark-framework compliance as evidence of improved reasoning by itself. The primary question is whether the controller improves correctness and decision quality enough to justify its additional reasoning cost.
+Do not treat protocol compliance as evidence of improved reasoning by itself. The primary question is whether the controller improves blinded decision quality enough to justify its reasoning cost.
 
 ## Repository structure
 
@@ -37,74 +44,84 @@ Do not treat benchmark-framework compliance as evidence of improved reasoning by
 │   ├── OPERATING_PROTOCOL.md
 │   ├── FRAMEWORK_V0_2_CANDIDATE.md
 │   ├── BENCHMARK_AUDIT_V0_2.md
-│   └── ZAI_PROVIDER.md
+│   ├── ZAI_PROVIDER.md
+│   ├── PILOT_001_RESULTS.md
+│   └── MEASUREMENT_V0_3.md
 ├── benchmark/
 │   ├── pilot.py
 │   ├── run_zai.py
+│   ├── run_v03.py
 │   ├── zai_adapter.py
 │   ├── pilot_cases.json
+│   ├── stress_cases_v03.json
 │   └── requirements.txt
 └── .github/workflows/
-    └── reasoning-benchmark-pilot.yml
+    ├── reasoning-benchmark-pilot.yml
+    └── reasoning-benchmark-v03.yml
 ```
 
-## Benchmark pilot
+## Experimental conditions
 
-The pilot compares the same target model under four conditions:
+The same target model is compared under four conditions:
 
-- `BASELINE` — no reasoning controller.
-- `COMPACT` — compact causal/mechanistic controller.
-- `FULL` — full eight-stage controller.
-- `ADAPTIVE` — router selects DIRECT, COMPACT, or FULL before answering.
+- `BASELINE` — no reasoning controller;
+- `COMPACT` — Problem → First Principle → Mechanism → Evidence → Solution;
+- `FULL` — Observe → Diagnose → Derive → Hypothesize → Predict → Test → Revise → Engineer;
+- `ADAPTIVE` — a router selects DIRECT, COMPACT, or FULL before answering.
 
-The six initial cases cover:
+## Measurement v0.3
 
-- correlation and selection bias;
-- competing causal mechanisms;
-- sequential contradictory evidence and revision;
-- false first-principle claims;
-- risk, reversibility, and second-order effects;
-- trivial-task mode control.
+Pilot 001's 0–4 scalar quality scores were nearly saturated, so v0.3 changes the measurement hierarchy:
 
-Sequential cases are evaluated turn by turn so future evidence is structurally withheld from earlier judgments. Evaluators are not told which experimental condition generated a response.
+1. **Primary:** blinded pairwise score against BASELINE (win=1, tie=0.5, loss=0).
+2. **Secondary:** stricter anchored 0–4 scalar scores.
+3. **Adaptive routing:** deterministic comparison of selected mode against case gold mode(s).
+4. **Uncertainty:** case-clustered bootstrap confidence intervals when stochastic replicates are used.
+5. **Cost:** token and latency accounting remains explicit.
+
+Six additional stress cases test aggregation reversal, measurement-generation changes, material vs irrelevant uncertainty, adversarial causal framing, and intervention-as-experiment reasoning.
+
+The v0.3 workflow supports `stress`, `pilot`, and `combined` suites and an arbitrary positive number of stochastic replicates.
 
 ## Model provider: Z.AI
 
-The canonical benchmark runtime uses Z.AI through its OpenAI-compatible Chat Completions protocol.
+The canonical target runtime uses Z.AI through its OpenAI-compatible Chat Completions protocol.
 
-Default endpoint:
+Default target endpoint:
 
 `https://api.z.ai/api/coding/paas/v4`
 
-Default target and judge model:
+Default model:
 
 `glm-5.1`
 
-The base URL is workflow-configurable. This is intentional because Z.AI documents the Coding Plan endpoint for supported coding-tool scenarios and recommends the general API endpoint for other uses; if required, set the workflow base URL to `https://api.z.ai/api/paas/v4` without changing benchmark code.
+The evaluator can use a different model, API key, and base URL. Configure optional `ZAI_JUDGE_API_KEY` for a separate judge credential; if absent it falls back to `ZAI_API_KEY`.
 
-See `docs/ZAI_PROVIDER.md` for the provider contract.
+See `docs/ZAI_PROVIDER.md` for provider details.
 
-## Run on GitHub Actions
+## Run Measurement v0.3 on GitHub Actions
 
-One-time setup:
+One-time minimum setup:
 
-1. Add an Actions repository secret named `ZAI_API_KEY`.
-2. Open **Actions → Reasoning Benchmark Pilot → Run workflow**.
-3. Keep or change:
-   - target model (default `glm-5.1`);
-   - evaluator model (default `glm-5.1`);
-   - base URL (default `https://api.z.ai/api/coding/paas/v4`).
-4. Download the generated result artifact after the workflow completes.
+1. Add repository Actions secret `ZAI_API_KEY`.
+2. Optionally add `ZAI_JUDGE_API_KEY` for an independent evaluator credential.
+3. Open **Actions → Reasoning Benchmark Measurement v0.3 → Run workflow**.
+4. Start with:
+   - suite: `stress`;
+   - replicates: `1`;
+   - target model: `glm-5.1`;
+   - judge model: `glm-5.1` unless another suitable judge is available.
+5. Inspect the generated artifact before increasing benchmark size or replicate count.
 
-The workflow produces:
+The workflow writes checkpointed artifacts under `benchmark/results_v03/`:
 
-- `pilot_report.json`
-- `pilot_runs.jsonl`
-- `pilot_pairwise.jsonl`
+- `v03_runs.jsonl`
+- `v03_pairwise.jsonl`
+- `v03_report.json` when the full run completes
 
-API keys must never be committed to this repository.
+API keys must never be committed to the repository.
 
-## Local pilot
+## Local Measurement v0.3
 
 ```bash
 cd benchmark
@@ -113,10 +130,12 @@ export ZAI_API_KEY=...
 export ZAI_BASE_URL=https://api.z.ai/api/coding/paas/v4
 export ZAI_TARGET_MODEL=glm-5.1
 export ZAI_JUDGE_MODEL=glm-5.1
-python run_zai.py
+export BENCHMARK_SUITE=stress
+export BENCHMARK_REPLICATES=1
+python run_v03.py
 ```
 
-The runner uses `chat.completions` and records Z.AI `prompt_tokens` and `completion_tokens` as benchmark input/output token usage. Blinded evaluator calls use JSON mode when available.
+For a separate evaluator, additionally set `ZAI_JUDGE_API_KEY` and optionally `ZAI_JUDGE_BASE_URL`.
 
 ## Research discipline
 

@@ -2,14 +2,17 @@ from __future__ import annotations
 
 import os
 import time
+from functools import lru_cache
 from typing import Any
 
 from openai import OpenAI
 
-BASE_URL = os.getenv("ZAI_BASE_URL", "https://api.z.ai/api/coding/paas/v4")
-API_KEY = os.environ["ZAI_API_KEY"]
+DEFAULT_BASE_URL = "https://api.z.ai/api/coding/paas/v4"
 
-client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
+
+@lru_cache(maxsize=8)
+def _client(api_key: str, base_url: str) -> OpenAI:
+    return OpenAI(api_key=api_key, base_url=base_url)
 
 
 def chat_completion(
@@ -17,18 +20,26 @@ def chat_completion(
     model: str,
     messages: list[dict[str, str]],
     json_mode: bool = False,
+    api_key: str | None = None,
+    base_url: str | None = None,
+    max_tokens_env: str = "ZAI_MAX_TOKENS",
+    temperature_env: str = "ZAI_TEMPERATURE",
 ) -> dict[str, Any]:
+    resolved_key = api_key or os.environ["ZAI_API_KEY"]
+    resolved_base = base_url or os.getenv("ZAI_BASE_URL", DEFAULT_BASE_URL)
+    client = _client(resolved_key, resolved_base)
+
     kwargs: dict[str, Any] = {
         "model": model,
         "messages": messages,
         "stream": False,
     }
 
-    max_tokens = os.getenv("ZAI_MAX_TOKENS")
+    max_tokens = os.getenv(max_tokens_env)
     if max_tokens:
         kwargs["max_tokens"] = int(max_tokens)
 
-    temperature = os.getenv("ZAI_TEMPERATURE")
+    temperature = os.getenv(temperature_env)
     if temperature:
         kwargs["temperature"] = float(temperature)
 
@@ -51,6 +62,7 @@ def chat_completion(
                 },
                 "response_id": response.id,
                 "finish_reason": choice.finish_reason,
+                "base_url": resolved_base,
             }
         except Exception as exc:
             last_error = exc
