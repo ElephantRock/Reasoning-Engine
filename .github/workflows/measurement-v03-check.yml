@@ -23,8 +23,24 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install runtime dependency
+        run: python -m pip install -r benchmark/requirements.txt
+
       - name: Validate Python syntax
-        run: python -m py_compile benchmark/pilot.py benchmark/zai_adapter.py benchmark/run_v03.py
+        run: python -m py_compile benchmark/pilot.py benchmark/run_zai.py benchmark/zai_adapter.py benchmark/run_v03.py
+
+      - name: Smoke-import legacy and v0.3 runners
+        env:
+          OPENAI_API_KEY: dummy
+          ZAI_API_KEY: dummy
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, 'benchmark')
+          import run_zai
+          import run_v03
+          print('legacy and v0.3 runner imports succeeded')
+          PY
 
       - name: Validate benchmark JSON
         run: |
