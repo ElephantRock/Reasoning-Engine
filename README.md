@@ -78,7 +78,7 @@ Default endpoint:
 
 Default target and judge model:
 
-`GLM-5.1`
+`glm-5.1`
 
 The base URL is workflow-configurable. This is intentional because Z.AI documents the Coding Plan endpoint for supported coding-tool scenarios and recommends the general API endpoint for other uses; if required, set the workflow base URL to `https://api.z.ai/api/paas/v4` without changing benchmark code.
 
@@ -91,8 +91,8 @@ One-time setup:
 1. Add an Actions repository secret named `ZAI_API_KEY`.
 2. Open **Actions → Reasoning Benchmark Pilot → Run workflow**.
 3. Keep or change:
-   - target model (default `GLM-5.1`);
-   - evaluator model (default `GLM-5.1`);
+   - target model (default `glm-5.1`);
+   - evaluator model (default `glm-5.1`);
    - base URL (default `https://api.z.ai/api/coding/paas/v4`).
 4. Download the generated result artifact after the workflow completes.
 
@@ -111,8 +111,8 @@ cd benchmark
 python -m pip install -r requirements.txt
 export ZAI_API_KEY=...
 export ZAI_BASE_URL=https://api.z.ai/api/coding/paas/v4
-export ZAI_TARGET_MODEL=GLM-5.1
-export ZAI_JUDGE_MODEL=GLM-5.1
+export ZAI_TARGET_MODEL=glm-5.1
+export ZAI_JUDGE_MODEL=glm-5.1
 python run_zai.py
 ```
 
