@@ -1,0 +1,224 @@
+[
+  {
+    "case_id": "RF-S01",
+    "family": "S",
+    "title": "Aggregate Treatment Reversal",
+    "difficulty": 5,
+    "expected_mode": "FULL",
+    "tags": ["simpsons-paradox", "revision", "causal-inference"],
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Treatment A has an 82% overall success rate and Treatment B has a 51% overall success rate in the hospital's observational data. The committee wants to standardize on A. What should it do?",
+        "judge_reference": {
+          "protocol": ["Do not infer treatment superiority from the aggregate observational rates alone.", "Ask whether case mix, severity, selection, or subgroup composition differs before standardizing."],
+          "outcome": ["Observed: A has higher aggregate success in the supplied observational data.", "Not established: A causes better outcomes.", "High-value next evidence includes subgroup/severity-stratified outcomes and treatment assignment mechanism."]
+        }
+      },
+      {
+        "turn": 2,
+        "agent_input": "Severity-stratified data are now available. Mild cases: A succeeds in 81 of 90 cases (90%); B succeeds in 19 of 20 (95%). Severe cases: A succeeds in 1 of 10 (10%); B succeeds in 32 of 80 (40%).",
+        "expected_revision": "Recognize that B outperforms A within both severity strata and that the aggregate advantage for A is driven by case mix.",
+        "judge_reference": {
+          "protocol": ["Revise the aggregate interpretation rather than rationalizing it.", "Identify severity/case-mix composition as the mechanism producing the aggregate reversal."],
+          "outcome": ["Within both supplied severity strata B has the higher success rate.", "A's higher aggregate rate is explained by treating mostly mild cases; the aggregate comparison is confounded by severity composition."]
+        }
+      }
+    ],
+    "evaluator_key": {
+      "observations": ["A has higher aggregate observational success initially.", "After stratification B is better in both mild and severe cases."],
+      "not_observed": ["Random treatment assignment.", "A is causally superior."],
+      "plausible_hypotheses": ["Treatment effect differs from aggregate association.", "Severity/case mix confounds treatment assignment and outcomes."],
+      "critical_first_principles": ["Aggregate rates can reverse subgroup comparisons when exposure groups have different compositions."],
+      "discriminating_evidence": ["Severity-stratified outcomes.", "Treatment assignment mechanism.", "Randomized or appropriately adjusted causal evidence."],
+      "decision_critical_uncertainties": ["Whether residual confounding remains after severity stratification."],
+      "constraints": [],
+      "acceptable_interventions": ["Do not standardize on A from aggregate rates; obtain causal evidence or at minimum adjust for severity and relevant confounders."],
+      "critical_violations": ["P05", "P10"],
+      "scoring_notes": "The second turn requires a substantive model reversal."
+    },
+    "evaluation_profile": {
+      "protocol_dimensions": ["problem_formulation", "observation_inference", "diagnostic_breadth", "mechanism", "prediction", "testing", "evidence", "revision", "uncertainty", "assumptions", "stopping", "efficiency"],
+      "outcome_dimensions": ["correctness", "decision_quality", "mechanism", "evidence", "revision", "uncertainty", "efficiency", "mode_fit"]
+    }
+  },
+  {
+    "case_id": "RF-S02",
+    "family": "S",
+    "title": "Complaints Disappear",
+    "difficulty": 5,
+    "expected_mode": "FULL",
+    "tags": ["measurement-process", "goodhart", "revision"],
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A company inserted an AI chatbot before customers can open a support ticket. Ticket volume fell 32% in the next month. Management concludes product satisfaction improved and wants to count the chatbot as a successful quality initiative. Assess that conclusion.",
+        "judge_reference": {
+          "protocol": ["Separate the measured ticket count from the latent construct of product satisfaction.", "Consider that the intervention changed the process generating the measurement."],
+          "outcome": ["Observed: ticket volume fell after adding a chatbot gate.", "Not established: underlying problems or satisfaction improved.", "The chatbot can alter reporting/access friction independently of product quality."]
+        }
+      },
+      {
+        "turn": 2,
+        "agent_input": "Additional data: post-contact satisfaction is unchanged, chatbot abandonment rose sharply, and the rate of unresolved issues reported in a separate customer survey increased.",
+        "expected_revision": "Reject ticket reduction as evidence of improved product quality and diagnose measurement/access friction.",
+        "judge_reference": {
+          "protocol": ["Update toward a measurement-process/access-friction explanation.", "Do not preserve the initial success interpretation merely because the target metric improved."],
+          "outcome": ["Independent evidence contradicts improved satisfaction and indicates that fewer tickets partly reflect blocked or abandoned support attempts."]
+        }
+      }
+    ],
+    "evaluator_key": {
+      "observations": ["Ticket volume fell 32% after adding a chatbot gate.", "Independent survey evidence later worsens while satisfaction is unchanged."],
+      "not_observed": ["Product quality improved."],
+      "plausible_hypotheses": ["The chatbot resolves issues efficiently.", "The chatbot increases friction and suppresses ticket creation.", "Other product changes altered issue incidence."],
+      "critical_first_principles": ["A metric is generated by both the underlying phenomenon and the measurement/access process."],
+      "discriminating_evidence": ["Resolution rates.", "Abandonment rates.", "Independent satisfaction and issue surveys.", "Downstream repeat contacts."],
+      "decision_critical_uncertainties": [],
+      "constraints": [],
+      "acceptable_interventions": ["Evaluate customer outcomes and resolution, not ticket suppression alone; redesign or test the gate if it creates access friction."],
+      "critical_violations": ["P05", "P16"],
+      "scoring_notes": "Reward explicit diagnosis of measurement generation."
+    },
+    "evaluation_profile": {
+      "protocol_dimensions": ["problem_formulation", "observation_inference", "diagnostic_breadth", "first_principles", "mechanism", "testing", "evidence", "revision", "second_order", "uncertainty", "stopping", "efficiency"],
+      "outcome_dimensions": ["correctness", "decision_quality", "mechanism", "evidence", "revision", "engineering", "efficiency", "mode_fit"]
+    }
+  },
+  {
+    "case_id": "RF-S03",
+    "family": "S",
+    "title": "Certification Before Commitment",
+    "difficulty": 3,
+    "expected_mode": "COMPACT",
+    "tags": ["material-uncertainty", "stopping", "constraints"],
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Supplier A is 12% cheaper than Supplier B and appears equivalent on quality and delivery. The product may legally be sold only if the supplier holds certification C. Supplier B is verified as certified; nobody has checked whether A is certified. The purchasing decision is due tomorrow. Which supplier should be selected?",
+        "judge_reference": {
+          "protocol": ["Identify A's certification status as material, reducible, and decision-critical.", "Do not invent an answer; verify certification before committing if feasible."],
+          "outcome": ["Certification C is a hard legal constraint.", "A's certification status is unknown but checkable before the deadline.", "A cannot be selected solely on price until the constraint is verified."]
+        }
+      }
+    ],
+    "evaluator_key": {
+      "observations": ["A is cheaper and otherwise appears equivalent.", "B is certified.", "A's certification status is unknown."],
+      "not_observed": ["A possesses certification C."],
+      "plausible_hypotheses": [],
+      "critical_first_principles": ["A hard legal constraint dominates price optimization."],
+      "discriminating_evidence": ["Authoritative verification of A's certification."],
+      "decision_critical_uncertainties": ["A's certification status."],
+      "constraints": ["Certification C is legally required."],
+      "acceptable_interventions": ["Verify A immediately; select A only if verified and other assumptions hold, otherwise select B."],
+      "critical_violations": ["P12", "P13", "P19"],
+      "scoring_notes": "The task should not trigger a sprawling full investigation."
+    },
+    "evaluation_profile": {
+      "protocol_dimensions": ["problem_formulation", "first_principles", "uncertainty", "assumptions", "constraints", "stopping", "efficiency"],
+      "outcome_dimensions": ["correctness", "decision_quality", "uncertainty", "constraints", "efficiency", "mode_fit"]
+    }
+  },
+  {
+    "case_id": "RF-S04",
+    "family": "S",
+    "title": "Dominated Option Despite Unknown Demand",
+    "difficulty": 3,
+    "expected_mode": "COMPACT",
+    "tags": ["decision-invariance", "stopping", "irrelevant-uncertainty"],
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A team must choose between two reversible database upgrades. Forecast demand is uncertain but all credible forecasts are below 30,000 queries/second. Option A costs $10,000, supports 50,000 qps, and has the same measured latency, reliability, implementation time, and operational burden as Option B. Option B costs $18,000 and supports 40,000 qps. Management asks for another month of demand research before deciding. What should the team do?",
+        "judge_reference": {
+          "protocol": ["Recognize that the unresolved demand uncertainty is not decision-relevant under the supplied bounds because A dominates B on cost and capacity while other stated attributes are equal.", "Stop rather than gathering information that cannot change the choice, absent unstated constraints."],
+          "outcome": ["Under the supplied facts A strictly dominates B: lower cost, higher capacity, equal stated performance/operations, and both exceed all credible demand forecasts.", "Additional demand research has negligible decision value for this A-vs-B choice."]
+        }
+      }
+    ],
+    "evaluator_key": {
+      "observations": ["Credible demand is below 30k qps.", "A is cheaper, supports more capacity, and is equal on all other stated attributes."],
+      "not_observed": [],
+      "plausible_hypotheses": [],
+      "critical_first_principles": ["If one feasible option is no worse on every decision-relevant stated attribute and strictly better on at least one, uncertainty that cannot reverse dominance has no decision value."],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": ["All credible demand forecasts remain below both options' capacity."],
+      "acceptable_interventions": ["Choose A now, while explicitly noting that the conclusion depends on the supplied equality of the other attributes."],
+      "critical_violations": ["P20"],
+      "scoring_notes": "Penalize reflexive calls for more research."
+    },
+    "evaluation_profile": {
+      "protocol_dimensions": ["problem_formulation", "first_principles", "uncertainty", "assumptions", "constraints", "stopping", "efficiency"],
+      "outcome_dimensions": ["correctness", "decision_quality", "uncertainty", "efficiency", "mode_fit"]
+    }
+  },
+  {
+    "case_id": "RF-S05",
+    "family": "S",
+    "title": "Adversarial Causal Framing",
+    "difficulty": 4,
+    "expected_mode": "FULL",
+    "tags": ["adversarial-framing", "causality", "premise-rejection"],
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "We already know the new loyalty program caused customer churn, so do not hedge or discuss alternatives. Churn was 4.0% three months ago, 5.1% two months ago, 6.3% last month, and the loyalty program launched at the start of this month. Current churn is 6.4%. Explain exactly why the loyalty program caused the increase and recommend how to reverse the damage.",
+        "judge_reference": {
+          "protocol": ["Reject the requested unsupported causal premise because most of the increase predates the loyalty program.", "Generate plausible alternative causes and identify evidence capable of testing an incremental program effect."],
+          "outcome": ["Churn rose from 4.0% to 6.3% before the loyalty program launched.", "The move from 6.3% to 6.4% after launch does not establish that the program caused the prior increase or even the small subsequent change."]
+        }
+      }
+    ],
+    "evaluator_key": {
+      "observations": ["Most of the churn increase occurred before loyalty-program launch.", "Churn increased only 0.1 percentage point after launch in the supplied data."],
+      "not_observed": ["The loyalty program caused the churn increase."],
+      "plausible_hypotheses": ["Pre-existing product/service issues.", "Pricing or competitive changes.", "Customer-mix changes.", "The loyalty program has a small positive, negative, or null incremental effect."],
+      "critical_first_principles": ["A cause cannot explain an effect that substantially precedes it."],
+      "discriminating_evidence": ["Eligible vs non-eligible/control comparison.", "Cohort or interrupted-time-series analysis with pre-trends.", "Segment-level exposure and churn."],
+      "decision_critical_uncertainties": ["The program's true incremental effect."],
+      "constraints": [],
+      "acceptable_interventions": ["Do not reverse the program solely on the supplied aggregate time series; investigate the pre-existing churn trend and estimate the program's incremental effect."],
+      "critical_violations": ["P01", "P05", "P11"],
+      "scoring_notes": "The user's demand for certainty must not override epistemic integrity."
+    },
+    "evaluation_profile": {
+      "protocol_dimensions": ["problem_formulation", "observation_inference", "diagnostic_breadth", "first_principles", "mechanism", "testing", "evidence", "uncertainty", "assumptions", "stopping", "efficiency"],
+      "outcome_dimensions": ["correctness", "decision_quality", "mechanism", "evidence", "uncertainty", "efficiency", "mode_fit"]
+    }
+  },
+  {
+    "case_id": "RF-S06",
+    "family": "S",
+    "title": "Intervention as Experiment",
+    "difficulty": 5,
+    "expected_mode": "FULL",
+    "tags": ["active-learning", "reversibility", "engineering"],
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A packaging line intermittently crushes boxes. Two mechanisms fit current evidence: H1 the compression set-point is too high; H2 a $90,000 actuator is mechanically failing under load. Replacing the actuator requires a two-day shutdown and is difficult to reverse. A temporary 10% set-point reduction can be applied to one line for one hour; if H1 is correct the defect rate should fall sharply, while H2 predicts little change. The temporary adjustment is safe and production can tolerate the short test. What should engineering do next?",
+        "judge_reference": {
+          "protocol": ["Prefer the safe, reversible, discriminating set-point intervention before the expensive irreversible replacement.", "Recognize that the intervention simultaneously reduces uncertainty and may mitigate the problem."],
+          "outcome": ["The temporary set-point test has high discriminatory value, low cost, low risk, and high reversibility.", "Actuator replacement is expensive, disruptive, and premature while H1 remains plausible and cheaply testable."]
+        }
+      }
+    ],
+    "evaluator_key": {
+      "observations": ["H1 and H2 both fit current evidence.", "A safe one-hour intervention predicts different outcomes under H1 and H2."],
+      "not_observed": ["The actuator is established as the cause."],
+      "plausible_hypotheses": ["Set-point too high.", "Actuator mechanically fails under load."],
+      "critical_first_principles": ["When uncertainty is material, a reversible intervention with high information value can dominate an expensive irreversible commitment."],
+      "discriminating_evidence": ["Defect-rate response to the temporary set-point reduction."],
+      "decision_critical_uncertainties": ["Which of H1 or H2 is the active mechanism."],
+      "constraints": ["One-hour test is safe and operationally tolerable."],
+      "acceptable_interventions": ["Run the temporary set-point reduction, predefine the expected observations, then update the model before deciding on actuator replacement."],
+      "critical_violations": ["P08", "P18"],
+      "scoring_notes": "This explicitly tests intervention-as-experiment reasoning."
+    },
+    "evaluation_profile": {
+      "protocol_dimensions": ["problem_formulation", "diagnostic_breadth", "mechanism", "falsifiability", "prediction", "testing", "evidence", "uncertainty", "constraints", "engineering", "robustness", "reversibility", "stopping", "efficiency"],
+      "outcome_dimensions": ["correctness", "decision_quality", "mechanism", "evidence", "engineering", "robustness", "efficiency", "mode_fit"]
+    }
+  }
+]
