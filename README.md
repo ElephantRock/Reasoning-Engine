@@ -36,9 +36,12 @@ Do not treat benchmark-framework compliance as evidence of improved reasoning by
 ├── docs/
 │   ├── OPERATING_PROTOCOL.md
 │   ├── FRAMEWORK_V0_2_CANDIDATE.md
-│   └── BENCHMARK_AUDIT_V0_2.md
+│   ├── BENCHMARK_AUDIT_V0_2.md
+│   └── ZAI_PROVIDER.md
 ├── benchmark/
 │   ├── pilot.py
+│   ├── run_zai.py
+│   ├── zai_adapter.py
 │   ├── pilot_cases.json
 │   └── requirements.txt
 └── .github/workflows/
@@ -65,13 +68,32 @@ The six initial cases cover:
 
 Sequential cases are evaluated turn by turn so future evidence is structurally withheld from earlier judgments. Evaluators are not told which experimental condition generated a response.
 
+## Model provider: Z.AI
+
+The canonical benchmark runtime uses Z.AI through its OpenAI-compatible Chat Completions protocol.
+
+Default endpoint:
+
+`https://api.z.ai/api/coding/paas/v4`
+
+Default target and judge model:
+
+`GLM-5.1`
+
+The base URL is workflow-configurable. This is intentional because Z.AI documents the Coding Plan endpoint for supported coding-tool scenarios and recommends the general API endpoint for other uses; if required, set the workflow base URL to `https://api.z.ai/api/paas/v4` without changing benchmark code.
+
+See `docs/ZAI_PROVIDER.md` for the provider contract.
+
 ## Run on GitHub Actions
 
 One-time setup:
 
-1. Add an Actions repository secret named `OPENAI_API_KEY`.
+1. Add an Actions repository secret named `ZAI_API_KEY`.
 2. Open **Actions → Reasoning Benchmark Pilot → Run workflow**.
-3. Choose the target model and evaluator model.
+3. Keep or change:
+   - target model (default `GLM-5.1`);
+   - evaluator model (default `GLM-5.1`);
+   - base URL (default `https://api.z.ai/api/coding/paas/v4`).
 4. Download the generated result artifact after the workflow completes.
 
 The workflow produces:
@@ -87,11 +109,14 @@ API keys must never be committed to this repository.
 ```bash
 cd benchmark
 python -m pip install -r requirements.txt
-export OPENAI_API_KEY=...
-export OPENAI_TARGET_MODEL=gpt-5.6-sol
-export OPENAI_JUDGE_MODEL=gpt-5.6-sol
-python pilot.py
+export ZAI_API_KEY=...
+export ZAI_BASE_URL=https://api.z.ai/api/coding/paas/v4
+export ZAI_TARGET_MODEL=GLM-5.1
+export ZAI_JUDGE_MODEL=GLM-5.1
+python run_zai.py
 ```
+
+The runner uses `chat.completions` and records Z.AI `prompt_tokens` and `completion_tokens` as benchmark input/output token usage. Blinded evaluator calls use JSON mode when available.
 
 ## Research discipline
 
