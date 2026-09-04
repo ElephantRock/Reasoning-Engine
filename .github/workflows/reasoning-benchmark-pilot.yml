@@ -6,11 +6,11 @@ on:
       target_model:
         description: Z.AI target model ID
         required: true
-        default: GLM-5.1
+        default: glm-5.1
       judge_model:
         description: Z.AI evaluator model ID
         required: true
-        default: GLM-5.1
+        default: glm-5.1
       base_url:
         description: Z.AI OpenAI-compatible base URL
         required: true
