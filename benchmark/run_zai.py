@@ -13,7 +13,7 @@ os.environ.setdefault("OPENAI_API_KEY", "unused-provider-shim")
 import pilot  # noqa: E402
 from zai_adapter import BASE_URL, chat_completion  # noqa: E402
 
-TARGET = os.getenv("ZAI_TARGET_MODEL", "GLM-5.1")
+TARGET = os.getenv("ZAI_TARGET_MODEL", "glm-5.1")
 JUDGE = os.getenv("ZAI_JUDGE_MODEL", TARGET)
 
 pilot.TARGET = TARGET
