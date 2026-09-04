@@ -8,6 +8,8 @@ from typing import Any
 from openai import OpenAI
 
 DEFAULT_BASE_URL = "https://api.z.ai/api/coding/paas/v4"
+# Backward-compatible alias used by the original Pilot 001 runner.
+BASE_URL = os.getenv("ZAI_BASE_URL", DEFAULT_BASE_URL)
 
 
 @lru_cache(maxsize=8)
@@ -26,7 +28,7 @@ def chat_completion(
     temperature_env: str = "ZAI_TEMPERATURE",
 ) -> dict[str, Any]:
     resolved_key = api_key or os.environ["ZAI_API_KEY"]
-    resolved_base = base_url or os.getenv("ZAI_BASE_URL", DEFAULT_BASE_URL)
+    resolved_base = base_url or BASE_URL
     client = _client(resolved_key, resolved_base)
 
     kwargs: dict[str, Any] = {
