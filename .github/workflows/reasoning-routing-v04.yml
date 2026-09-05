@@ -23,12 +23,16 @@ on:
         description: Judge OpenAI-compatible base URL
         required: true
         default: https://api.z.ai/api/coding/paas/v4
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
 
 jobs:
   routing-v04:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-v04-heldout]')
     runs-on: ubuntu-latest
     timeout-minutes: 420
     defaults:
@@ -37,12 +41,12 @@ jobs:
     env:
       ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
       ZAI_JUDGE_API_KEY: ${{ secrets.ZAI_JUDGE_API_KEY }}
-      ZAI_BASE_URL: ${{ inputs.target_base_url }}
-      ZAI_JUDGE_BASE_URL: ${{ inputs.judge_base_url }}
-      ZAI_TARGET_MODEL: ${{ inputs.target_model }}
-      ZAI_JUDGE_MODEL: ${{ inputs.judge_model }}
-      BENCHMARK_REPLICATES: ${{ inputs.replicates }}
-      BENCHMARK_SUITE: stress
+      ZAI_BASE_URL: ${{ inputs.target_base_url || 'https://api.z.ai/api/coding/paas/v4' }}
+      ZAI_JUDGE_BASE_URL: ${{ inputs.judge_base_url || 'https://api.z.ai/api/coding/paas/v4' }}
+      ZAI_TARGET_MODEL: ${{ inputs.target_model || 'glm-5.1' }}
+      ZAI_JUDGE_MODEL: ${{ inputs.judge_model || 'glm-5.1' }}
+      BENCHMARK_REPLICATES: ${{ inputs.replicates || '1' }}
+      BENCHMARK_SUITE: holdout
 
     steps:
       - name: Checkout
