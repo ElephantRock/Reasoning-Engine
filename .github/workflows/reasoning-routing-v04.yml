@@ -1,0 +1,93 @@
+name: Reasoning Routing Measurement v0.4
+
+on:
+  workflow_dispatch:
+    inputs:
+      replicates:
+        description: Stochastic replicates per held-out case/condition
+        required: true
+        default: '1'
+      target_model:
+        description: Z.AI target model ID
+        required: true
+        default: glm-5.1
+      judge_model:
+        description: Z.AI evaluator model ID
+        required: true
+        default: glm-5.1
+      target_base_url:
+        description: Target OpenAI-compatible base URL
+        required: true
+        default: https://api.z.ai/api/coding/paas/v4
+      judge_base_url:
+        description: Judge OpenAI-compatible base URL
+        required: true
+        default: https://api.z.ai/api/coding/paas/v4
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  routing-v04:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-v04-heldout]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 420
+    defaults:
+      run:
+        working-directory: benchmark
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      ZAI_JUDGE_API_KEY: ${{ secrets.ZAI_JUDGE_API_KEY }}
+      ZAI_BASE_URL: ${{ inputs.target_base_url || 'https://api.z.ai/api/coding/paas/v4' }}
+      ZAI_JUDGE_BASE_URL: ${{ inputs.judge_base_url || 'https://api.z.ai/api/coding/paas/v4' }}
+      ZAI_TARGET_MODEL: ${{ inputs.target_model || 'glm-5.1' }}
+      ZAI_JUDGE_MODEL: ${{ inputs.judge_model || 'glm-5.1' }}
+      BENCHMARK_REPLICATES: ${{ inputs.replicates || '1' }}
+      BENCHMARK_SUITE: holdout
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Verify experiment configuration
+        shell: bash
+        run: |
+          if [ -z "$ZAI_API_KEY" ]; then
+            echo "ZAI_API_KEY repository secret is required." >&2
+            exit 1
+          fi
+          if ! [[ "$BENCHMARK_REPLICATES" =~ ^[1-9][0-9]*$ ]]; then
+            echo "replicates must be a positive integer." >&2
+            exit 1
+          fi
+          if [ -z "$ZAI_JUDGE_API_KEY" ]; then
+            echo "ZAI_JUDGE_API_KEY is not set; evaluator will fall back to ZAI_API_KEY."
+          fi
+          if [ "$ZAI_TARGET_MODEL" = "$ZAI_JUDGE_MODEL" ] && [ "$ZAI_BASE_URL" = "$ZAI_JUDGE_BASE_URL" ]; then
+            echo "WARNING: target and judge use the same model/endpoint; results are not evaluator-independent."
+          fi
+
+      - name: Run held-out routing measurement v0.4
+        run: python run_v04.py
+
+      - name: Upload routing results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reasoning-routing-v04-${{ github.run_id }}
+          path: benchmark/results_v04/
+          if-no-files-found: warn
+          retention-days: 30

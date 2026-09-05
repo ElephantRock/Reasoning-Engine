@@ -1,0 +1,225 @@
+[
+  {
+    "case_id": "RF-H01",
+    "family": "H",
+    "title": "Dominant Backup Plan",
+    "difficulty": 2,
+    "expected_mode": "DIRECT",
+    "tags": ["dominance", "irrelevant-uncertainty", "stopping"],
+    "turns": [{
+      "turn": 1,
+      "agent_input": "A team must choose between two reversible disaster-recovery plans. Plan A costs $18,000/year, restores in 12 minutes, retains 35 days of backups, and has the same tested reliability and operational burden as Plan B. Plan B costs $27,000/year, restores in 18 minutes, and retains 30 days. Both exceed the company's required 25-day retention and 30-minute recovery objective. Management wants a month of additional research on whether annual data growth will be 15% or 25%; both plans support either forecast without modification. What should the team do?",
+      "judge_reference": {
+        "protocol": ["Recognize that A dominates B on the supplied decision-relevant attributes and that the growth uncertainty cannot change the choice.", "Stop rather than commissioning decision-irrelevant research, while making the conclusion conditional on the stated equality of reliability and operational burden."],
+        "outcome": ["Under the supplied facts Plan A is cheaper, faster to restore, retains more history, and both plans satisfy all stated future-growth scenarios.", "Choose A now unless an unstated attribute breaks the supplied dominance relationship."]
+      }
+    }],
+    "evaluator_key": {
+      "observations": ["A is cheaper, restores faster, retains more history, and is equal on tested reliability/operational burden.", "Both options satisfy all supplied growth forecasts and hard requirements."],
+      "not_observed": [],
+      "plausible_hypotheses": [],
+      "critical_first_principles": ["Information has decision value only if it can plausibly change the preferred feasible action."],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": ["At least 25 days retention and recovery within 30 minutes."],
+      "acceptable_interventions": ["Choose Plan A now; do not delay for growth research that cannot reverse the decision under the supplied bounds."],
+      "critical_violations": ["P20"],
+      "scoring_notes": "This is a stopping/dominance test; unnecessary analysis should be penalized."
+    },
+    "evaluation_profile": {
+      "protocol_dimensions": ["problem_formulation", "first_principles", "uncertainty", "assumptions", "constraints", "stopping", "efficiency"],
+      "outcome_dimensions": ["correctness", "decision_quality", "uncertainty", "efficiency", "mode_fit"]
+    }
+  },
+  {
+    "case_id": "RF-H02",
+    "family": "H",
+    "title": "Permit Before Shipment",
+    "difficulty": 3,
+    "expected_mode": "COMPACT",
+    "tags": ["gating-constraint", "verification", "material-uncertainty"],
+    "turns": [{
+      "turn": 1,
+      "agent_input": "A logistics company can use Carrier X for 9% less than Carrier Y. Service levels and insurance are otherwise equivalent. A controlled-material shipment may legally be transported only by a carrier holding Permit P. Y's permit is verified. X says it is permitted, but procurement has not checked the regulator registry. The shipment decision is due in six hours and the registry can be checked in minutes. Which carrier should be selected?",
+      "judge_reference": {
+        "protocol": ["Treat X's permit status as a material, reducible gating uncertainty rather than assuming it either way.", "Verify the registry immediately; choose X only if authoritative verification succeeds, otherwise choose Y."],
+        "outcome": ["Permit P is a hard legal feasibility constraint.", "X's status is unknown but cheaply verifiable before the deadline, so price optimization comes after verification."]
+      }
+    }],
+    "evaluator_key": {
+      "observations": ["X is cheaper and otherwise equivalent.", "Y is verified to hold Permit P.", "X's permit claim is unverified."],
+      "not_observed": ["X is actually listed as permitted in the regulator registry."],
+      "plausible_hypotheses": [],
+      "critical_first_principles": ["A hard legal feasibility constraint dominates optimization among otherwise feasible options."],
+      "discriminating_evidence": ["Authoritative Permit P registry lookup for Carrier X."],
+      "decision_critical_uncertainties": ["Carrier X's actual permit status."],
+      "constraints": ["Permit P is legally required."],
+      "acceptable_interventions": ["Check X in the registry now; choose X if verified, otherwise Y."],
+      "critical_violations": ["P12", "P13", "P19"],
+      "scoring_notes": "A focused verification path should beat broad investigation."
+    },
+    "evaluation_profile": {
+      "protocol_dimensions": ["problem_formulation", "first_principles", "testing", "uncertainty", "assumptions", "constraints", "stopping", "efficiency"],
+      "outcome_dimensions": ["correctness", "decision_quality", "evidence", "uncertainty", "constraints", "efficiency", "mode_fit"]
+    }
+  },
+  {
+    "case_id": "RF-H03",
+    "family": "H",
+    "title": "Five-Minute Cache Test",
+    "difficulty": 4,
+    "expected_mode": "COMPACT",
+    "tags": ["discriminating-test", "reversibility", "engineering"],
+    "turns": [{
+      "turn": 1,
+      "agent_input": "An API has intermittent latency spikes. Two mechanisms fit current telemetry: H1 a cache policy is causing bursty misses; H2 database lock contention is the main cause. On one low-risk canary, engineering can temporarily restore the previous cache policy for five minutes. H1 predicts the spikes should largely disappear; H2 predicts little change. The canary is isolated, the change is immediately reversible, and no customer-facing SLO is at risk. A database redesign would take weeks. What should engineering do next?",
+      "judge_reference": {
+        "protocol": ["Use the safe reversible cache-policy intervention as the next discriminating test before escalating to database redesign.", "Predefine what observation would support H1 versus H2 and retain uncertainty if the result is ambiguous."],
+        "outcome": ["The five-minute canary has high information value, low cost, low risk, and distinguishes the two supplied mechanisms.", "Run the canary test first rather than committing to the expensive redesign."]
+      }
+    }],
+    "evaluator_key": {
+      "observations": ["H1 and H2 fit current evidence.", "A low-risk reversible intervention has sharply different predictions under H1 and H2."],
+      "not_observed": ["Database contention is established as the root cause."],
+      "plausible_hypotheses": ["Bursty cache misses.", "Database lock contention."],
+      "critical_first_principles": ["Prefer low-cost reversible actions that discriminate between decision-relevant mechanisms before expensive commitments."],
+      "discriminating_evidence": ["Latency-spike behavior during the temporary cache-policy restoration, ideally alongside cache-miss and lock metrics."],
+      "decision_critical_uncertainties": ["Which supplied mechanism dominates the spikes."],
+      "constraints": ["Canary is isolated and safe; database redesign is costly and slow."],
+      "acceptable_interventions": ["Run the five-minute canary test with precommitted interpretation criteria, then update the mechanism and next action."],
+      "critical_violations": ["P03", "P08", "P18"],
+      "scoring_notes": "High stakes or technical complexity alone should not force FULL when one focused test dominates the next-step decision."
+    },
+    "evaluation_profile": {
+      "protocol_dimensions": ["problem_formulation", "diagnostic_breadth", "mechanism", "prediction", "testing", "evidence", "uncertainty", "reversibility", "stopping", "efficiency"],
+      "outcome_dimensions": ["correctness", "decision_quality", "mechanism", "evidence", "uncertainty", "engineering", "robustness", "efficiency", "mode_fit"]
+    }
+  },
+  {
+    "case_id": "RF-H04",
+    "family": "H",
+    "title": "Safety Reports Fall After Approval Gate",
+    "difficulty": 5,
+    "expected_mode": "FULL",
+    "tags": ["measurement-process", "goodhart", "causal-diagnosis"],
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A factory added supervisor pre-approval before workers can submit near-miss safety reports. Reported near-misses fell 45% over the next quarter. Leadership says safety improved and proposes expanding the gate to every site. Assess the conclusion and next action.",
+        "judge_reference": {
+          "protocol": ["Separate the latent safety phenomenon from the reporting process, which the intervention directly changed.", "Consider multiple mechanisms: real safety improvement, reporting friction/suppression, workforce or production-mix changes, and classification changes."],
+          "outcome": ["A fall in submitted near-miss reports after adding a reporting gate does not establish that underlying safety improved.", "Expansion should wait for independent safety/outcome evidence and assessment of reporting friction."]
+        }
+      },
+      {
+        "turn": 2,
+        "agent_input": "Additional evidence: anonymous safety surveys show more unreported near-misses, workers say supervisors often discourage submissions, and recordable injury rates are unchanged.",
+        "expected_revision": "Update strongly toward reporting suppression rather than improved safety.",
+        "judge_reference": {
+          "protocol": ["Use the independent evidence to revise toward a measurement/access-suppression mechanism.", "Do not preserve the gate as successful merely because the target count fell."],
+          "outcome": ["The new evidence contradicts the claimed safety improvement and supports suppressed reporting; the gate should not be expanded as a safety intervention."]
+        }
+      }
+    ],
+    "evaluator_key": {
+      "observations": ["Submitted near-miss reports fell after a supervisor approval gate.", "Independent evidence later shows more unreported incidents and discouragement while injuries are unchanged."],
+      "not_observed": ["Underlying near-miss incidence fell 45%.", "The gate improved safety."],
+      "plausible_hypotheses": ["Safety genuinely improved.", "Supervisor approval suppresses reporting.", "Production/workforce mix changed.", "Classification practices changed."],
+      "critical_first_principles": ["Observed counts depend on both the latent event rate and the process that detects, permits, and records events."],
+      "discriminating_evidence": ["Anonymous reporting/surveys.", "Recordable injuries or other independent safety outcomes.", "Submission attempts and approval/denial rates.", "Site-level controls without the gate."],
+      "decision_critical_uncertainties": [],
+      "constraints": ["Safety systems should not create incentives to hide hazards."],
+      "acceptable_interventions": ["Do not expand the gate; restore low-friction reporting and evaluate safety using independent outcome/process measures."],
+      "critical_violations": ["P05", "P10", "P16"],
+      "scoring_notes": "Requires reasoning about the measurement-generating mechanism and revision after independent evidence."
+    },
+    "evaluation_profile": {
+      "protocol_dimensions": ["problem_formulation", "observation_inference", "diagnostic_breadth", "first_principles", "mechanism", "testing", "evidence", "revision", "second_order", "uncertainty", "stopping", "efficiency"],
+      "outcome_dimensions": ["correctness", "decision_quality", "mechanism", "evidence", "revision", "engineering", "efficiency", "mode_fit"]
+    }
+  },
+  {
+    "case_id": "RF-H05",
+    "family": "H",
+    "title": "Yield Loss Revision Chain",
+    "difficulty": 5,
+    "expected_mode": "FULL",
+    "tags": ["sequential", "contradiction", "root-vs-proximate"],
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A production line's yield fell from 97% to 88% shortly after a new raw-material lot arrived. The team wants to reject the supplier lot. What is the working diagnosis and next test?",
+        "judge_reference": {
+          "protocol": ["Treat the raw-material explanation as a working hypothesis, not a conclusion from timing alone.", "Seek discriminating evidence such as lot-by-line patterns, retained samples, machine state, and changes shared across affected production."],
+          "outcome": ["The new lot is temporally associated with the yield loss but causation is not established."]
+        }
+      },
+      {
+        "turn": 2,
+        "agent_input": "A second line using the previous supplier lot shows the same new defect pattern, while an unaffected third line uses the new lot.",
+        "expected_revision": "Strongly weaken the supplier-lot hypothesis and look for factors shared by the two affected lines.",
+        "judge_reference": {
+          "protocol": ["Revise away from the supplier-lot explanation rather than preserving it.", "Search for a shared machine, software, process, operator, or environment change across the affected lines."],
+          "outcome": ["The cross-line pattern contradicts a simple supplier-lot cause."]
+        }
+      },
+      {
+        "turn": 3,
+        "agent_input": "The two affected lines received the same controller firmware update last week; the unaffected line did not. Rolling back the firmware on one affected line restores yield to 97% while material and operators remain unchanged.",
+        "expected_revision": "Promote the firmware update to the leading causal mechanism and distinguish it from the initial material coincidence.",
+        "judge_reference": {
+          "protocol": ["Update strongly toward the firmware change because the rollback is a targeted intervention with the predicted outcome.", "Do not overclaim beyond the tested line; verify the mechanism and controlled rollback on the other affected line before broad deployment."],
+          "outcome": ["The targeted rollback provides strong causal evidence that the firmware update drives the yield defect on the tested line."]
+        }
+      }
+    ],
+    "evaluator_key": {
+      "observations": ["Yield loss followed a new material lot on one line.", "Another affected line uses the old lot while an unaffected line uses the new lot.", "Both affected lines share a firmware update and one targeted rollback restores yield."],
+      "not_observed": ["The supplier lot caused the yield loss."],
+      "plausible_hypotheses": ["Raw-material variation.", "Shared controller/firmware change.", "Shared process or environment change."],
+      "critical_first_principles": ["A causal explanation should track interventions and cross-condition variation better than mere temporal coincidence."],
+      "discriminating_evidence": ["Cross-line material/firmware matrix.", "Targeted firmware rollback with material/operators held constant."],
+      "decision_critical_uncertainties": ["Whether the firmware mechanism generalizes to the second affected line."],
+      "constraints": ["Avoid unnecessary supplier rejection if the lot is not causal."],
+      "acceptable_interventions": ["Stop blaming the material lot; verify/roll back the firmware under controlled conditions and investigate the firmware defect."],
+      "critical_violations": ["P03", "P05", "P10"],
+      "scoring_notes": "Three turns test disciplined revision and intervention-sensitive causality."
+    },
+    "evaluation_profile": {
+      "protocol_dimensions": ["problem_formulation", "observation_inference", "diagnostic_breadth", "mechanism", "prediction", "testing", "evidence", "revision", "uncertainty", "assumptions", "stopping", "efficiency"],
+      "outcome_dimensions": ["correctness", "decision_quality", "mechanism", "evidence", "revision", "uncertainty", "efficiency", "mode_fit"]
+    }
+  },
+  {
+    "case_id": "RF-H06",
+    "family": "H",
+    "title": "Irreversible Capacity Expansion",
+    "difficulty": 5,
+    "expected_mode": "FULL",
+    "tags": ["engineering", "irreversibility", "competing-mechanisms", "second-order"],
+    "turns": [{
+      "turn": 1,
+      "agent_input": "A fulfillment center is missing same-day shipping targets. Management proposes a $12 million automated sortation system that requires a six-week shutdown and is difficult to reverse. Current data show three plausible bottlenecks: H1 manual sortation capacity, H2 upstream picking congestion, and H3 carrier dock scheduling that creates late-day queues. A two-week instrumentation study plus a reversible second-shift pilot can separately estimate stage utilization and whether extra sortation labor changes end-to-end throughput. Management says the automation is obviously the scalable answer and wants immediate approval. What should the decision team do?",
+      "judge_reference": {
+        "protocol": ["Do not commit to an irreversible solution before locating the throughput bottleneck among the supplied competing mechanisms.", "Use stage-level measurements and the reversible pilot because they can discriminate whether sortation is actually constraining end-to-end throughput.", "Account for shutdown risk, bottleneck migration, and the possibility that automating a non-bottleneck does not improve system throughput."],
+        "outcome": ["Automation may be valuable, but the current evidence does not establish sortation as the bottleneck.", "The reversible instrumentation/pilot has high decision value relative to the irreversible $12M commitment."]
+      }
+    }],
+    "evaluator_key": {
+      "observations": ["Shipping targets are missed.", "Three materially plausible bottlenecks exist.", "The proposed automation is expensive, disruptive, and hard to reverse.", "A lower-cost reversible study/pilot can discriminate the bottleneck."],
+      "not_observed": ["Manual sortation is established as the system bottleneck.", "Automation will improve end-to-end throughput enough to justify its cost."],
+      "plausible_hypotheses": ["Sortation capacity is binding.", "Picking congestion is binding.", "Carrier dock scheduling is binding."],
+      "critical_first_principles": ["System throughput is constrained by the binding bottleneck; improving a non-bottleneck need not improve end-to-end output."],
+      "discriminating_evidence": ["Stage utilization/queue measurements.", "Throughput response to reversible sortation-capacity increase.", "Time-of-day flow and dock queue data."],
+      "decision_critical_uncertainties": ["Which stage is the binding bottleneck and whether additional sortation capacity raises total throughput."],
+      "constraints": ["$12M capital cost.", "Six-week shutdown.", "Low reversibility."],
+      "acceptable_interventions": ["Run the instrumentation and reversible pilot first; approve automation only if evidence supports sortation as a binding bottleneck and the economics survive shutdown/second-order analysis."],
+      "critical_violations": ["P01", "P03", "P15", "P17", "P18"],
+      "scoring_notes": "FULL is justified because multiple mechanisms, high irreversibility, and system-level second-order effects can change the decision."
+    },
+    "evaluation_profile": {
+      "protocol_dimensions": ["problem_formulation", "diagnostic_breadth", "first_principles", "mechanism", "prediction", "testing", "evidence", "uncertainty", "assumptions", "constraints", "candidate_interventions", "engineering", "second_order", "robustness", "reversibility", "stopping", "efficiency"],
+      "outcome_dimensions": ["correctness", "decision_quality", "mechanism", "evidence", "uncertainty", "engineering", "robustness", "efficiency", "mode_fit"]
+    }
+  }
+]
