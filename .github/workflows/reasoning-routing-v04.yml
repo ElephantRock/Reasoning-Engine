@@ -46,7 +46,9 @@ jobs:
       ZAI_TARGET_MODEL: ${{ inputs.target_model || 'glm-5.1' }}
       ZAI_JUDGE_MODEL: ${{ inputs.judge_model || 'glm-5.1' }}
       BENCHMARK_REPLICATES: ${{ inputs.replicates || '1' }}
-      BENCHMARK_SUITE: holdout
+      # run_v04 imports run_v03 before replacing v03.CASES with the held-out suite.
+      # Keep this at a v0.3-valid value; the actual evaluated cases are RF-H01..RF-H06.
+      BENCHMARK_SUITE: stress
 
     steps:
       - name: Checkout
