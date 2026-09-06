@@ -16,7 +16,6 @@ ROOT = Path(__file__).resolve().parent
 CASES = json.loads((ROOT / "stage_ablation_cases_v06.json").read_text(encoding="utf-8"))
 GENERATION_REPLICATES = max(1, int(os.getenv("ABLATION_GENERATION_REPLICATES", "1")))
 JUDGE_VOTES = int(os.getenv("ABLATION_JUDGE_VOTES", "3"))
-BOOTSTRAP_SAMPLES = max(1000, int(os.getenv("BENCHMARK_BOOTSTRAP_SAMPLES", "5000")))
 
 if JUDGE_VOTES < 3 or JUDGE_VOTES % 2 == 0:
     raise ValueError("ABLATION_JUDGE_VOTES must be an odd integer >= 3")
@@ -188,6 +187,9 @@ def family_breakdown(votes: list[dict[str, Any]]) -> dict[str, Any]:
     out: dict[str, Any] = {}
     for family in REMOVALS:
         subset = [v for v in votes if v["family"] == family]
+        if not subset:
+            continue
+
         by_case_rep: dict[tuple[str, int], list[dict[str, Any]]] = {}
         for vote in subset:
             by_case_rep.setdefault((vote["case_id"], vote["replicate"]), []).append(vote)
