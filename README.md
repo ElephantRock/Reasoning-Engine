@@ -8,7 +8,7 @@ For substantial non-trivial problems:
 
 **Observe → Diagnose → Derive → Hypothesize → Predict → Test → Revise → Engineer**
 
-Compact ablation:
+Compact scaffold:
 
 **Problem → First Principle → Mechanism → Evidence → Solution**
 
@@ -16,87 +16,100 @@ An adaptive routing layer also exists experimentally, but routing is currently *
 
 ## Current research question
 
-The operating protocol is specified, but its value as an agent controller remains an empirical hypothesis.
+The project is now testing two questions in sequence:
 
-The project is currently testing:
+1. **Does explicit structured reasoning improve reasoning quality relative to an uncontrolled baseline?**
+2. **Which additional capabilities in the full protocol add marginal quality beyond Compact?**
 
-> **Does the reasoning protocol produce better reasoning quality than an uncontrolled baseline?**
+The research hierarchy is:
 
-The research hierarchy is now explicit:
-
-1. **Quality first** — establish whether FULL reasoning improves epistemic and decision outcomes.
-2. **Reliability second** — establish whether any quality advantage reproduces across cases, generations, and evaluators.
-3. **Cost third** — only after a credible quality advantage exists, optimize reasoning cost while preserving that quality.
+1. **Quality first** — establish the reasoning-quality effect.
+2. **Component value second** — identify which reasoning capabilities cause the marginal gain.
+3. **Reliability third** — reproduce effects across cases, generations, and evaluators.
+4. **Cost last** — optimize reasoning cost only after the quality-producing process is understood.
 
 Token count, latency, and routing efficiency are not primary outcomes in the current phase.
 
-## Why the focus changed
+## Current evidence
 
-Pilot 001 and Measurement v0.3 showed directional differences between BASELINE, COMPACT, FULL, and ADAPTIVE, but also exposed scalar-score ceiling effects and stochastic pairwise judging.
+Quality Measurement v0.5 used 12 existing pilot + stress cases, one target-generation replicate, and three repeated blinded judge votes per response pair.
 
-Routing v0.4 then showed that identical response pairs could receive materially different pairwise verdicts on repeated evaluation. That makes evaluator reliability a prerequisite for further controller optimization.
+Directional calibration results:
 
-Measurement v0.5 therefore returns to the core theory and removes Adaptive routing from the primary experiment.
+- **FULL vs BASELINE:** score `0.7778`, 95% case-bootstrap interval `0.5833–0.9444`, 8 wins / 3 ties / 1 loss, mean vote agreement `0.9722`.
+- **COMPACT vs BASELINE:** score `0.8056`, interval `0.6250–0.9583`, 9 wins / 1 tie / 2 losses.
+- **FULL vs COMPACT:** score `0.5833`, interval `0.4167–0.7500`, 6 wins / 3 ties / 3 losses.
 
-See:
+Interpretation: structured reasoning shows a strong quality signal over baseline on these development cases, but v0.5 does **not** establish that the full eight-stage protocol is superior to Compact.
 
-- `docs/OPERATING_PROTOCOL.md` — canonical reasoning protocol;
-- `docs/PILOT_001_RESULTS.md` — first empirical pilot;
-- `docs/MEASUREMENT_V0_3.md` — hardened evaluator and stress suite;
-- `docs/ROUTING_V0_4_CANDIDATE.md` — routing candidate, retained as a later optimization layer;
-- `docs/QUALITY_MEASUREMENT_V0_5.md` — current quality-first measurement design.
+See `docs/QUALITY_V0_5_RESULTS.md` for exact provenance and interpretation boundaries.
+
+## Measurement v0.6 — stage ablation
+
+v0.6 asks which additional capabilities add marginal quality beyond Compact.
+
+Each `TARGETED` treatment starts from the **identical Compact prompt** and adds exactly one capability:
+
+- `DIAGNOSE` — competing causal explanations and causal-level distinction;
+- `PREDICT` — prospective mechanism-specific predictions;
+- `TEST` — discriminating/falsifying evidence;
+- `REVISE` — explicit model updating after contradiction;
+- `ENGINEER` — mechanism-linked intervention design under constraints, robustness, reversibility, feedback, and second-order effects.
+
+Each stage has two dedicated development/calibration cases in `benchmark/stage_ablation_cases_v06.json`.
+
+Four conditions are generated per case:
+
+- `COMPACT` — unchanged Compact scaffold;
+- `ATTENTION` — Compact plus a generic extra quality-control pass;
+- `TARGETED` — Compact plus the case-relevant capability instruction;
+- `FULL` — the complete protocol, used only as a ceiling/headroom diagnostic.
+
+Primary comparisons:
+
+1. **TARGETED vs COMPACT** — marginal component effect;
+2. **TARGETED vs ATTENTION** — stage specificity beyond generic extra checking;
+3. **FULL vs TARGETED** — residual headroom of the full protocol;
+4. **ATTENTION vs COMPACT** — generic-attention control effect.
+
+Each pair receives repeated blinded quality-only votes with independently randomized A/B orientation. Cost remains outside the quality score.
+
+See `docs/STAGE_ABLATION_V0_6.md` for the full design.
 
 ## Coupled systems
 
 The project maintains two coupled systems:
 
-1. **Reasoning engine** — the protocol and controller under test.
-2. **Evaluation engine** — adversarial benchmarks intended to falsify, refine, or reject the reasoning claims.
+1. **Reasoning engine** — the protocol and component hypotheses under test.
+2. **Evaluation engine** — adversarial benchmarks intended to falsify, refine, or reject those hypotheses.
 
 Protocol compliance is not evidence of improved reasoning by itself.
 
-## Current experimental conditions
+## Validation boundary
 
-Quality Measurement v0.5 evaluates only:
+The current v0.5 and v0.6 cases are development/calibration cases, not final held-out validation.
 
-- `BASELINE` — no reasoning controller;
-- `COMPACT` — Problem → First Principle → Mechanism → Evidence → Solution;
-- `FULL` — Observe → Diagnose → Derive → Hypothesize → Predict → Test → Revise → Engineer.
+Framework validation will require, after prompts and component definitions are frozen:
 
-The primary comparison is:
+1. fresh held-out cases not used in prompt or benchmark development;
+2. multiple stochastic target generations per case;
+3. repeated blinded judgments;
+4. preferably a judge model independent of the target model;
+5. predeclared primary effects and interpretation thresholds.
 
-**FULL vs BASELINE**
-
-Secondary ablations are:
-
-- **COMPACT vs BASELINE**;
-- **FULL vs COMPACT**.
-
-`ADAPTIVE` is intentionally excluded from quality promotion evidence. It is an efficiency/control layer to revisit only after the underlying reasoning-quality effect is established.
-
-## Quality Measurement v0.5
-
-The quality judge evaluates substantive reasoning only, including correctness, causal/mechanistic accuracy, evidence discrimination, revision, uncertainty calibration, assumptions, constraints, and decision/intervention quality when applicable.
-
-The judge is explicitly told not to reward shorter or cheaper answers.
-
-Each response pair receives repeated blinded votes with independently randomized A/B orientation. The report exposes vote agreement and non-unanimous cases rather than silently treating one stochastic verdict as ground truth.
-
-The initial v0.5 calibration uses the existing 12 `pilot + stress` cases, one target-generation replicate, and three judge votes per pair. Because those cases have already influenced framework development, this run is **calibration, not validation**.
-
-Fresh held-out cases and preferably an evaluator model independent of the target model are required for framework validation.
+Only after component value is understood should the project return to Adaptive routing and reasoning-cost optimization.
 
 ## Cost policy
 
-Target token usage and latency are still recorded, but only as descriptive diagnostics.
+Target token usage and latency are still recorded as descriptive diagnostics.
 
 They do **not** enter:
 
 - the quality judge prompt;
-- the pairwise quality score;
-- the primary promotion criterion.
+- pairwise quality scores;
+- current component promotion decisions.
 
-Cost optimization is a later constrained problem:
+Later, cost becomes a constrained optimization problem:
 
 > Minimize reasoning cost subject to preserving the quality of the validated best reasoning process within a predefined tolerance.
 
@@ -116,21 +129,20 @@ The evaluator can use a different model, API key, and base URL. Configure option
 
 See `docs/ZAI_PROVIDER.md` for provider details.
 
-## Run Quality Measurement v0.5
+## Run Measurement v0.6
 
-In GitHub Actions, open **Reasoning Quality Measurement v0.5** and use the calibration defaults:
+In GitHub Actions, open **Reasoning Stage Ablation v0.6** and use the calibration defaults:
 
-- suite: `combined`;
 - generation replicates: `1`;
 - judge votes: `3`;
 - target model: `glm-5.1`;
 - judge model: `glm-5.1` unless an independent evaluator is available.
 
-The workflow writes checkpointed artifacts under `benchmark/results_v05/`:
+The workflow writes artifacts under `benchmark/results_v06/`:
 
-- `v05_runs.jsonl`;
-- `v05_judge_votes.jsonl`;
-- `v05_report.json` when the full run completes.
+- `v06_runs.jsonl`;
+- `v06_judge_votes.jsonl`;
+- `v06_report.json` when the full run completes.
 
 API keys must never be committed to the repository.
 
@@ -142,4 +154,4 @@ The governing research loop is the framework applied to itself:
 
 **Observe benchmark failures → Diagnose → Derive → Hypothesize changes → Predict improvements → Test → Revise → Engineer**
 
-The immediate objective is **reproducibly better reasoning quality**. Efficiency optimization comes later.
+The immediate objective is **reproducibly better reasoning quality and an evidence-based account of which components produce it**. Efficiency optimization comes later.

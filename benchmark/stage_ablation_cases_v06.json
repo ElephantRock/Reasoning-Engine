@@ -1,0 +1,170 @@
+[
+  {
+    "case_id": "RF-V06-DG01",
+    "family": "DIAGNOSE",
+    "title": "Regional Checkout 502s",
+    "expected_mode": "COMPACT",
+    "evaluator_key": {
+      "target_capability": "DIAGNOSE",
+      "observations": ["Checkout 502 errors rose from 0.3% to 4.8% within 20 minutes of an application deploy.", "Application p95 latency and database saturation are unchanged.", "87% of new errors originate from one geographic region.", "The CDN reports origin-reset spikes in that region during the same window."],
+      "not_observed": ["No evidence yet shows the deploy itself causes the failures.", "No controlled bypass test has been run."],
+      "plausible_hypotheses": ["Application deploy regression.", "Regional CDN/origin connectivity or routing fault.", "Region-specific dependency or configuration interaction."],
+      "discriminating_evidence": ["Compare identical checkout requests through the affected CDN path versus a controlled bypass or unaffected region.", "Check whether failures follow application version or network/edge path."],
+      "decision_critical_uncertainties": ["Whether rollback would address the actual failure mechanism."],
+      "acceptable_interventions": ["Run a path-discriminating check before broad rollback unless immediate mitigation is operationally required."],
+      "scoring_notes": ["Keep multiple material explanations alive and distinguish temporal coincidence from mechanism."]
+    },
+    "turns": [{"turn": 1, "agent_input": "Twenty minutes after our checkout service deploy, 502 errors rose from 0.3% to 4.8%. The deploy is the obvious culprit. But p95 app latency and DB saturation are unchanged. 87% of the new errors come from one region, and the CDN shows origin-reset spikes there. We can either roll back immediately or spend 15 minutes on one diagnostic check. What is the best next step and why?", "judge_reference": {"protocol": [], "outcome": []}, "expected_revision": null}]
+  },
+  {
+    "case_id": "RF-V06-DG02",
+    "family": "DIAGNOSE",
+    "title": "Packaging Defects After Shift Change",
+    "expected_mode": "COMPACT",
+    "evaluator_key": {
+      "target_capability": "DIAGNOSE",
+      "observations": ["Seal defects rose from 1.1% to 3.9% after a shift-schedule change.", "Defects are concentrated on line 2.", "Machine vibration and temperature remain within prior ranges.", "A new film supplier lot entered production on line 2 the same day."],
+      "not_observed": ["Operator fatigue has not been directly measured.", "The new material lot has not been swapped across lines."],
+      "plausible_hypotheses": ["Shift-related fatigue or procedure drift.", "Material-lot properties interacting with line 2.", "A line-2 calibration issue not visible in coarse telemetry."],
+      "discriminating_evidence": ["Swap or split the film lot across lines while holding operators/settings as constant as possible.", "Compare defect signatures by operator, line, and material lot."],
+      "decision_critical_uncertainties": ["Whether staffing, material quarantine, or equipment calibration is the correct intervention."],
+      "acceptable_interventions": ["Prefer a low-risk cross-line/material test before attributing the defect rise to the schedule."],
+      "scoring_notes": ["The contribution is meaningful hypothesis competition, not a long list of remote possibilities."]
+    },
+    "turns": [{"turn": 1, "agent_input": "Seal defects jumped from 1.1% to 3.9% after we changed the shift schedule. Management wants to undo the schedule. But the defects are mostly on line 2, vibration and temperature look normal, and a new film supplier lot started on line 2 the same day. What should we conclude and what single check would most reduce the uncertainty?", "judge_reference": {"protocol": [], "outcome": []}, "expected_revision": null}]
+  },
+  {
+    "case_id": "RF-V06-PR01",
+    "family": "PREDICT",
+    "title": "API Timeout Predictions",
+    "expected_mode": "COMPACT",
+    "evaluator_key": {
+      "target_capability": "PREDICT",
+      "observations": ["An API intermittently times out under peak load.", "The two leading mechanisms are CPU saturation and downstream lock contention.", "No peak-window CPU or lock-wait trace has yet been collected."],
+      "plausible_hypotheses": ["CPU saturation causes request queues and timeouts.", "Downstream lock contention stalls requests despite available CPU."],
+      "discriminating_evidence": ["CPU saturation predicts CPU near saturation, runnable-queue growth, and latency tracking CPU load.", "Lock contention predicts elevated lock waits/blocked sessions and long stalls without necessarily high CPU."],
+      "decision_critical_uncertainties": ["Which measurement pattern would justify scaling compute versus fixing contention."],
+      "acceptable_interventions": ["State divergent observable predictions before choosing the measurement."],
+      "scoring_notes": ["Predictions must be prospective and mechanism-specific, not generic requests for monitoring."]
+    },
+    "turns": [{"turn": 1, "agent_input": "Our API times out intermittently during peak traffic. The two serious hypotheses are (H1) CPU saturation and (H2) downstream database lock contention. We can collect one 10-minute peak-window trace tomorrow. Before we run it, tell me what observations each hypothesis predicts and which measurements would discriminate them.", "judge_reference": {"protocol": [], "outcome": []}, "expected_revision": null}]
+  },
+  {
+    "case_id": "RF-V06-PR02",
+    "family": "PREDICT",
+    "title": "Packet Loss Predictions",
+    "expected_mode": "COMPACT",
+    "evaluator_key": {
+      "target_capability": "PREDICT",
+      "observations": ["One storage node has bursty packet loss during nightly backups.", "Candidate mechanisms are shared-uplink congestion and a faulty local NIC/driver."],
+      "plausible_hypotheses": ["Shared-uplink congestion during backup traffic.", "Local NIC or driver fault."],
+      "discriminating_evidence": ["Congestion predicts queue occupancy/loss synchronized with aggregate link utilization and may affect peers.", "NIC/driver fault predicts local error counters/resets or loss that follows the host/interface rather than shared utilization."],
+      "decision_critical_uncertainties": ["Whether to add/rate-limit capacity or repair the node interface."],
+      "acceptable_interventions": ["Commit to discriminating predicted signatures before collecting the trace."],
+      "scoring_notes": ["Reward explicit divergent consequences that could falsify one mechanism."]
+    },
+    "turns": [{"turn": 1, "agent_input": "One storage node has bursty packet loss during nightly backups. Network thinks the shared uplink is congested; hardware thinks the node's NIC or driver is faulty. We can instrument tonight's backup once. What should each mechanism predict, and what pattern would distinguish them?", "judge_reference": {"protocol": [], "outcome": []}, "expected_revision": null}]
+  },
+  {
+    "case_id": "RF-V06-TS01",
+    "family": "TEST",
+    "title": "Conversion Drop Test Choice",
+    "expected_mode": "COMPACT",
+    "evaluator_key": {
+      "target_capability": "TEST",
+      "observations": ["Reported checkout conversion fell 18% after a pricing-page redesign.", "Payment-processor revenue fell only 2%.", "A client analytics SDK update shipped in the same release."],
+      "plausible_hypotheses": ["The redesign reduced actual purchases.", "The analytics update undercounts successful checkouts."],
+      "discriminating_evidence": ["Reconcile server/payment completed orders against analytics events for the same sessions."],
+      "decision_critical_uncertainties": ["Whether to revert product UI/pricing or repair measurement."],
+      "acceptable_interventions": ["Choose a test capable of falsifying the favored product-causation story."],
+      "scoring_notes": ["The best test directly contrasts actual completed orders with reported conversion."]
+    },
+    "turns": [{"turn": 1, "agent_input": "Reported checkout conversion fell 18% after a pricing-page redesign, so the product team wants an immediate rollback. But payment-processor revenue fell only 2%, and a client analytics SDK update shipped in the same release. We have time for one test before deciding. What test should we run and what outcomes would change the decision?", "judge_reference": {"protocol": [], "outcome": []}, "expected_revision": null}]
+  },
+  {
+    "case_id": "RF-V06-TS02",
+    "family": "TEST",
+    "title": "Memory Pressure Discriminating Test",
+    "expected_mode": "COMPACT",
+    "evaluator_key": {
+      "target_capability": "TEST",
+      "observations": ["A service's RSS grows throughout the day and drops after restart.", "Candidate mechanisms are a true object leak and an intentionally growing cache with weak eviction.", "A restart is compatible with both mechanisms."],
+      "plausible_hypotheses": ["Unreachable objects accumulate because of a leak.", "Reachable cached objects grow because eviction is insufficient."],
+      "discriminating_evidence": ["Use heap/object-retention profiling together with cache residency/eviction measurements under a controlled cache-size change."],
+      "decision_critical_uncertainties": ["Whether to debug object ownership/lifetimes or redesign cache limits/eviction."],
+      "acceptable_interventions": ["Prefer a controlled test with different expected results under leak versus cache-growth mechanisms."],
+      "scoring_notes": ["Reward falsification capability and explicit interpretation of both possible outcomes."]
+    },
+    "turns": [{"turn": 1, "agent_input": "A service's RSS grows all day and resets after restart. Some engineers say memory leak; others say the cache just grows because eviction is weak. Restarting proves nothing because both predict a drop. What single experiment would best discriminate the mechanisms, and how would you interpret each result?", "judge_reference": {"protocol": [], "outcome": []}, "expected_revision": null}]
+  },
+  {
+    "case_id": "RF-V06-RV01",
+    "family": "REVISE",
+    "title": "Deploy Causality Reversal",
+    "expected_mode": "FULL",
+    "evaluator_key": {
+      "target_capability": "REVISE",
+      "observations": ["At turn 1, failures were noticed soon after a deploy that changed connection settings.", "At turn 2, timestamp reconstruction shows failures began two hours before the deploy.", "The earlier onset coincides with a certificate rotation and TLS handshake failures."],
+      "not_observed": ["The deploy cannot explain failures that began before it unless a separate mechanism is shown."],
+      "plausible_hypotheses": ["Initial deploy/config regression hypothesis.", "Certificate/TLS rotation failure mechanism."],
+      "discriminating_evidence": ["Timeline and TLS error signatures should cause a substantive causal-model update."],
+      "decision_critical_uncertainties": ["Whether rollback is relevant or certificate/TLS remediation is required."],
+      "acceptable_interventions": ["Explicitly demote the deploy hypothesis and redirect diagnosis/remediation toward TLS while retaining residual uncertainty."],
+      "scoring_notes": ["A strong answer states what changed in the model rather than merely adding the new fact."]
+    },
+    "turns": [
+      {"turn": 1, "agent_input": "Connection failures were first noticed right after a deploy that changed pool settings. The deploy is our leading hypothesis. What should we do next?", "judge_reference": {"protocol": [], "outcome": []}, "expected_revision": null},
+      {"turn": 2, "agent_input": "We reconstructed timestamps: the failures actually began about two hours before the deploy. They start within minutes of a certificate rotation, and failed requests show TLS handshake errors. Update your diagnosis and recommendation.", "judge_reference": {"protocol": [], "outcome": []}, "expected_revision": "Demote the deploy explanation; update toward the certificate/TLS mechanism and change the recommended action."}
+    ]
+  },
+  {
+    "case_id": "RF-V06-RV02",
+    "family": "REVISE",
+    "title": "Churn Attribution Reversal",
+    "expected_mode": "FULL",
+    "evaluator_key": {
+      "target_capability": "REVISE",
+      "observations": ["At turn 1, churn rose after a loyalty feature launch.", "At turn 2, churn had already been rising for months before launch.", "A comparable untreated market shows a similar increase over the same period."],
+      "not_observed": ["Post-launch timing alone does not establish the feature as the cause."],
+      "plausible_hypotheses": ["The feature caused churn.", "A broader pre-existing trend caused most or all of the increase."],
+      "discriminating_evidence": ["The pretrend and untreated comparison require causal attribution to be revised."],
+      "decision_critical_uncertainties": ["Whether disabling the feature would address churn."],
+      "acceptable_interventions": ["Withdraw or sharply reduce the causal claim and investigate the common trend before disabling the feature."],
+      "scoring_notes": ["Revision should be explicit and consequential for the decision."]
+    },
+    "turns": [
+      {"turn": 1, "agent_input": "Monthly churn rose from 4.9% to 5.6% in the month after we launched a loyalty feature. Leadership thinks the feature is driving customers away. How should we reason about this now?", "judge_reference": {"protocol": [], "outcome": []}, "expected_revision": null},
+      {"turn": 2, "agent_input": "New analysis: churn was 4.1%, 4.4%, 4.7%, and 4.9% in the four months before launch, then 5.6% after. A similar market where the feature was not launched rose from 4.0% to 5.4% over the same period. Update your conclusion and action.", "judge_reference": {"protocol": [], "outcome": []}, "expected_revision": "Substantially weaken the feature-causation claim and redirect toward the broader trend/confounders."}
+    ]
+  },
+  {
+    "case_id": "RF-V06-EN01",
+    "family": "ENGINEER",
+    "title": "Conveyor Intervention Design",
+    "expected_mode": "FULL",
+    "evaluator_key": {
+      "target_capability": "ENGINEER",
+      "observations": ["Instrumented tests confirmed box crush events occur when conveyor acceleration overshoots the setpoint.", "A 10% acceleration cap eliminates crushes in a one-hour test but reduces peak throughput about 4%.", "Motor replacement costs $120k and requires two days of downtime.", "Adding final inspection detects damage but does not prevent it."],
+      "critical_first_principles": ["Intervention should address the validated mechanism while respecting throughput, downtime, reversibility, and residual-risk constraints."],
+      "constraints": ["Peak throughput loss above 6% is unacceptable.", "Two days of downtime this month is operationally costly."],
+      "acceptable_interventions": ["Use the reversible acceleration cap as a near-term control with monitoring; investigate/control the overshoot source before irreversible replacement.", "Do not treat downstream inspection as equivalent to preventing damage."],
+      "scoring_notes": ["Quality depends on mechanism-linked intervention design, tradeoffs, reversibility, and monitoring."]
+    },
+    "turns": [{"turn": 1, "agent_input": "We confirmed our packaging crushes happen when conveyor acceleration overshoots the setpoint. A one-hour test with a 10% acceleration cap eliminated crushes and reduced peak throughput 4%. Replacing the drive motor costs $120k and needs two days down. Adding final inspection catches damage but doesn't prevent it. Throughput loss above 6% is unacceptable. What intervention plan should we implement?", "judge_reference": {"protocol": [], "outcome": []}, "expected_revision": null}]
+  },
+  {
+    "case_id": "RF-V06-EN02",
+    "family": "ENGINEER",
+    "title": "Fraud False-Positive Intervention",
+    "expected_mode": "FULL",
+    "evaluator_key": {
+      "target_capability": "ENGINEER",
+      "observations": ["A fraud model's false positives are concentrated among legitimate customers traveling internationally.", "Global threshold relaxation would reduce false positives but is expected to raise fraud loss materially.", "A travel-aware feature can be piloted for 10% of traffic and rolled back quickly.", "Manual review capacity is limited."],
+      "critical_first_principles": ["Intervention should target the identified failure mechanism rather than broadly weakening detection.", "Adversarial adaptation and customer friction matter."],
+      "constraints": ["Fraud-loss increase above 3% is unacceptable.", "Manual review cannot exceed current staffing by more than 10%."],
+      "acceptable_interventions": ["Pilot a travel-aware/segment-specific adjustment with guardrails, fraud-loss monitoring, and rollback criteria.", "Avoid an unconditional global threshold reduction."],
+      "scoring_notes": ["Reward robust, reversible, mechanism-specific engineering with explicit guardrails and second-order risk."]
+    },
+    "turns": [{"turn": 1, "agent_input": "We found our fraud model's false positives are concentrated among legitimate customers traveling internationally. Lowering the global threshold would help them but is projected to increase fraud loss materially. We can pilot a travel-aware feature on 10% of traffic and roll it back quickly; manual-review capacity can grow only 10%, and fraud-loss increase above 3% is unacceptable. Design the intervention.", "judge_reference": {"protocol": [], "outcome": []}, "expected_revision": null}]
+  }
+]

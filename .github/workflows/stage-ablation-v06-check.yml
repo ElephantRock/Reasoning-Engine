@@ -1,0 +1,87 @@
+name: Stage Ablation v0.6 Static Check
+
+on:
+  pull_request:
+    paths:
+      - 'benchmark/run_v06.py'
+      - 'benchmark/stage_ablation_cases_v06.json'
+      - '.github/workflows/reasoning-stage-ablation-v06.yml'
+      - '.github/workflows/stage-ablation-v06-check.yml'
+      - 'docs/STAGE_ABLATION_V0_6.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: benchmark
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+
+      - name: Install runtime dependency
+        run: python -m pip install -r requirements.txt
+
+      - name: Validate Python syntax
+        run: python -m py_compile pilot.py run_v03.py run_v05.py run_v06.py zai_adapter.py
+
+      - name: Validate ablation JSON
+        run: python -m json.tool stage_ablation_cases_v06.json >/dev/null
+
+      - name: Validate ablation structure
+        run: |
+          python - <<'PY'
+          import json
+          from collections import Counter
+          cases = json.load(open('stage_ablation_cases_v06.json'))
+          expected = {'DIAGNOSE', 'PREDICT', 'TEST', 'REVISE', 'ENGINEER'}
+          assert len(cases) == 10, len(cases)
+          ids = [c['case_id'] for c in cases]
+          assert len(ids) == len(set(ids)), ids
+          counts = Counter(c['family'] for c in cases)
+          assert set(counts) == expected, counts
+          assert all(counts[x] == 2 for x in expected), counts
+          for case in cases:
+              assert case['evaluator_key']['target_capability'] == case['family']
+              assert case['turns'] and [t['turn'] for t in case['turns']] == list(range(1, len(case['turns']) + 1))
+              assert case['evaluator_key'].get('observations')
+          print('validated', counts)
+          PY
+
+      - name: Smoke-import v0.6 runner
+        env:
+          OPENAI_API_KEY: dummy
+          ZAI_API_KEY: dummy
+          BENCHMARK_SUITE: combined
+          ABLATION_GENERATION_REPLICATES: '1'
+          ABLATION_JUDGE_VOTES: '3'
+        run: |
+          python - <<'PY'
+          import run_v06
+          assert len(run_v06.CASES) == 10
+          assert set(run_v06.STAGE_ADDONS) == {'DIAGNOSE','PREDICT','TEST','REVISE','ENGINEER'}
+          assert [x['pair_id'] for x in run_v06.PAIR_SPECS] == [
+              'TARGETED_vs_COMPACT',
+              'TARGETED_vs_ATTENTION',
+              'FULL_vs_TARGETED',
+              'ATTENTION_vs_COMPACT',
+          ]
+          for case in run_v06.CASES:
+              targeted = run_v06.system_for(case, 'TARGETED')
+              compact = run_v06.system_for(case, 'COMPACT')
+              attention = run_v06.system_for(case, 'ATTENTION')
+              assert targeted.startswith(compact)
+              assert targeted != attention
+          print('v0.6 import and treatment construction OK')
+          PY
