@@ -16,15 +16,15 @@ An adaptive routing layer also exists experimentally, but routing is currently *
 
 ## Current research question
 
-The project is now testing two questions in sequence:
+The project is testing two questions in sequence:
 
 1. **Does explicit structured reasoning improve reasoning quality relative to an uncontrolled baseline?**
-2. **Which additional capabilities in the full protocol add marginal quality beyond Compact?**
+2. **Which explicitly specified capabilities in the full protocol make a marginal contribution to that quality?**
 
 The research hierarchy is:
 
 1. **Quality first** — establish the reasoning-quality effect.
-2. **Component value second** — identify which reasoning capabilities cause the marginal gain.
+2. **Component value second** — identify which explicit reasoning instructions cause marginal gain.
 3. **Reliability third** — reproduce effects across cases, generations, and evaluators.
 4. **Cost last** — optimize reasoning cost only after the quality-producing process is understood.
 
@@ -44,37 +44,32 @@ Interpretation: structured reasoning shows a strong quality signal over baseline
 
 See `docs/QUALITY_V0_5_RESULTS.md` for exact provenance and interpretation boundaries.
 
-## Measurement v0.6 — stage ablation
+## Measurement v0.6.1 — corrected stage ablation
 
-v0.6 asks which additional capabilities add marginal quality beyond Compact.
+The first v0.6 design compared `COMPACT + stage instruction` against `COMPACT`. Review identified an identification defect: Compact already explicitly contains several Test, Revise, and Engineer behaviors. That experiment can measure **re-emphasis**, but not cleanly identify the marginal value of introducing those components.
 
-Each `TARGETED` treatment starts from the **identical Compact prompt** and adds exactly one capability:
+v0.6.1 therefore uses a leave-one-capability-out design:
 
-- `DIAGNOSE` — competing causal explanations and causal-level distinction;
+- `FULL` — the exact production `pilot.FULL` prompt;
+- `ABLATED` — that exact prompt with only the case-relevant capability instruction fragment(s) removed.
+
+The five capability families are:
+
+- `DIAGNOSE` — competing causal explanations and symptom/proximate/root distinction;
 - `PREDICT` — prospective mechanism-specific predictions;
 - `TEST` — discriminating/falsifying evidence;
 - `REVISE` — explicit model updating after contradiction;
-- `ENGINEER` — mechanism-linked intervention design under constraints, robustness, reversibility, feedback, and second-order effects.
+- `ENGINEER` — mechanism-linked intervention design under constraints, robustness, reversibility, feedback, second-order effects, and post-intervention observation.
 
-Each stage has two dedicated development/calibration cases in `benchmark/stage_ablation_cases_v06.json`.
+Each capability has two dedicated development/calibration cases in `benchmark/stage_ablation_cases_v06.json`.
 
-Four conditions are generated per case:
+Primary comparison:
 
-- `COMPACT` — unchanged Compact scaffold;
-- `ATTENTION` — Compact plus a generic extra quality-control pass;
-- `TARGETED` — Compact plus the case-relevant capability instruction;
-- `FULL` — the complete protocol, used only as a ceiling/headroom diagnostic.
+**FULL vs FULL-minus-target-capability**
 
-Primary comparisons:
+Each pair receives repeated blinded quality-only votes with independently randomized A/B orientation. Family-level statistics preserve `(case_id, generation_replicate)` boundaries so judge disagreement is not conflated with generation variability.
 
-1. **TARGETED vs COMPACT** — marginal component effect;
-2. **TARGETED vs ATTENTION** — stage specificity beyond generic extra checking;
-3. **FULL vs TARGETED** — residual headroom of the full protocol;
-4. **ATTENTION vs COMPACT** — generic-attention control effect.
-
-Each pair receives repeated blinded quality-only votes with independently randomized A/B orientation. Cost remains outside the quality score.
-
-See `docs/STAGE_ABLATION_V0_6.md` for the full design.
+See `docs/STAGE_ABLATION_V0_6_1.md` for the corrected design and the v0.6 interpretation limitation.
 
 ## Coupled systems
 
@@ -87,7 +82,7 @@ Protocol compliance is not evidence of improved reasoning by itself.
 
 ## Validation boundary
 
-The current v0.5 and v0.6 cases are development/calibration cases, not final held-out validation.
+The current v0.5 and v0.6.x cases are development/calibration cases, not final held-out validation.
 
 Framework validation will require, after prompts and component definitions are frozen:
 
@@ -101,13 +96,7 @@ Only after component value is understood should the project return to Adaptive r
 
 ## Cost policy
 
-Target token usage and latency are still recorded as descriptive diagnostics.
-
-They do **not** enter:
-
-- the quality judge prompt;
-- pairwise quality scores;
-- current component promotion decisions.
+Target token usage and latency are recorded as descriptive diagnostics only. They do **not** enter the quality judge prompt, pairwise quality score, or current component promotion decisions.
 
 Later, cost becomes a constrained optimization problem:
 
@@ -129,20 +118,20 @@ The evaluator can use a different model, API key, and base URL. Configure option
 
 See `docs/ZAI_PROVIDER.md` for provider details.
 
-## Run Measurement v0.6
+## Run Measurement v0.6.1
 
-In GitHub Actions, open **Reasoning Stage Ablation v0.6** and use the calibration defaults:
+In GitHub Actions, open **Reasoning Stage Ablation v0.6.1** and use the calibration defaults:
 
 - generation replicates: `1`;
 - judge votes: `3`;
 - target model: `glm-5.1`;
 - judge model: `glm-5.1` unless an independent evaluator is available.
 
-The workflow writes artifacts under `benchmark/results_v06/`:
+The workflow writes artifacts under `benchmark/results_v061/`:
 
-- `v06_runs.jsonl`;
-- `v06_judge_votes.jsonl`;
-- `v06_report.json` when the full run completes.
+- `v061_runs.jsonl`;
+- `v061_judge_votes.jsonl`;
+- `v061_report.json` when the run completes.
 
 API keys must never be committed to the repository.
 
@@ -154,4 +143,4 @@ The governing research loop is the framework applied to itself:
 
 **Observe benchmark failures → Diagnose → Derive → Hypothesize changes → Predict improvements → Test → Revise → Engineer**
 
-The immediate objective is **reproducibly better reasoning quality and an evidence-based account of which components produce it**. Efficiency optimization comes later.
+The immediate objective is **reproducibly better reasoning quality and an evidence-based account of which explicit components produce it**. Efficiency optimization comes later.

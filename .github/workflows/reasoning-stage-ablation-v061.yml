@@ -1,0 +1,103 @@
+name: Reasoning Stage Ablation v0.6.1
+
+on:
+  workflow_dispatch:
+    inputs:
+      generation_replicates:
+        description: Stochastic target generations per case/condition
+        required: true
+        default: '1'
+      judge_votes:
+        description: Odd repeated blinded judge votes per response pair
+        required: true
+        default: '3'
+      target_model:
+        description: Z.AI target model ID
+        required: true
+        default: glm-5.1
+      judge_model:
+        description: Z.AI evaluator model ID
+        required: true
+        default: glm-5.1
+      target_base_url:
+        description: Target OpenAI-compatible base URL
+        required: true
+        default: https://api.z.ai/api/coding/paas/v4
+      judge_base_url:
+        description: Judge OpenAI-compatible base URL
+        required: true
+        default: https://api.z.ai/api/coding/paas/v4
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  stage-ablation-v061:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-v061-ablation]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 420
+    defaults:
+      run:
+        working-directory: benchmark
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      ZAI_JUDGE_API_KEY: ${{ secrets.ZAI_JUDGE_API_KEY }}
+      ZAI_BASE_URL: ${{ inputs.target_base_url || 'https://api.z.ai/api/coding/paas/v4' }}
+      ZAI_JUDGE_BASE_URL: ${{ inputs.judge_base_url || 'https://api.z.ai/api/coding/paas/v4' }}
+      ZAI_TARGET_MODEL: ${{ inputs.target_model || 'glm-5.1' }}
+      ZAI_JUDGE_MODEL: ${{ inputs.judge_model || 'glm-5.1' }}
+      ZAI_JUDGE_TEMPERATURE: '0.2'
+      ABLATION_GENERATION_REPLICATES: ${{ inputs.generation_replicates || '1' }}
+      ABLATION_JUDGE_VOTES: ${{ inputs.judge_votes || '3' }}
+      BENCHMARK_SUITE: combined
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Verify experiment configuration
+        shell: bash
+        run: |
+          if [ -z "$ZAI_API_KEY" ]; then
+            echo "ZAI_API_KEY repository secret is required." >&2
+            exit 1
+          fi
+          if ! [[ "$ABLATION_GENERATION_REPLICATES" =~ ^[1-9][0-9]*$ ]]; then
+            echo "generation_replicates must be a positive integer." >&2
+            exit 1
+          fi
+          if ! [[ "$ABLATION_JUDGE_VOTES" =~ ^[0-9]+$ ]] || [ "$ABLATION_JUDGE_VOTES" -lt 3 ] || [ $((ABLATION_JUDGE_VOTES % 2)) -eq 0 ]; then
+            echo "judge_votes must be an odd integer >= 3." >&2
+            exit 1
+          fi
+          if [ -z "$ZAI_JUDGE_API_KEY" ]; then
+            echo "ZAI_JUDGE_API_KEY is not set; evaluator will fall back to ZAI_API_KEY."
+          fi
+          if [ "$ZAI_TARGET_MODEL" = "$ZAI_JUDGE_MODEL" ] && [ "$ZAI_BASE_URL" = "$ZAI_JUDGE_BASE_URL" ]; then
+            echo "WARNING: target and judge use the same model/endpoint; this is component calibration, not evaluator-independent validation."
+          fi
+
+      - name: Run corrected stage ablation v0.6.1
+        run: python run_v061.py
+
+      - name: Upload corrected ablation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reasoning-stage-ablation-v061-${{ github.run_id }}
+          path: benchmark/results_v061/
+          if-no-files-found: warn
+          retention-days: 30
