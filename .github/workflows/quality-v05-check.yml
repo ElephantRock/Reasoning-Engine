@@ -1,0 +1,59 @@
+name: Quality v0.5 Static Check
+
+on:
+  pull_request:
+    paths:
+      - 'benchmark/run_v05.py'
+      - 'benchmark/pilot_cases.json'
+      - 'benchmark/stress_cases_v03.json'
+      - '.github/workflows/reasoning-quality-v05.yml'
+      - '.github/workflows/quality-v05-check.yml'
+      - 'docs/QUALITY_MEASUREMENT_V0_5.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install runtime dependency
+        run: python -m pip install -r benchmark/requirements.txt
+
+      - name: Validate Python syntax
+        run: python -m py_compile benchmark/run_v05.py benchmark/run_v03.py benchmark/pilot.py benchmark/zai_adapter.py
+
+      - name: Smoke-import quality runner
+        env:
+          OPENAI_API_KEY: dummy
+          ZAI_API_KEY: dummy
+          QUALITY_SUITE: combined
+          QUALITY_GENERATION_REPLICATES: '1'
+          QUALITY_JUDGE_VOTES: '3'
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, 'benchmark')
+          import run_v05
+          assert len(run_v05.CASES) == 12, len(run_v05.CASES)
+          assert {p['pair_id'] for p in run_v05.PAIR_SPECS} == {
+              'FULL_vs_BASELINE', 'COMPACT_vs_BASELINE', 'FULL_vs_COMPACT'
+          }
+          assert all('ADAPTIVE' not in (p['left'], p['right']) for p in run_v05.PAIR_SPECS)
+          assert run_v05.PAIR_SPECS[0]['role'] == 'primary'
+          print('quality v0.5 import and experiment structure validated')
+          PY
+
+      - name: Validate source case JSON
+        run: |
+          python -m json.tool benchmark/pilot_cases.json >/dev/null
+          python -m json.tool benchmark/stress_cases_v03.json >/dev/null
