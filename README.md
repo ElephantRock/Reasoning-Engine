@@ -1,6 +1,6 @@
 # Reasoning Engine
 
-An experimental reasoning-control architecture for moving from observations to justified interventions while explicitly managing causal uncertainty, evidence, revision, and reasoning cost.
+An experimental reasoning-control architecture for moving from observations to justified interventions while explicitly managing causal uncertainty, evidence, revision, and engineering consequences.
 
 ## Core protocol
 
@@ -8,86 +8,103 @@ For substantial non-trivial problems:
 
 **Observe → Diagnose → Derive → Hypothesize → Predict → Test → Revise → Engineer**
 
-Compact mode:
+Compact ablation:
 
 **Problem → First Principle → Mechanism → Evidence → Solution**
 
-Current adaptive candidate:
+An adaptive routing layer also exists experimentally, but routing is currently **deferred from the primary research question**.
 
-**Route → Reason → Verify → Act → Observe**
-
-with `DIRECT`, `COMPACT`, and `FULL` reasoning modes selected according to the decision-relevant complexity of the task.
-
-## Project status
+## Current research question
 
 The operating protocol is specified, but its value as an agent controller remains an empirical hypothesis.
 
-Pilot 001 successfully executed end-to-end against Z.AI `glm-5.1`. It produced encouraging directional signals—especially for Compact reasoning—but also exposed evaluator ceiling saturation and an Adaptive routing error. Measurement v0.3 therefore hardens the evaluator before the project scales to a larger benchmark.
+The project is currently testing:
+
+> **Does the reasoning protocol produce better reasoning quality than an uncontrolled baseline?**
+
+The research hierarchy is now explicit:
+
+1. **Quality first** — establish whether FULL reasoning improves epistemic and decision outcomes.
+2. **Reliability second** — establish whether any quality advantage reproduces across cases, generations, and evaluators.
+3. **Cost third** — only after a credible quality advantage exists, optimize reasoning cost while preserving that quality.
+
+Token count, latency, and routing efficiency are not primary outcomes in the current phase.
+
+## Why the focus changed
+
+Pilot 001 and Measurement v0.3 showed directional differences between BASELINE, COMPACT, FULL, and ADAPTIVE, but also exposed scalar-score ceiling effects and stochastic pairwise judging.
+
+Routing v0.4 then showed that identical response pairs could receive materially different pairwise verdicts on repeated evaluation. That makes evaluator reliability a prerequisite for further controller optimization.
+
+Measurement v0.5 therefore returns to the core theory and removes Adaptive routing from the primary experiment.
 
 See:
 
-- `docs/PILOT_001_RESULTS.md` — exact Pilot 001 provenance and results;
-- `docs/MEASUREMENT_V0_3.md` — evaluator changes motivated by those results.
+- `docs/OPERATING_PROTOCOL.md` — canonical reasoning protocol;
+- `docs/PILOT_001_RESULTS.md` — first empirical pilot;
+- `docs/MEASUREMENT_V0_3.md` — hardened evaluator and stress suite;
+- `docs/ROUTING_V0_4_CANDIDATE.md` — routing candidate, retained as a later optimization layer;
+- `docs/QUALITY_MEASUREMENT_V0_5.md` — current quality-first measurement design.
+
+## Coupled systems
 
 The project maintains two coupled systems:
 
-1. **Reasoning engine** — the controller and its governing principles.
-2. **Evaluation engine** — adversarial benchmarks intended to falsify or refine the controller.
+1. **Reasoning engine** — the protocol and controller under test.
+2. **Evaluation engine** — adversarial benchmarks intended to falsify, refine, or reject the reasoning claims.
 
-Do not treat protocol compliance as evidence of improved reasoning by itself. The primary question is whether the controller improves blinded decision quality enough to justify its reasoning cost.
+Protocol compliance is not evidence of improved reasoning by itself.
 
-## Repository structure
+## Current experimental conditions
 
-```text
-.
-├── docs/
-│   ├── OPERATING_PROTOCOL.md
-│   ├── FRAMEWORK_V0_2_CANDIDATE.md
-│   ├── BENCHMARK_AUDIT_V0_2.md
-│   ├── ZAI_PROVIDER.md
-│   ├── PILOT_001_RESULTS.md
-│   └── MEASUREMENT_V0_3.md
-├── benchmark/
-│   ├── pilot.py
-│   ├── run_zai.py
-│   ├── run_v03.py
-│   ├── zai_adapter.py
-│   ├── pilot_cases.json
-│   ├── stress_cases_v03.json
-│   └── requirements.txt
-└── .github/workflows/
-    ├── reasoning-benchmark-pilot.yml
-    └── reasoning-benchmark-v03.yml
-```
-
-## Experimental conditions
-
-The same target model is compared under four conditions:
+Quality Measurement v0.5 evaluates only:
 
 - `BASELINE` — no reasoning controller;
 - `COMPACT` — Problem → First Principle → Mechanism → Evidence → Solution;
-- `FULL` — Observe → Diagnose → Derive → Hypothesize → Predict → Test → Revise → Engineer;
-- `ADAPTIVE` — a router selects DIRECT, COMPACT, or FULL before answering.
+- `FULL` — Observe → Diagnose → Derive → Hypothesize → Predict → Test → Revise → Engineer.
 
-## Measurement v0.3
+The primary comparison is:
 
-Pilot 001's 0–4 scalar quality scores were nearly saturated, so v0.3 changes the measurement hierarchy:
+**FULL vs BASELINE**
 
-1. **Primary:** blinded pairwise score against BASELINE (win=1, tie=0.5, loss=0).
-2. **Secondary:** stricter anchored 0–4 scalar scores.
-3. **Adaptive routing:** deterministic comparison of selected mode against case gold mode(s).
-4. **Uncertainty:** case-clustered bootstrap confidence intervals when stochastic replicates are used.
-5. **Cost:** token and latency accounting remains explicit.
+Secondary ablations are:
 
-Six additional stress cases test aggregation reversal, measurement-generation changes, material vs irrelevant uncertainty, adversarial causal framing, and intervention-as-experiment reasoning.
+- **COMPACT vs BASELINE**;
+- **FULL vs COMPACT**.
 
-The v0.3 workflow supports `stress`, `pilot`, and `combined` suites and an arbitrary positive number of stochastic replicates.
+`ADAPTIVE` is intentionally excluded from quality promotion evidence. It is an efficiency/control layer to revisit only after the underlying reasoning-quality effect is established.
+
+## Quality Measurement v0.5
+
+The quality judge evaluates substantive reasoning only, including correctness, causal/mechanistic accuracy, evidence discrimination, revision, uncertainty calibration, assumptions, constraints, and decision/intervention quality when applicable.
+
+The judge is explicitly told not to reward shorter or cheaper answers.
+
+Each response pair receives repeated blinded votes with independently randomized A/B orientation. The report exposes vote agreement and non-unanimous cases rather than silently treating one stochastic verdict as ground truth.
+
+The initial v0.5 calibration uses the existing 12 `pilot + stress` cases, one target-generation replicate, and three judge votes per pair. Because those cases have already influenced framework development, this run is **calibration, not validation**.
+
+Fresh held-out cases and preferably an evaluator model independent of the target model are required for framework validation.
+
+## Cost policy
+
+Target token usage and latency are still recorded, but only as descriptive diagnostics.
+
+They do **not** enter:
+
+- the quality judge prompt;
+- the pairwise quality score;
+- the primary promotion criterion.
+
+Cost optimization is a later constrained problem:
+
+> Minimize reasoning cost subject to preserving the quality of the validated best reasoning process within a predefined tolerance.
 
 ## Model provider: Z.AI
 
-The canonical target runtime uses Z.AI through its OpenAI-compatible Chat Completions protocol.
+The canonical runtime uses Z.AI through its OpenAI-compatible Chat Completions protocol.
 
-Default target endpoint:
+Default endpoint:
 
 `https://api.z.ai/api/coding/paas/v4`
 
@@ -99,50 +116,30 @@ The evaluator can use a different model, API key, and base URL. Configure option
 
 See `docs/ZAI_PROVIDER.md` for provider details.
 
-## Run Measurement v0.3 on GitHub Actions
+## Run Quality Measurement v0.5
 
-One-time minimum setup:
+In GitHub Actions, open **Reasoning Quality Measurement v0.5** and use the calibration defaults:
 
-1. Add repository Actions secret `ZAI_API_KEY`.
-2. Optionally add `ZAI_JUDGE_API_KEY` for an independent evaluator credential.
-3. Open **Actions → Reasoning Benchmark Measurement v0.3 → Run workflow**.
-4. Start with:
-   - suite: `stress`;
-   - replicates: `1`;
-   - target model: `glm-5.1`;
-   - judge model: `glm-5.1` unless another suitable judge is available.
-5. Inspect the generated artifact before increasing benchmark size or replicate count.
+- suite: `combined`;
+- generation replicates: `1`;
+- judge votes: `3`;
+- target model: `glm-5.1`;
+- judge model: `glm-5.1` unless an independent evaluator is available.
 
-The workflow writes checkpointed artifacts under `benchmark/results_v03/`:
+The workflow writes checkpointed artifacts under `benchmark/results_v05/`:
 
-- `v03_runs.jsonl`
-- `v03_pairwise.jsonl`
-- `v03_report.json` when the full run completes
+- `v05_runs.jsonl`;
+- `v05_judge_votes.jsonl`;
+- `v05_report.json` when the full run completes.
 
 API keys must never be committed to the repository.
-
-## Local Measurement v0.3
-
-```bash
-cd benchmark
-python -m pip install -r requirements.txt
-export ZAI_API_KEY=...
-export ZAI_BASE_URL=https://api.z.ai/api/coding/paas/v4
-export ZAI_TARGET_MODEL=glm-5.1
-export ZAI_JUDGE_MODEL=glm-5.1
-export BENCHMARK_SUITE=stress
-export BENCHMARK_REPLICATES=1
-python run_v03.py
-```
-
-For a separate evaluator, additionally set `ZAI_JUDGE_API_KEY` and optionally `ZAI_JUDGE_BASE_URL`.
 
 ## Research discipline
 
 The framework should be revised or rejected when evidence contradicts its claimed benefits.
 
-The governing research loop is therefore the framework applied to itself:
+The governing research loop is the framework applied to itself:
 
-**Observe benchmark failures → Diagnose → Derive → Hypothesize controller changes → Predict improvements → Test → Revise → Engineer**
+**Observe benchmark failures → Diagnose → Derive → Hypothesize changes → Predict improvements → Test → Revise → Engineer**
 
-The intended endpoint is not maximal reasoning. It is **maximum justified decision quality per unit of reasoning cost**.
+The immediate objective is **reproducibly better reasoning quality**. Efficiency optimization comes later.
