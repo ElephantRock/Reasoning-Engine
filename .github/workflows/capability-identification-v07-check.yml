@@ -1,0 +1,116 @@
+name: Capability Identification v0.7 Static Check
+
+on:
+  pull_request:
+    paths:
+      - 'benchmark/run_v07.py'
+      - 'benchmark/capability_cases_v07.json'
+      - '.github/workflows/reasoning-capability-v07.yml'
+      - '.github/workflows/capability-identification-v07-check.yml'
+      - 'docs/CAPABILITY_IDENTIFICATION_V0_7.md'
+      - 'docs/ABLATION_V0_6_1_REPLICATION_RESULTS.md'
+      - 'README.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: benchmark
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Validate syntax and JSON
+        run: |
+          python -m py_compile run_v07.py
+          python -m json.tool capability_cases_v07.json > /dev/null
+
+      - name: Validate experimental structure
+        env:
+          OPENAI_API_KEY: unused-provider-shim
+          ZAI_API_KEY: unused-zai-shim
+          BENCHMARK_SUITE: combined
+        run: |
+          python - <<'PY'
+          import run_v07 as r
+
+          assert len(r.CASES) == 6
+          assert set(r.TARGET_MODULES) == {'DIAGNOSE', 'REVISE', 'ENGINEER'}
+          for family in r.TARGET_MODULES:
+              assert sum(c['family'] == family for c in r.CASES) == 2
+
+          for case in r.CASES:
+              assert r.system_for(case, 'CONTROL') == r.CORE
+              assert r.system_for(case, 'ATTENTION') == r.ATTENTION
+              assert r.system_for(case, 'TARGET') == r.CORE + r.TARGET_MODULES[case['family']]
+              assert r.TARGET_MODULES[case['family']] not in r.CORE
+              assert r.TARGET_MODULES[case['family']] not in r.ATTENTION
+
+          forbidden = {
+              'DIAGNOSE': ['diagnos', 'hypoth'],
+              'REVISE': ['revise', 'revision', 'update your', 'reassess'],
+              'ENGINEER': ['engineer', 'intervention plan', 'design a solution'],
+          }
+          for case in r.CASES:
+              prompt = ' '.join(t['agent_input'].lower() for t in case['turns'])
+              for token in forbidden[case['family']]:
+                  assert token not in prompt, (case['case_id'], token)
+
+          assert r.GENERATION_REPLICATES == 3
+          assert r.QUALITY_VOTES == 3
+          assert r.BEHAVIOR_VOTES == 3
+          assert r.MANIPULATION_LIFT_GATE == 0.5
+          print('v0.7 structure validated')
+          PY
+
+      - name: Validate repeated manipulation aggregation
+        env:
+          OPENAI_API_KEY: unused-provider-shim
+          ZAI_API_KEY: unused-zai-shim
+          BENCHMARK_SUITE: combined
+        run: |
+          python - <<'PY'
+          import run_v07 as r
+
+          votes = []
+          for family in r.TARGET_MODULES:
+              for rep in [1, 2]:
+                  for vote_index in [1, 2, 3]:
+                      votes.append({
+                          'family': family,
+                          'case_id': f'{family}-X',
+                          'replicate': rep,
+                          'vote_index': vote_index,
+                          'target_score': 3.0,
+                          'control_score': 2.0,
+                          'lift': 1.0,
+                      })
+          out = r.manipulation_summary(votes)
+          for family in r.TARGET_MODULES:
+              assert out[family]['n_case_replicates'] == 2
+              assert out[family]['behavior_lift'] == 1.0
+              assert out[family]['identification_gate'] is True
+          print('repeated manipulation aggregation validated')
+          PY
+
+      - name: Smoke import
+        env:
+          OPENAI_API_KEY: unused-provider-shim
+          ZAI_API_KEY: unused-zai-shim
+          BENCHMARK_SUITE: combined
+        run: python -c "import run_v07; print('run_v07 import ok')"

@@ -1,0 +1,110 @@
+name: Reasoning Capability Identification v0.7
+
+on:
+  workflow_dispatch:
+    inputs:
+      generation_replicates:
+        description: Stochastic target generations per case/condition
+        required: true
+        default: '3'
+      quality_votes:
+        description: Odd blinded quality votes per generated pair
+        required: true
+        default: '3'
+      behavior_votes:
+        description: Odd blinded target-behavior votes per TARGET-vs-CONTROL pair
+        required: true
+        default: '3'
+      target_model:
+        description: Z.AI target model ID
+        required: true
+        default: glm-5.1
+      judge_model:
+        description: Z.AI evaluator model ID
+        required: true
+        default: glm-5.1
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  capability-identification-v07:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-v07-capability]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 420
+    defaults:
+      run:
+        working-directory: benchmark
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      ZAI_JUDGE_API_KEY: ${{ secrets.ZAI_JUDGE_API_KEY }}
+      ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      ZAI_JUDGE_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      ZAI_TARGET_MODEL: ${{ inputs.target_model || 'glm-5.1' }}
+      ZAI_JUDGE_MODEL: ${{ inputs.judge_model || 'glm-5.1' }}
+      ZAI_JUDGE_TEMPERATURE: '0.2'
+      V07_GENERATION_REPLICATES: ${{ inputs.generation_replicates || '3' }}
+      V07_JUDGE_VOTES: ${{ inputs.quality_votes || '3' }}
+      V07_BEHAVIOR_VOTES: ${{ inputs.behavior_votes || '3' }}
+      V07_MANIPULATION_LIFT_GATE: '0.5'
+      BENCHMARK_SUITE: combined
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Verify experiment configuration
+        shell: bash
+        run: |
+          if [ -z "$ZAI_API_KEY" ]; then
+            echo "ZAI_API_KEY repository secret is required." >&2
+            exit 1
+          fi
+          for value in "$V07_GENERATION_REPLICATES" "$V07_JUDGE_VOTES" "$V07_BEHAVIOR_VOTES"; do
+            if ! [[ "$value" =~ ^[1-9][0-9]*$ ]]; then
+              echo "replicate/vote settings must be positive integers." >&2
+              exit 1
+            fi
+          done
+          if [ "$V07_GENERATION_REPLICATES" -ne 3 ]; then
+            echo "WARNING: preregistered calibration uses exactly 3 target-generation replicates."
+          fi
+          if [ "$V07_JUDGE_VOTES" -lt 3 ] || [ $((V07_JUDGE_VOTES % 2)) -eq 0 ]; then
+            echo "quality votes must be an odd integer >= 3." >&2
+            exit 1
+          fi
+          if [ "$V07_BEHAVIOR_VOTES" -lt 3 ] || [ $((V07_BEHAVIOR_VOTES % 2)) -eq 0 ]; then
+            echo "behavior votes must be an odd integer >= 3." >&2
+            exit 1
+          fi
+          if [ -z "$ZAI_JUDGE_API_KEY" ]; then
+            echo "ZAI_JUDGE_API_KEY is not set; evaluator will fall back to ZAI_API_KEY."
+          fi
+          if [ "$ZAI_TARGET_MODEL" = "$ZAI_JUDGE_MODEL" ]; then
+            echo "WARNING: same target/judge model; this remains development calibration rather than evaluator-independent validation."
+          fi
+
+      - name: Run capability identification v0.7
+        run: python run_v07.py
+
+      - name: Upload capability diagnostic results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reasoning-capability-v07-${{ github.run_id }}
+          path: benchmark/results_v07/
+          if-no-files-found: warn
+          retention-days: 30

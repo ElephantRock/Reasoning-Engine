@@ -1,0 +1,241 @@
+[
+  {
+    "case_id": "RF-V07-DG01",
+    "family": "DIAGNOSE",
+    "title": "Regional Payment Failures",
+    "evaluator_key": {
+      "target_behavior": "Under material ambiguity, keep multiple materially plausible causal models alive, distinguish symptom/proximate/root cause where useful, and tie the next action to evidence that separates those models rather than collapsing early.",
+      "observations": [
+        "Payment failures rose from 0.4% to 5.1% shortly after a frontend deploy.",
+        "Application CPU, database saturation, and successful-request latency remain near baseline.",
+        "About 90% of failures come from customers routed through one banking region.",
+        "The payment gateway reports a spike in TLS resets for that region during the same window."
+      ],
+      "not_observed": [
+        "No evidence yet establishes that the frontend deploy caused the failures.",
+        "No controlled path or version comparison has been performed."
+      ],
+      "plausible_hypotheses": [
+        "Frontend deploy regression that manifests only for a regional path or configuration.",
+        "Regional payment-network or TLS path failure unrelated to the deploy.",
+        "Interaction between the deployed version and a region-specific gateway configuration."
+      ],
+      "discriminating_evidence": [
+        "Compare failures by deployed version while holding region constant, or by region/path while holding version constant.",
+        "Use a controlled bypass or unaffected-region transaction to see whether the failure follows application version or network path."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether a broad rollback would address the mechanism or merely consume recovery time."
+      ],
+      "acceptable_interventions": [
+        "Preserve evidence and run a fast path/version discriminator before broad rollback unless immediate containment is operationally necessary."
+      ],
+      "scoring_notes": [
+        "Do not reward simply naming many remote possibilities; reward material competition and a check whose result changes the action."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Payment failures rose from 0.4% to 5.1% about twenty minutes after a frontend deploy. CPU, database saturation, and successful-request latency are still normal. Roughly 90% of the failures are from customers routed through one banking region, and the payment gateway reports a spike in TLS resets there. A rollback takes about 25 minutes and peak traffic begins in 40 minutes. What should we do next?",
+        "expected_revision": null
+      }
+    ]
+  },
+  {
+    "case_id": "RF-V07-DG02",
+    "family": "DIAGNOSE",
+    "title": "Seal Defects After Staffing Change",
+    "evaluator_key": {
+      "target_behavior": "Under material ambiguity, keep multiple materially plausible causal models alive, distinguish symptom/proximate/root cause where useful, and tie the next action to evidence that separates those models rather than collapsing early.",
+      "observations": [
+        "Seal defects rose from 1.0% to 4.2% after a staffing rotation changed.",
+        "Most defects occur on packaging line 3.",
+        "A new film lot began on line 3 during the same shift.",
+        "Coarse machine temperature and vibration telemetry remain within historical ranges."
+      ],
+      "not_observed": [
+        "Operator fatigue or procedure drift has not been measured directly.",
+        "Seal pressure, dwell-time uniformity, and the new film lot have not been cross-checked under controlled conditions."
+      ],
+      "plausible_hypotheses": [
+        "Staffing/crew change altered procedure execution on line 3.",
+        "The new film lot has a narrower sealing window or interacts with line-3 settings.",
+        "A line-3 calibration or tooling issue is not visible in coarse telemetry."
+      ],
+      "discriminating_evidence": [
+        "Alternate retained old-lot and new-lot film on line 3 while holding crew and settings fixed.",
+        "Stratify existing defects by line, crew, and film lot before changing staffing."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether staffing, material quarantine, or line calibration is the appropriate corrective action."
+      ],
+      "acceptable_interventions": [
+        "Do not reverse the staffing change solely on timing; prefer a quick controlled material/line check first."
+      ],
+      "scoring_notes": [
+        "Strong reasoning retains the line-specific calibration possibility even when the material lot appears most likely."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Seal defects rose from 1.0% to 4.2% after a staffing rotation changed. Most defects are on packaging line 3. A new film lot also began on line 3 during that shift, while the line's temperature and vibration telemetry look normal. Management wants the old staffing pattern restored before tomorrow's run. What action is warranted now?",
+        "expected_revision": null
+      }
+    ]
+  },
+  {
+    "case_id": "RF-V07-RV01",
+    "family": "REVISE",
+    "title": "Cache Change and DNS Failures",
+    "evaluator_key": {
+      "target_behavior": "When later evidence conflicts with an earlier causal model, explicitly change the model or confidence, identify what is demoted/promoted, and change the recommended action rather than merely appending the new fact.",
+      "observations": [
+        "At turn 1, API failures were first noticed soon after a cache-configuration change.",
+        "At turn 2, raw timestamps show failures began about 80 minutes before that change.",
+        "The earlier onset coincides with an upstream DNS TTL/configuration change and NXDOMAIN errors."
+      ],
+      "plausible_hypotheses": [
+        "Initial cache-configuration regression hypothesis.",
+        "Upstream DNS configuration or propagation failure.",
+        "The cache change may have amplified visibility or request churn without initiating the outage."
+      ],
+      "discriminating_evidence": [
+        "Timeline consistency and DNS error signatures should materially change the causal ranking.",
+        "Check whether restoring DNS state resolves failures without reverting cache settings."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether reverting cache settings is relevant to recovery."
+      ],
+      "acceptable_interventions": [
+        "Move remediation toward DNS while retaining any narrow residual role for the cache change only if evidence supports it."
+      ],
+      "scoring_notes": [
+        "The second response should visibly change the causal model and action; restating both facts without reprioritization is insufficient."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "API failures were first noticed shortly after we changed cache configuration at 14:00. Reverting that change is our fastest familiar recovery action. What should we do next?",
+        "expected_revision": null
+      },
+      {
+        "turn": 2,
+        "agent_input": "Raw timestamps now show the failures began around 12:40, about 80 minutes before the cache change. At 12:38 an upstream DNS TTL/configuration change went live, and failed requests contain NXDOMAIN errors. What should we do now?",
+        "expected_revision": "Demote the cache change as the initiating mechanism, promote the DNS mechanism, and redirect recovery accordingly while preserving any evidence-based residual role for the cache change."
+      }
+    ]
+  },
+  {
+    "case_id": "RF-V07-RV02",
+    "family": "REVISE",
+    "title": "Returns After Packaging Redesign",
+    "evaluator_key": {
+      "target_behavior": "When later evidence conflicts with an earlier causal model, explicitly change the model or confidence, identify what is demoted/promoted, and change the recommended action rather than merely appending the new fact.",
+      "observations": [
+        "At turn 1, return rate increased after a packaging redesign.",
+        "At turn 2, the return rate had already been rising for three months before the redesign.",
+        "A comparable warehouse that did not adopt the redesign shows a similar increase over the same period."
+      ],
+      "plausible_hypotheses": [
+        "The packaging redesign increased returns.",
+        "A broader product-quality, seasonality, or measurement trend explains most of the increase.",
+        "The redesign could still contribute a smaller residual effect."
+      ],
+      "discriminating_evidence": [
+        "Compare aligned pre/post changes across redesigned and untreated warehouses and inspect parallel-trend assumptions.",
+        "Reconcile reason codes and raw counts for shared measurement changes."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether reverting the redesign would materially reduce returns."
+      ],
+      "acceptable_interventions": [
+        "Substantially weaken the redesign-causation claim and investigate the common trend before a costly rollback."
+      ],
+      "scoring_notes": [
+        "Quantitative comparisons must use aligned time windows; arithmetic or window-mixing errors are material reasoning failures."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Customer returns rose from 5.0% to 5.8% in the month after a packaging redesign. Operations is considering reverting the redesign. What should we do next?",
+        "expected_revision": null
+      },
+      {
+        "turn": 2,
+        "agent_input": "The prior three months were 4.3%, 4.6%, and 5.0%. A comparable warehouse that did not adopt the redesign rose from 4.2% to 5.6% over the same four-month span. What should we do now?",
+        "expected_revision": "Materially weaken the redesign-causation claim, compare aligned windows, and redirect attention toward the shared trend while retaining calibrated residual uncertainty."
+      }
+    ]
+  },
+  {
+    "case_id": "RF-V07-EN01",
+    "family": "ENGINEER",
+    "title": "Compressor Overheating Control",
+    "evaluator_key": {
+      "target_behavior": "Translate a sufficiently supported mechanism into a robust action under constraints: connect action to mechanism, compare reversible and irreversible options, define monitoring/rollback criteria, and account for important feedback or second-order effects without inventing unsupported causal certainty.",
+      "observations": [
+        "Instrumented testing shows compressor trips occur when discharge temperature exceeds 112 C during rapid load ramps.",
+        "A revised fan-control curve kept temperature below 106 C in a four-hour high-load test and increased energy use by 3%.",
+        "Compressor replacement costs $180k and requires 36 hours of downtime.",
+        "Adding an alarm detects overheating but does not prevent the trip."
+      ],
+      "constraints": [
+        "Sustained energy increase above 5% is unacceptable.",
+        "Unplanned downtime during the next two weeks is especially costly."
+      ],
+      "acceptable_interventions": [
+        "Use the reversible fan-control change as an interim control with representative validation and monitoring.",
+        "Do not infer that the fan-curve success proves the compressor itself is healthy; diagnose the source of the thermal excursion before irreversible replacement.",
+        "Treat alarms as monitoring/containment rather than prevention."
+      ],
+      "scoring_notes": [
+        "Reward robust action design and evidence gates; penalize overclaiming that a successful control action uniquely identifies root cause."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Instrumented testing shows our compressor trips when discharge temperature exceeds 112 C during rapid load ramps. A revised fan-control curve kept it below 106 C during a four-hour high-load test, with 3% more energy use. Replacing the compressor costs $180k and needs 36 hours down. An added alarm would detect overheating but not prevent the trip. Sustained energy increase above 5% is unacceptable, and downtime is especially costly for the next two weeks. What should we do next?",
+        "expected_revision": null
+      }
+    ]
+  },
+  {
+    "case_id": "RF-V07-EN02",
+    "family": "ENGINEER",
+    "title": "Database Burst Saturation",
+    "evaluator_key": {
+      "target_behavior": "Translate a sufficiently supported mechanism into a robust action under constraints: connect action to mechanism, compare reversible and irreversible options, define monitoring/rollback criteria, and account for important feedback or second-order effects without inventing unsupported causal certainty.",
+      "observations": [
+        "Tracing confirms write latency spikes when a batch processor releases large flushes that saturate the database write queue.",
+        "Capping each flush and smoothing releases removed the latency spikes in a six-hour production shadow test.",
+        "The cap adds about 7 minutes to batch completion, within the 15-minute SLA margin.",
+        "A larger database tier costs substantially more and requires a maintenance window; alerting alone would not prevent saturation."
+      ],
+      "constraints": [
+        "Batch completion may not slip more than 15 minutes.",
+        "Interactive write p99 must remain below the current SLO.",
+        "A maintenance window is unavailable this week."
+      ],
+      "acceptable_interventions": [
+        "Deploy the reversible flush cap/smoothing control with p99 and batch-duration guardrails, then validate across representative load before deciding on capacity expansion.",
+        "Keep open the possibility that capacity remains insufficient under other workloads; do not treat one shadow test as proof that scaling is unnecessary.",
+        "Use alerting as observability, not as the primary corrective mechanism."
+      ],
+      "scoring_notes": [
+        "Reward explicit guardrails, rollback criteria, and residual-capacity checks; penalize unnecessary irreversible scaling or unsupported certainty."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Tracing confirms our interactive write-latency spikes occur when a batch processor releases large flushes that saturate the database write queue. Capping each flush and smoothing releases removed the spikes in a six-hour production shadow test, adding about 7 minutes to batch completion. We have 15 minutes of SLA margin. A larger database tier costs much more and needs a maintenance window we do not have this week; alerting alone would not prevent saturation. Interactive write p99 must stay under the current SLO. What should we do next?",
+        "expected_revision": null
+      }
+    ]
+  }
+]
