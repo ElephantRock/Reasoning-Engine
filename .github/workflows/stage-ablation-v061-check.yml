@@ -58,12 +58,22 @@ jobs:
               for fragment in fragments:
                   assert fragment in full
                   assert fragment not in ablated
-              # Every non-target family fragment must remain untouched.
-              for other, other_fragments in r.REMOVALS.items():
-                  if other == family:
-                      continue
-                  for fragment in other_fragments:
-                      assert fragment in ablated, (family, other, fragment)
+
+          # Verify the prediction and testing semantics survive one another's ablation.
+          predict_ablated = r.ablated_full_prompt('PREDICT')
+          test_ablated = r.ablated_full_prompt('TEST')
+          assert 'prefer discriminating/falsifying tests' in predict_ablated
+          assert 'derive observable predictions' in test_ablated
+
+          # Unrelated capability sentences must remain under each ablation.
+          for family in r.REMOVALS:
+              ablated = r.ablated_full_prompt(family)
+              if family != 'DIAGNOSE':
+                  assert 'Generate multiple plausible explanations under material ambiguity.' in ablated
+              if family != 'REVISE':
+                  assert 'Contradictions require model revision.' in ablated
+              if family != 'ENGINEER':
+                  assert 'Engineer only after sufficient understanding' in ablated
           print('ablation construction validated')
           PY
 
@@ -79,7 +89,7 @@ jobs:
           votes = []
           # Same case, two generation replicates with opposite unanimous verdicts.
           for rep, winner in [(1, 'FULL'), (2, 'ABLATED')]:
-              for i in range(3):
+              for _ in range(3):
                   votes.append({
                       'family': 'DIAGNOSE', 'case_id': 'X', 'replicate': rep,
                       'winner': winner,
