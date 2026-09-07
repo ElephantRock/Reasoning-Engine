@@ -1,0 +1,167 @@
+[
+  {
+    "case_id": "RF-V10-TS01",
+    "family": "TEST",
+    "title": "Intermittent Checkout Failures",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A checkout service began returning 3-5% 502s after two changes landed within the same hour: a new edge-cache rule and a database connection-pool increase. Failed requests are concentrated in one region. Successful-request p95 latency is unchanged. Application logs contain no request record for most failures, while edge logs show upstream connection resets. A full rollback of both changes would interrupt a major promotion, but you can make one small reversible change or collect one targeted observation before deciding. What should the team do next, and why?"
+      }
+    ],
+    "evaluator_key": {
+      "target_behavior": "Chooses an evidence-gathering action that can discriminate the leading mechanisms, states distinct observable consequences expected under the competing mechanisms before the result is known, and explains how materially different outcomes would change the next decision rather than merely seeking confirmation.",
+      "observations": [
+        "502s began after an edge-cache rule and DB pool increase landed close together.",
+        "Failures are concentrated in one region.",
+        "Successful-request p95 latency is unchanged.",
+        "Most failed requests have no application request record.",
+        "Edge logs show upstream connection resets.",
+        "One small reversible change or one targeted observation is available before a broader rollback decision."
+      ],
+      "not_observed": [
+        "No evidence establishes that the cache rule or DB pool change is causal.",
+        "Flat latency among successful requests does not by itself prove failures occur before application code.",
+        "No region-matched control intervention has yet been performed."
+      ],
+      "plausible_hypotheses": [
+        "The regional edge path or new cache behavior is causing upstream resets before requests reach the application.",
+        "The DB pool change is indirectly causing connection churn or resets that surface at the edge.",
+        "A regional network/upstream dependency issue coincident with the deployments is responsible."
+      ],
+      "discriminating_evidence": [
+        "Route a small affected-region cohort through the previous edge/cache path while leaving the DB pool change in place, then compare failure rate and edge reset signatures.",
+        "Alternatively compare affected and unaffected regions on upstream reset counters and connection targets while holding application version constant.",
+        "A useful answer states what result would weaken or strengthen each leading explanation and what action follows from each result."
+      ],
+      "constraints": [
+        "Avoid broad interruption during the promotion.",
+        "Prefer a small reversible action or targeted observation before a full rollback."
+      ],
+      "scoring_notes": [
+        "Reward discriminating value and explicit outcome-dependent updating.",
+        "Do not reward a generic 'gather more logs' recommendation unless it identifies what observation separates the mechanisms.",
+        "Do not reward immediate causal certainty from temporal coincidence."
+      ]
+    }
+  },
+  {
+    "case_id": "RF-V10-TS02",
+    "family": "TEST",
+    "title": "Memory Pressure After Runtime Upgrade",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A batch-processing fleet started OOM-killing workers after a runtime upgrade. At the same time, a new input source increased average record size by 18%. Heap snapshots from surviving workers show similar retained-object composition to before the incident, but resident memory rises faster during long jobs. GC pause time is modestly higher. You can change only one factor on a small canary fleet for the next processing window before deciding whether to revert the runtime or throttle the new source. What should you do next?"
+      }
+    ],
+    "evaluator_key": {
+      "target_behavior": "Chooses a falsification-capable or discriminating evidence action, derives prospective outcome patterns that differ across the leading explanations, and ties each materially different outcome to an explicit update in diagnosis or decision.",
+      "observations": [
+        "OOM kills began after a runtime upgrade and an 18% average record-size increase from a new source.",
+        "Heap retained-object composition in surviving workers looks similar to baseline.",
+        "Resident memory rises faster during long jobs.",
+        "GC pause time is modestly higher.",
+        "Only one factor can be changed on a small canary fleet in the next window."
+      ],
+      "not_observed": [
+        "No controlled comparison has isolated runtime effects from workload-size effects.",
+        "Heap snapshots alone do not rule out native/runtime memory growth.",
+        "The record-size increase alone has not been shown sufficient to explain the OOMs."
+      ],
+      "plausible_hypotheses": [
+        "The runtime upgrade introduced higher native or allocator memory retention under long jobs.",
+        "The larger records increased peak live-set or buffering enough to cross memory limits.",
+        "The two changes interact, with the new runtime behaving poorly only at the larger record size."
+      ],
+      "discriminating_evidence": [
+        "On a small canary, revert the runtime while processing the same new-source workload and compare RSS growth, heap use, and OOM incidence against current-runtime peers.",
+        "A decisive answer states what persistence versus disappearance of excess RSS growth would imply and how that changes the revert/throttle decision.",
+        "A complementary design could hold runtime fixed and downsample record size, but only one factor may be changed now."
+      ],
+      "constraints": [
+        "Only one factor may be changed on a small canary fleet in the next window.",
+        "The decision is between reverting the runtime and throttling the new source."
+      ],
+      "scoring_notes": [
+        "Reward a controlled change that preserves the other factor and distinguishes mechanisms.",
+        "Reward prospective predictions and explicit outcome-conditioned updates.",
+        "Penalize confirmation-only checks or a recommendation that does not say how the result changes the decision."
+      ]
+    }
+  },
+  {
+    "case_id": "RF-V10-EN01",
+    "family": "ENGINEER",
+    "title": "Conveyor Sensor Drift",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A packaging line's false jam stops have been traced to one photoelectric sensor model whose signal drifts upward as the enclosure warms. Bench measurements reproduce the drift, and swapping in a temperature-compensated sensor removes it. The line must keep shipping; replacing every sensor immediately would require a long shutdown. Operators can change thresholds, replace sensors during short planned pauses, and monitor stop rate plus missed-item rate. What operating plan should the plant adopt?"
+      }
+    ],
+    "evaluator_key": {
+      "target_behavior": "Translates a sufficiently supported mechanism into a robust intervention under constraints, links actions to the mechanism, compares reversible and irreversible options, defines monitoring and rollback criteria, and accounts for important side effects or feedback rather than jumping directly to a single irreversible fix.",
+      "observations": [
+        "False jam stops are traced to thermal drift in one photoelectric sensor model.",
+        "Bench measurements reproduce the drift.",
+        "A temperature-compensated replacement removes the drift.",
+        "An immediate fleet-wide replacement would require a long shutdown.",
+        "Thresholds can be changed and sensors can be replaced during short planned pauses.",
+        "Stop rate and missed-item rate are monitorable."
+      ],
+      "constraints": [
+        "The line must continue shipping.",
+        "Avoid a long immediate shutdown.",
+        "Any threshold change must not create unacceptable missed-item risk."
+      ],
+      "acceptable_interventions": [
+        "Use a bounded temporary threshold adjustment only if monitored missed-item risk remains acceptable.",
+        "Prioritize staged replacement of the drifting sensor model during short planned pauses.",
+        "Define rollback limits for temporary threshold changes and completion criteria for the replacement program.",
+        "Monitor both false stops and missed-item rate so the temporary mitigation does not hide a new failure mode."
+      ],
+      "scoring_notes": [
+        "Reward a staged, mechanism-linked plan rather than a one-shot fix.",
+        "Reward explicit reversible mitigation, monitoring, rollback, and eventual removal of the temporary workaround.",
+        "Penalize raising thresholds without guarding against missed items."
+      ]
+    }
+  },
+  {
+    "case_id": "RF-V10-EN02",
+    "family": "ENGINEER",
+    "title": "Fraud Rule False Positives",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A fraud team's investigation shows that a newly introduced rule is responsible for most of a sudden increase in false declines. The rule keys heavily on a device attribute that changed format for a large legitimate mobile-app cohort. Removing the rule entirely would also remove protection against a known fraud pattern. The system supports rule shadowing, cohort-specific weighting, small traffic canaries, manual-review sampling, and rapid rollback. What should the team deploy?"
+      }
+    ],
+    "evaluator_key": {
+      "target_behavior": "Designs an intervention from the validated mechanism while respecting constraints, compares reversible and irreversible options, uses staged deployment where appropriate, specifies monitoring and rollback criteria, and considers second-order effects such as fraud leakage or hidden false-positive shifts.",
+      "observations": [
+        "The new fraud rule causes most of the false-decline increase.",
+        "The rule depends heavily on a device attribute whose format changed for a large legitimate mobile cohort.",
+        "Removing the rule entirely would weaken protection against a known fraud pattern.",
+        "Shadowing, cohort-specific weighting, small canaries, manual-review sampling, and rapid rollback are available."
+      ],
+      "constraints": [
+        "Reduce false declines without materially increasing fraud loss.",
+        "Avoid an irreversible all-traffic change before observing effects.",
+        "Preserve protection for cohorts where the device attribute remains informative."
+      ],
+      "acceptable_interventions": [
+        "Down-weight or bypass the affected device feature for the impacted legitimate cohort rather than deleting the rule globally.",
+        "Use shadow evaluation or a small canary before broader rollout.",
+        "Monitor false-decline rate, fraud capture/loss, cohort shifts, and manual-review samples.",
+        "Define explicit rollback thresholds and a path to repair feature parsing or rule logic rather than leaving a permanent blanket exception."
+      ],
+      "scoring_notes": [
+        "Reward mechanism-specific mitigation with staged rollout and dual-sided monitoring.",
+        "Reward preservation of fraud protection where the feature remains valid.",
+        "Penalize globally disabling the rule without a compensating control or monitoring plan."
+      ]
+    }
+  }
+]
