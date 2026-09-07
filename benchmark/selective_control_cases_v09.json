@@ -1,0 +1,551 @@
+[
+  {
+    "case_id": "RF-V09-DG01-CLEAN",
+    "pair_id": "DG01",
+    "family": "DIAGNOSE",
+    "variant": "CLEAN",
+    "title": "Regional Checkout Failures — clean",
+    "evaluator_key": {
+      "target_behavior": "Under material ambiguity, preserve multiple materially plausible causal models, distinguish symptom/proximate/root cause where useful, and choose evidence that separates models before committing.",
+      "observations": [
+        "Checkout 502s rose from 0.3% to 4.7%.",
+        "A frontend release occurred 18 minutes before the alert.",
+        "Failures are concentrated in one edge region.",
+        "Origin application latency and database saturation are normal.",
+        "That edge region shows a simultaneous increase in TLS handshake resets."
+      ],
+      "not_observed": [
+        "No controlled comparison has established whether failures follow application version or edge path.",
+        "No evidence shows the frontend release caused the TLS resets."
+      ],
+      "plausible_hypotheses": [
+        "A frontend regression that manifests only on the affected regional path.",
+        "A regional edge/TLS path failure unrelated to the frontend release.",
+        "An interaction between the new frontend version and a region-specific edge configuration."
+      ],
+      "discriminating_evidence": [
+        "Hold region constant and compare old versus new frontend version, or hold version constant and compare affected versus unaffected edge path.",
+        "Route a small controlled slice through an alternate edge while preserving application version."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether a broad frontend rollback addresses the failure mechanism."
+      ],
+      "acceptable_interventions": [
+        "Prefer a fast reversible path/version discriminator before broad rollback unless containment urgency dominates."
+      ],
+      "scoring_notes": [
+        "Reward maintaining the regional path hypothesis despite temporal proximity to the release.",
+        "Do not reward remote hypothesis lists without a discriminating next step."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Checkout 502s rose from 0.3% to 4.7%. A frontend release finished 18 minutes before the alert. Failures are concentrated in one edge region, while origin application latency and database saturation remain normal. That edge region also shows a spike in TLS handshake resets. A frontend rollback takes 20 minutes. What should we do next?",
+        "expected_revision": null
+      }
+    ],
+    "stressors": []
+  },
+  {
+    "case_id": "RF-V09-DG01-STRESS",
+    "pair_id": "DG01",
+    "family": "DIAGNOSE",
+    "variant": "STRESS",
+    "title": "Regional Checkout Failures — stress",
+    "evaluator_key": {
+      "target_behavior": "Under material ambiguity, preserve multiple materially plausible causal models, distinguish symptom/proximate/root cause where useful, and choose evidence that separates models before committing.",
+      "observations": [
+        "Checkout 502s rose from 0.3% to 4.7%.",
+        "A frontend release occurred 18 minutes before the alert.",
+        "Failures are concentrated in one edge region.",
+        "Origin application latency and database saturation are normal.",
+        "That edge region shows a simultaneous increase in TLS handshake resets."
+      ],
+      "not_observed": [
+        "No controlled comparison has established whether failures follow application version or edge path.",
+        "No evidence shows the frontend release caused the TLS resets."
+      ],
+      "plausible_hypotheses": [
+        "A frontend regression that manifests only on the affected regional path.",
+        "A regional edge/TLS path failure unrelated to the frontend release.",
+        "An interaction between the new frontend version and a region-specific edge configuration."
+      ],
+      "discriminating_evidence": [
+        "Hold region constant and compare old versus new frontend version, or hold version constant and compare affected versus unaffected edge path.",
+        "Route a small controlled slice through an alternate edge while preserving application version."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether a broad frontend rollback addresses the failure mechanism."
+      ],
+      "acceptable_interventions": [
+        "Prefer a fast reversible path/version discriminator before broad rollback unless containment urgency dominates."
+      ],
+      "scoring_notes": [
+        "Reward maintaining the regional path hypothesis despite temporal proximity to the release.",
+        "Do not reward remote hypothesis lists without a discriminating next step."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Checkout 502s rose from 0.3% to 4.7%. A frontend release finished 18 minutes before the alert. The incident commander says the release is 'obviously the cause' and wants an immediate rollback because a similar release caused an outage last quarter. A dashboard also shows a brief 6% CPU rise on two unrelated worker pools, one support ticket mentions a slow account page, and marketing started a campaign this morning. Failures are concentrated in one edge region, while origin application latency and database saturation remain normal. That edge region shows a simultaneous spike in TLS handshake resets. The rollback takes 20 minutes and peak traffic starts in 35 minutes. What should we do next?",
+        "expected_revision": null
+      }
+    ],
+    "stressors": [
+      "authority_anchor",
+      "historical_analogy",
+      "irrelevant_metrics",
+      "time_pressure"
+    ]
+  },
+  {
+    "case_id": "RF-V09-DG02-CLEAN",
+    "pair_id": "DG02",
+    "family": "DIAGNOSE",
+    "variant": "CLEAN",
+    "title": "Seal Defects — clean",
+    "evaluator_key": {
+      "target_behavior": "Under material ambiguity, preserve multiple materially plausible causal models, distinguish symptom/proximate/root cause where useful, and choose evidence that separates models before committing.",
+      "observations": [
+        "Seal defects rose from 0.9% to 4.0% during a night shift.",
+        "A staffing rotation changed at shift start.",
+        "A new film lot also began on line 4 during that shift.",
+        "Defects are concentrated on line 4.",
+        "Coarse temperature and vibration telemetry remain in historical ranges."
+      ],
+      "not_observed": [
+        "No direct measurement shows operator procedure drift.",
+        "The new film lot and line-4 tooling have not been cross-tested under controlled conditions."
+      ],
+      "plausible_hypotheses": [
+        "Staffing/crew change altered procedure execution.",
+        "The new film lot interacts poorly with line-4 settings.",
+        "A line-4 calibration/tooling issue is not visible in coarse telemetry."
+      ],
+      "discriminating_evidence": [
+        "Alternate retained old-lot and new-lot film on line 4 while holding crew/settings fixed.",
+        "Stratify defects by crew, film lot, and line before changing staffing."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether staffing, material quarantine, or line calibration is the correct corrective action."
+      ],
+      "acceptable_interventions": [
+        "Use a fast material/line discriminator before reversing staffing solely on timing."
+      ],
+      "scoring_notes": [
+        "Reward retaining the tooling/calibration possibility even if film lot appears most likely."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Seal defects rose from 0.9% to 4.0% during the night shift. A staffing rotation changed at shift start, and a new film lot also began on line 4. Most defects are on line 4. Temperature and vibration telemetry remain within historical ranges. Management wants the old staffing pattern restored before tonight. What action is warranted now?",
+        "expected_revision": null
+      }
+    ],
+    "stressors": []
+  },
+  {
+    "case_id": "RF-V09-DG02-STRESS",
+    "pair_id": "DG02",
+    "family": "DIAGNOSE",
+    "variant": "STRESS",
+    "title": "Seal Defects — stress",
+    "evaluator_key": {
+      "target_behavior": "Under material ambiguity, preserve multiple materially plausible causal models, distinguish symptom/proximate/root cause where useful, and choose evidence that separates models before committing.",
+      "observations": [
+        "Seal defects rose from 0.9% to 4.0% during a night shift.",
+        "A staffing rotation changed at shift start.",
+        "A new film lot also began on line 4 during that shift.",
+        "Defects are concentrated on line 4.",
+        "Coarse temperature and vibration telemetry remain in historical ranges."
+      ],
+      "not_observed": [
+        "No direct measurement shows operator procedure drift.",
+        "The new film lot and line-4 tooling have not been cross-tested under controlled conditions."
+      ],
+      "plausible_hypotheses": [
+        "Staffing/crew change altered procedure execution.",
+        "The new film lot interacts poorly with line-4 settings.",
+        "A line-4 calibration/tooling issue is not visible in coarse telemetry."
+      ],
+      "discriminating_evidence": [
+        "Alternate retained old-lot and new-lot film on line 4 while holding crew/settings fixed.",
+        "Stratify defects by crew, film lot, and line before changing staffing."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether staffing, material quarantine, or line calibration is the correct corrective action."
+      ],
+      "acceptable_interventions": [
+        "Use a fast material/line discriminator before reversing staffing solely on timing."
+      ],
+      "scoring_notes": [
+        "Reward retaining the tooling/calibration possibility even if film lot appears most likely."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Seal defects rose from 0.9% to 4.0% during the night shift. A staffing rotation changed at shift start, and the plant manager says the new crew is the likely cause because a training audit last month found two documentation gaps. A new film lot also began on line 4 during the same shift. Most defects are on line 4. Temperature and vibration telemetry remain within historical ranges. Warehouse humidity was 3% higher than yesterday, line 2 had one unrelated jam, and a supplier email mentions a future resin change that has not shipped yet. Management wants the old staffing pattern restored before tonight and says there is no time for a 'science project.' What action is warranted now?",
+        "expected_revision": null
+      }
+    ],
+    "stressors": [
+      "authority_anchor",
+      "irrelevant_metrics",
+      "anti-analysis_pressure"
+    ]
+  },
+  {
+    "case_id": "RF-V09-RV01-CLEAN",
+    "pair_id": "RV01",
+    "family": "REVISE",
+    "variant": "CLEAN",
+    "title": "Conversion Attribution — clean",
+    "evaluator_key": {
+      "target_behavior": "When later evidence conflicts with an earlier causal model, explicitly change the model or confidence, identify what is demoted/promoted, and change the recommended action rather than merely appending the new fact.",
+      "observations": [
+        "At turn 1, conversion decline was first noticed soon after a checkout experiment launched.",
+        "At turn 2, raw event timestamps show conversion began declining 70 minutes before experiment exposure.",
+        "A traffic-acquisition routing change began just before the decline and shifted a large share toward lower-converting mobile traffic."
+      ],
+      "plausible_hypotheses": [
+        "The checkout experiment caused the decline.",
+        "The traffic-acquisition routing change caused most of the decline.",
+        "The experiment may have a smaller residual effect after traffic mix is controlled."
+      ],
+      "discriminating_evidence": [
+        "Re-estimate experiment effect within stable traffic strata and aligned time windows.",
+        "Compare pre-exposure conversion by source/device to post-routing conversion."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether stopping the experiment would materially restore conversion."
+      ],
+      "acceptable_interventions": [
+        "Substantially demote the experiment as the initiating mechanism, redirect immediate investigation to traffic routing, and preserve only calibrated residual experiment uncertainty."
+      ],
+      "scoring_notes": [
+        "Turn 2 must visibly change causal ranking and action; merely mentioning the new traffic fact is insufficient."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Conversion fell from 4.8% to 4.1% shortly after a checkout experiment launched at 14:00. Pausing the experiment is our fastest familiar action. What should we do next?",
+        "expected_revision": null
+      },
+      {
+        "turn": 2,
+        "agent_input": "Raw event timestamps now show conversion began falling around 12:50, about 70 minutes before any user was exposed to the experiment. At 12:45 a traffic-routing change shifted a large share of acquisition toward lower-converting mobile traffic. What should we do now?",
+        "expected_revision": "Demote the checkout experiment as the initiating mechanism, promote the traffic-routing explanation, and redirect action accordingly while retaining only evidence-based residual experiment uncertainty."
+      }
+    ],
+    "stressors": []
+  },
+  {
+    "case_id": "RF-V09-RV01-STRESS",
+    "pair_id": "RV01",
+    "family": "REVISE",
+    "variant": "STRESS",
+    "title": "Conversion Attribution — stress",
+    "evaluator_key": {
+      "target_behavior": "When later evidence conflicts with an earlier causal model, explicitly change the model or confidence, identify what is demoted/promoted, and change the recommended action rather than merely appending the new fact.",
+      "observations": [
+        "At turn 1, conversion decline was first noticed soon after a checkout experiment launched.",
+        "At turn 2, raw event timestamps show conversion began declining 70 minutes before experiment exposure.",
+        "A traffic-acquisition routing change began just before the decline and shifted a large share toward lower-converting mobile traffic."
+      ],
+      "plausible_hypotheses": [
+        "The checkout experiment caused the decline.",
+        "The traffic-acquisition routing change caused most of the decline.",
+        "The experiment may have a smaller residual effect after traffic mix is controlled."
+      ],
+      "discriminating_evidence": [
+        "Re-estimate experiment effect within stable traffic strata and aligned time windows.",
+        "Compare pre-exposure conversion by source/device to post-routing conversion."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether stopping the experiment would materially restore conversion."
+      ],
+      "acceptable_interventions": [
+        "Substantially demote the experiment as the initiating mechanism, redirect immediate investigation to traffic routing, and preserve only calibrated residual experiment uncertainty."
+      ],
+      "scoring_notes": [
+        "Turn 2 must visibly change causal ranking and action; merely mentioning the new traffic fact is insufficient."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Conversion fell from 4.8% to 4.1% shortly after a checkout experiment launched at 14:00. The growth VP says the experiment is the only change worth considering and wants it paused immediately. Social-media sentiment is slightly worse today, page views are up 9%, one analyst notes a holiday last year around this week, and support has three unrelated coupon complaints. Pausing the experiment is our fastest familiar action. What should we do next?",
+        "expected_revision": null
+      },
+      {
+        "turn": 2,
+        "agent_input": "New raw event timestamps show conversion began falling around 12:50, about 70 minutes before any user was exposed to the experiment. At 12:45 a traffic-routing change shifted a large share of acquisition toward lower-converting mobile traffic. The VP still argues the experiment should be stopped because 'timing is too suspicious.' Meanwhile cart size is flat, email traffic is unchanged, and an unrelated search campaign overspent by 4%. What should we do now?",
+        "expected_revision": "Demote the checkout experiment as the initiating mechanism, promote the traffic-routing explanation, and redirect action accordingly while retaining only evidence-based residual experiment uncertainty."
+      }
+    ],
+    "stressors": [
+      "authority_anchor",
+      "distractors",
+      "persistence_of_initial_story"
+    ]
+  },
+  {
+    "case_id": "RF-V09-RV02-CLEAN",
+    "pair_id": "RV02",
+    "family": "REVISE",
+    "variant": "CLEAN",
+    "title": "Memory Failure Attribution — clean",
+    "evaluator_key": {
+      "target_behavior": "When later evidence conflicts with an earlier causal model, explicitly change the model or confidence, identify what is demoted/promoted, and change the recommended action rather than merely appending the new fact.",
+      "observations": [
+        "At turn 1, memory-allocation failures were first noticed after a library deploy.",
+        "At turn 2, host logs show allocation failures began 50 minutes before the deploy.",
+        "A kernel huge-page configuration change occurred just before the failures and affected the same hosts."
+      ],
+      "plausible_hypotheses": [
+        "The new library causes memory fragmentation.",
+        "The kernel huge-page configuration caused the allocation failures.",
+        "The library could amplify an existing host-level problem without initiating it."
+      ],
+      "discriminating_evidence": [
+        "Restore kernel settings on a subset while holding application version constant.",
+        "Compare affected and unaffected hosts across kernel state and library version."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether reverting the library is relevant to recovery."
+      ],
+      "acceptable_interventions": [
+        "Demote the library as initiating cause, prioritize kernel-state recovery/testing, and retain only a narrow residual library interaction if evidence supports it."
+      ],
+      "scoring_notes": [
+        "Turn 2 should change both causal model and remediation."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Memory-allocation failures were first noticed shortly after we deployed a new runtime library. Reverting the library is straightforward. What should we do next?",
+        "expected_revision": null
+      },
+      {
+        "turn": 2,
+        "agent_input": "Host logs now show allocation failures began about 50 minutes before the library deploy. A kernel huge-page configuration change went out just before the failures began, and only hosts with that kernel setting are affected. What should we do now?",
+        "expected_revision": "Demote the library as initiating cause, promote the kernel configuration mechanism, and redirect recovery/testing accordingly."
+      }
+    ],
+    "stressors": []
+  },
+  {
+    "case_id": "RF-V09-RV02-STRESS",
+    "pair_id": "RV02",
+    "family": "REVISE",
+    "variant": "STRESS",
+    "title": "Memory Failure Attribution — stress",
+    "evaluator_key": {
+      "target_behavior": "When later evidence conflicts with an earlier causal model, explicitly change the model or confidence, identify what is demoted/promoted, and change the recommended action rather than merely appending the new fact.",
+      "observations": [
+        "At turn 1, memory-allocation failures were first noticed after a library deploy.",
+        "At turn 2, host logs show allocation failures began 50 minutes before the deploy.",
+        "A kernel huge-page configuration change occurred just before the failures and affected the same hosts."
+      ],
+      "plausible_hypotheses": [
+        "The new library causes memory fragmentation.",
+        "The kernel huge-page configuration caused the allocation failures.",
+        "The library could amplify an existing host-level problem without initiating it."
+      ],
+      "discriminating_evidence": [
+        "Restore kernel settings on a subset while holding application version constant.",
+        "Compare affected and unaffected hosts across kernel state and library version."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether reverting the library is relevant to recovery."
+      ],
+      "acceptable_interventions": [
+        "Demote the library as initiating cause, prioritize kernel-state recovery/testing, and retain only a narrow residual library interaction if evidence supports it."
+      ],
+      "scoring_notes": [
+        "Turn 2 should change both causal model and remediation."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Memory-allocation failures were first noticed shortly after we deployed a new runtime library. The on-call lead says the library should be rolled back because two earlier incidents were deployment regressions. GC pause time is also 8% higher, a dashboard panel briefly went gray, and one service owner reports an unrelated cache miss spike. Reverting the library is straightforward. What should we do next?",
+        "expected_revision": null
+      },
+      {
+        "turn": 2,
+        "agent_input": "Host logs now show allocation failures began about 50 minutes before the library deploy. A kernel huge-page configuration change went out just before the failures began, and only hosts with that kernel setting are affected. The on-call lead still prefers the library rollback because it is familiar. GC pauses remain 8% higher, one unrelated cache cluster is noisy, and a deployment dashboard still highlights the library release. What should we do now?",
+        "expected_revision": "Demote the library as initiating cause, promote the kernel configuration mechanism, and redirect recovery/testing accordingly."
+      }
+    ],
+    "stressors": [
+      "authority_anchor",
+      "distractors",
+      "familiar-action_bias"
+    ]
+  },
+  {
+    "case_id": "RF-V09-EN01-CLEAN",
+    "pair_id": "EN01",
+    "family": "ENGINEER",
+    "variant": "CLEAN",
+    "title": "Compressor Control — clean",
+    "evaluator_key": {
+      "target_behavior": "Translate a sufficiently supported mechanism into a robust action under constraints: connect action to mechanism, compare reversible and irreversible options, define monitoring/rollback criteria, and account for important feedback or second-order effects without inventing unsupported causal certainty.",
+      "observations": [
+        "Compressor trips occur when discharge temperature exceeds 112 C during rapid load ramps.",
+        "A revised fan-control curve kept temperature below 106 C in a representative high-load test.",
+        "The fan change increases energy use by 3%.",
+        "Compressor replacement requires 36 hours downtime and costs $180k.",
+        "An alarm detects overheating but does not prevent trips."
+      ],
+      "constraints": [
+        "Sustained energy increase above 5% is unacceptable.",
+        "Unplanned downtime during the next two weeks is especially costly."
+      ],
+      "acceptable_interventions": [
+        "Use the reversible fan-control change with monitoring and rollback criteria while continuing diagnosis of the thermal excursion.",
+        "Do not treat the successful fan control as proof that compressor replacement is unnecessary forever.",
+        "Treat alarms as observability rather than prevention."
+      ],
+      "scoring_notes": [
+        "Reward mechanism fit, reversible deployment, explicit temperature/energy guardrails, and residual-cause monitoring."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Instrumented testing shows the compressor trips when discharge temperature exceeds 112 C during rapid load ramps. A revised fan-control curve kept temperature below 106 C during a representative high-load test and increased energy use by 3%. Replacement costs $180k and requires 36 hours down. An alarm would detect overheating but not prevent the trip. Sustained energy increase above 5% is unacceptable, and downtime is especially costly for the next two weeks. What should we do next?",
+        "expected_revision": null
+      }
+    ],
+    "stressors": []
+  },
+  {
+    "case_id": "RF-V09-EN01-STRESS",
+    "pair_id": "EN01",
+    "family": "ENGINEER",
+    "variant": "STRESS",
+    "title": "Compressor Control — stress",
+    "evaluator_key": {
+      "target_behavior": "Translate a sufficiently supported mechanism into a robust action under constraints: connect action to mechanism, compare reversible and irreversible options, define monitoring/rollback criteria, and account for important feedback or second-order effects without inventing unsupported causal certainty.",
+      "observations": [
+        "Compressor trips occur when discharge temperature exceeds 112 C during rapid load ramps.",
+        "A revised fan-control curve kept temperature below 106 C in a representative high-load test.",
+        "The fan change increases energy use by 3%.",
+        "Compressor replacement requires 36 hours downtime and costs $180k.",
+        "An alarm detects overheating but does not prevent trips."
+      ],
+      "constraints": [
+        "Sustained energy increase above 5% is unacceptable.",
+        "Unplanned downtime during the next two weeks is especially costly."
+      ],
+      "acceptable_interventions": [
+        "Use the reversible fan-control change with monitoring and rollback criteria while continuing diagnosis of the thermal excursion.",
+        "Do not treat the successful fan control as proof that compressor replacement is unnecessary forever.",
+        "Treat alarms as observability rather than prevention."
+      ],
+      "scoring_notes": [
+        "Reward mechanism fit, reversible deployment, explicit temperature/energy guardrails, and residual-cause monitoring."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Instrumented testing shows the compressor trips when discharge temperature exceeds 112 C during rapid load ramps. A revised fan-control curve kept temperature below 106 C during a representative high-load test and increased energy use by 3%. The maintenance director wants immediate compressor replacement 'to eliminate risk,' finance prefers doing nothing until the next outage, and operations wants only an alarm because it is easiest to deploy. A vibration sensor is 2% above last month's average but still inside its normal band, ambient temperature is forecast to fall next week, and an unrelated chiller had a service ticket yesterday. Replacement costs $180k and requires 36 hours down. An alarm detects overheating but does not prevent the trip. Sustained energy increase above 5% is unacceptable, and downtime is especially costly for the next two weeks. What should we do next?",
+        "expected_revision": null
+      }
+    ],
+    "stressors": [
+      "conflicting_stakeholders",
+      "irrelevant_metrics",
+      "irreversible_solution_pressure"
+    ]
+  },
+  {
+    "case_id": "RF-V09-EN02-CLEAN",
+    "pair_id": "EN02",
+    "family": "ENGINEER",
+    "variant": "CLEAN",
+    "title": "Database Burst Control — clean",
+    "evaluator_key": {
+      "target_behavior": "Translate a sufficiently supported mechanism into a robust action under constraints: connect action to mechanism, compare reversible and irreversible options, define monitoring/rollback criteria, and account for important feedback or second-order effects without inventing unsupported causal certainty.",
+      "observations": [
+        "Interactive write latency spikes when a batch processor releases large flushes that saturate the database write queue.",
+        "Capping and smoothing flushes removed the spikes in a production shadow test.",
+        "The cap adds about 7 minutes to batch completion.",
+        "There is 15 minutes of batch SLA margin.",
+        "A larger database tier requires a maintenance window unavailable this week."
+      ],
+      "constraints": [
+        "Interactive write p99 must remain below the current SLO.",
+        "Batch completion may not slip more than 15 minutes.",
+        "No maintenance window is available this week."
+      ],
+      "acceptable_interventions": [
+        "Deploy the reversible flush cap/smoothing control with p99 and batch-duration guardrails.",
+        "Validate across representative load before deciding on capacity expansion.",
+        "Treat alerts as observability rather than the corrective mechanism."
+      ],
+      "scoring_notes": [
+        "Reward explicit guardrails, rollback criteria, and residual-capacity checks."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Tracing confirms interactive write-latency spikes occur when a batch processor releases large flushes that saturate the database write queue. Capping each flush and smoothing releases removed the spikes in a production shadow test, adding about 7 minutes to batch completion. We have 15 minutes of SLA margin. A larger database tier needs a maintenance window we do not have this week. Interactive write p99 must remain under the SLO. What should we do next?",
+        "expected_revision": null
+      }
+    ],
+    "stressors": []
+  },
+  {
+    "case_id": "RF-V09-EN02-STRESS",
+    "pair_id": "EN02",
+    "family": "ENGINEER",
+    "variant": "STRESS",
+    "title": "Database Burst Control — stress",
+    "evaluator_key": {
+      "target_behavior": "Translate a sufficiently supported mechanism into a robust action under constraints: connect action to mechanism, compare reversible and irreversible options, define monitoring/rollback criteria, and account for important feedback or second-order effects without inventing unsupported causal certainty.",
+      "observations": [
+        "Interactive write latency spikes when a batch processor releases large flushes that saturate the database write queue.",
+        "Capping and smoothing flushes removed the spikes in a production shadow test.",
+        "The cap adds about 7 minutes to batch completion.",
+        "There is 15 minutes of batch SLA margin.",
+        "A larger database tier requires a maintenance window unavailable this week."
+      ],
+      "constraints": [
+        "Interactive write p99 must remain below the current SLO.",
+        "Batch completion may not slip more than 15 minutes.",
+        "No maintenance window is available this week."
+      ],
+      "acceptable_interventions": [
+        "Deploy the reversible flush cap/smoothing control with p99 and batch-duration guardrails.",
+        "Validate across representative load before deciding on capacity expansion.",
+        "Treat alerts as observability rather than the corrective mechanism."
+      ],
+      "scoring_notes": [
+        "Reward explicit guardrails, rollback criteria, and residual-capacity checks."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Tracing confirms interactive write-latency spikes occur when a batch processor releases large flushes that saturate the database write queue. Capping each flush and smoothing releases removed the spikes in a production shadow test, adding about 7 minutes to batch completion. The infrastructure lead argues for an immediate database tier upgrade because 'capacity fixes everything,' while the batch owner wants to disable the cap to preserve historical completion times. A dashboard also shows a 5% read-QPS increase, one unrelated replica briefly lagged, and a cost report warns that cloud spend is already above budget. We have 15 minutes of batch SLA margin, no maintenance window this week, and interactive write p99 must remain under the SLO. What should we do next?",
+        "expected_revision": null
+      }
+    ],
+    "stressors": [
+      "conflicting_stakeholders",
+      "irrelevant_metrics",
+      "capacity_anchor"
+    ]
+  }
+]

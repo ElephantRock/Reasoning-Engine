@@ -1,0 +1,172 @@
+name: Selective Control v0.9 Static Check
+
+on:
+  pull_request:
+    paths:
+      - 'benchmark/run_v09.py'
+      - 'benchmark/selective_control_cases_v09.json'
+      - '.github/workflows/reasoning-selective-control-v09.yml'
+      - '.github/workflows/selective-control-v09-check.yml'
+      - 'docs/SELECTIVE_CONTROL_V0_9.md'
+      - 'README.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: benchmark
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Validate syntax and JSON
+        run: |
+          python -m py_compile run_v09.py
+          python -m json.tool selective_control_cases_v09.json > /dev/null
+
+      - name: Validate paired stress design and frozen modules
+        env:
+          OPENAI_API_KEY: unused-provider-shim
+          ZAI_API_KEY: unused-zai-shim
+          BENCHMARK_SUITE: combined
+        run: |
+          python - <<'PY'
+          import run_v09 as r
+          import run_v07 as v07
+          import run_v08 as v08
+
+          assert len(r.CASES) == 12
+          assert set(r.FAMILIES) == {'DIAGNOSE', 'REVISE', 'ENGINEER'}
+          assert set(r.VARIANTS) == {'CLEAN', 'STRESS'}
+          assert set(r.CONDITIONS) == {'CONTROL', 'ATTENTION', 'TARGET'}
+          assert r.GENERATION_REPLICATES == 3
+          assert r.JUDGE_VOTES == 3
+          assert r.STRESS_DROP_GATE == 0.5
+          assert r.RECOVERY_LIFT_GATE == 0.5
+          assert r.CONTROL == v08.CONTROL
+          assert r.ATTENTION == v08.ATTENTION
+          for family in r.FAMILIES:
+              assert r.TARGET_MODULES[family] == v07.TARGET_MODULES[family]
+              assert sum(c['family'] == family for c in r.CASES) == 4
+
+          pair_ids = sorted({c['pair_id'] for c in r.CASES})
+          assert len(pair_ids) == 6
+          for pair_id in pair_ids:
+              xs = [c for c in r.CASES if c['pair_id'] == pair_id]
+              assert len(xs) == 2
+              assert {c['variant'] for c in xs} == {'CLEAN', 'STRESS'}
+              clean = next(c for c in xs if c['variant'] == 'CLEAN')
+              stress = next(c for c in xs if c['variant'] == 'STRESS')
+              assert clean['family'] == stress['family']
+              assert clean['evaluator_key'] == stress['evaluator_key']
+              assert len(clean['turns']) == len(stress['turns'])
+              assert clean['stressors'] == []
+              assert stress['stressors']
+              clean_text = ' '.join(t['agent_input'] for t in clean['turns'])
+              stress_text = ' '.join(t['agent_input'] for t in stress['turns'])
+              assert len(stress_text) > len(clean_text)
+
+          forbidden = {
+              'DIAGNOSE': ['diagnos', 'hypoth'],
+              'REVISE': ['revise', 'revision', 'update your', 'reassess'],
+              'ENGINEER': ['engineer', 'intervention plan', 'design a solution'],
+          }
+          for case in r.CASES:
+              prompt = ' '.join(t['agent_input'].lower() for t in case['turns'])
+              for token in forbidden[case['family']]:
+                  assert token not in prompt, (case['case_id'], token)
+
+          print('v0.9 paired stress structure and frozen modules validated')
+          PY
+
+      - name: Validate stress and recovery gates
+        env:
+          OPENAI_API_KEY: unused-provider-shim
+          ZAI_API_KEY: unused-zai-shim
+          BENCHMARK_SUITE: combined
+        run: |
+          python - <<'PY'
+          import run_v09 as r
+
+          absolute = []
+          behavior = []
+          for family in r.FAMILIES:
+              absolute += [
+                  {'family': family, 'variant': 'CLEAN', 'condition': 'CONTROL', 'score': 4.0},
+                  {'family': family, 'variant': 'STRESS', 'condition': 'CONTROL', 'score': 3.0},
+              ]
+              behavior += [
+                  {'family': family, 'variant': 'CLEAN', 'target_score': 4.0, 'control_score': 4.0},
+                  {'family': family, 'variant': 'STRESS', 'target_score': 4.0, 'control_score': 3.0},
+              ]
+          out = r.stress_summary(absolute, behavior)
+          for family in r.FAMILIES:
+              assert out[family]['stress_behavior_drop'] == 1.0
+              assert out[family]['stress_effect_gate'] is True
+              assert out[family]['stress_target_minus_control_behavior_lift'] == 1.0
+              assert out[family]['recovery_gate'] is True
+
+          absolute_fail = [dict(x) for x in absolute]
+          for row in absolute_fail:
+              if row['variant'] == 'STRESS':
+                  row['score'] = 4.0
+          failed = r.stress_summary(absolute_fail, behavior)
+          for family in r.FAMILIES:
+              assert failed[family]['stress_effect_gate'] is False
+          print('v0.9 behavioral gate logic validated')
+          PY
+
+      - name: Validate quality aggregation identifiers and paired interaction
+        env:
+          OPENAI_API_KEY: unused-provider-shim
+          ZAI_API_KEY: unused-zai-shim
+          BENCHMARK_SUITE: combined
+        run: |
+          python - <<'PY'
+          import run_v09 as r
+
+          votes = []
+          for family in r.FAMILIES:
+              for base in ['A', 'B']:
+                  for variant, winner, score in [('CLEAN', 'CONTROL', 0.0), ('STRESS', 'TARGET', 1.0)]:
+                      votes.append({
+                          'case_id': f'{family}-{base}-{variant}',
+                          'case_pair_id': f'{family}-{base}',
+                          'pair_id': 'TARGET_vs_CONTROL',
+                          'family': family,
+                          'variant': variant,
+                          'replicate': 1,
+                          'winner': winner,
+                          'focal_score': score,
+                      })
+          quality = r.aggregate_quality(votes)
+          assert quality['TARGET_vs_CONTROL']['by_variant']['CLEAN']['score'] == 0.0
+          assert quality['TARGET_vs_CONTROL']['by_variant']['STRESS']['score'] == 1.0
+          interaction = r.paired_quality_interaction(votes)
+          for family in r.FAMILIES:
+              assert interaction[family]['mean_stress_minus_clean'] == 1.0
+              assert len(interaction[family]['pair_effects']) == 2
+          print('v0.9 quality identifiers and paired interaction validated')
+          PY
+
+      - name: Smoke import
+        env:
+          OPENAI_API_KEY: unused-provider-shim
+          ZAI_API_KEY: unused-zai-shim
+          BENCHMARK_SUITE: combined
+        run: python -c "import run_v09; print('run_v09 import ok')"
