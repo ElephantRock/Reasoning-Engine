@@ -1,1 +1,512 @@
-REPLACE_ME
+[
+  {
+    "case_id": "RF-V08-DG01",
+    "family": "DIAGNOSE",
+    "title": "Night-Shift Picking Errors",
+    "evaluator_key": {
+      "target_behavior": "Under material ambiguity, keep multiple materially plausible causal explanations alive, distinguish symptom/proximate/root cause where useful, and tie the next action to evidence that separates those models rather than collapsing early.",
+      "observations": [
+        "Picking errors rose from 0.7% to 3.8% after handheld scanner firmware was updated.",
+        "About 78% of errors occur on the night shift and 72% involve one family of small boxed parts.",
+        "A new barcode-label supplier began shipping labels for that part family during the same week.",
+        "Scanner battery and Wi-Fi telemetry are normal."
+      ],
+      "not_observed": [
+        "No controlled comparison has separated firmware version, shift, and label supplier.",
+        "No direct evidence establishes whether misreads, operator workflow, or label quality is driving the errors."
+      ],
+      "plausible_hypotheses": [
+        "Scanner firmware changed decoding behavior for marginal barcodes.",
+        "New labels have print/contrast characteristics that are harder to read.",
+        "Night-shift workflow or lighting interacts with either firmware or label quality."
+      ],
+      "discriminating_evidence": [
+        "Cross old/new firmware with retained old/new labels under the same lighting and operator conditions.",
+        "Stratify raw scan failures by firmware, shift, and label lot before a fleet-wide rollback."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether a firmware rollback would address the dominant mechanism or only disrupt operations."
+      ],
+      "acceptable_interventions": [
+        "Run a fast crossed scan check and contain the affected part family before a broad firmware rollback unless error severity requires immediate containment."
+      ],
+      "scoring_notes": [
+        "Reward material causal competition and an action that separates firmware, label, and shift effects rather than merely listing possibilities."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Picking errors rose from 0.7% to 3.8% after we updated handheld scanner firmware. About 78% of the errors are on the night shift and 72% involve one family of small boxed parts. A new barcode-label supplier began shipping labels for that part family during the same week. Scanner battery and Wi-Fi telemetry look normal. Rolling the firmware back across the fleet takes most of a shift. What should we do next?",
+        "expected_revision": null
+      }
+    ]
+  },
+  {
+    "case_id": "RF-V08-DG02",
+    "family": "DIAGNOSE",
+    "title": "Regional Charger Session Failures",
+    "evaluator_key": {
+      "target_behavior": "Under material ambiguity, keep multiple materially plausible causal explanations alive, distinguish symptom/proximate/root cause where useful, and tie the next action to evidence that separates those models rather than collapsing early.",
+      "observations": [
+        "Public charging session failures rose soon after a mobile-app release.",
+        "Failures are concentrated in vehicles running an older firmware branch and at stations behind one load-balancer cluster.",
+        "The same week, that cluster received a certificate-chain update.",
+        "Unaffected vehicle firmware succeeds at many of the same stations."
+      ],
+      "not_observed": [
+        "No matrix comparison has held vehicle firmware, app version, and load-balancer cluster constant.",
+        "No evidence yet isolates app logic, vehicle protocol behavior, certificate handling, or an interaction."
+      ],
+      "plausible_hypotheses": [
+        "App release changed session negotiation in a way older vehicles cannot handle.",
+        "Certificate-chain change breaks older vehicle or station trust handling.",
+        "An interaction between app release and the affected load-balancer cluster is required."
+      ],
+      "discriminating_evidence": [
+        "Compare old/new app versions on the same older vehicle firmware through affected and unaffected clusters.",
+        "Test certificate-chain rollback or alternate cluster routing while holding app and vehicle versions fixed."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether app rollback, cluster certificate rollback, or targeted routing is the least disruptive corrective action."
+      ],
+      "acceptable_interventions": [
+        "Prefer a small version-by-cluster discriminator and targeted containment over a global app rollback if safety and service levels permit."
+      ],
+      "scoring_notes": [
+        "A strong answer should avoid assuming that temporal proximity to the app release identifies the mechanism."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Charging-session failures rose from 1.2% to 6.4% shortly after a mobile-app release. Most failures involve cars on an older vehicle-firmware branch and stations behind one load-balancer cluster. That cluster also received a certificate-chain update this week. Newer vehicle firmware succeeds at many of the same stations. A global app rollback would affect all users. What should we do next?",
+        "expected_revision": null
+      }
+    ]
+  },
+  {
+    "case_id": "RF-V08-DG03",
+    "family": "DIAGNOSE",
+    "title": "Specimen Rejection Spike",
+    "evaluator_key": {
+      "target_behavior": "Under material ambiguity, keep multiple materially plausible causal explanations alive, distinguish symptom/proximate/root cause where useful, and tie the next action to evidence that separates those models rather than collapsing early.",
+      "observations": [
+        "Laboratory specimen rejection rose after a courier schedule was changed.",
+        "Most rejected specimens come from one collection site.",
+        "That site also began using a new lot of collection tubes the same morning.",
+        "Transit temperature loggers remain within specification."
+      ],
+      "not_observed": [
+        "Collection technique, tube lot, and transit-time effects have not been separated.",
+        "Temperature compliance does not establish that clotting, fill volume, or handling is normal."
+      ],
+      "plausible_hypotheses": [
+        "Longer or differently timed courier transit increased rejection.",
+        "The new tube lot has a defect or narrower handling tolerance.",
+        "A site-specific collection workflow issue coincided with the schedule change."
+      ],
+      "discriminating_evidence": [
+        "Compare retained old/new tube lots at the affected site under the same pickup schedule.",
+        "Compare rejection modes and transit times for the affected site against another site using the same courier schedule."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether to restore courier timing, quarantine tubes, or intervene at the collection site."
+      ],
+      "acceptable_interventions": [
+        "Contain patient risk while collecting a fast tube/site/schedule discriminator rather than treating timing alone as causal."
+      ],
+      "scoring_notes": [
+        "Reward attention to rejection mode and controlled separation of co-occurring changes."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Specimen rejection rose from 2% to 9% after we changed the courier pickup schedule. Most rejected samples are from one collection site. That site also started a new lot of collection tubes the same morning. Transit temperature loggers remain within specification. Restoring the old courier schedule is operationally expensive. What action is warranted now?",
+        "expected_revision": null
+      }
+    ]
+  },
+  {
+    "case_id": "RF-V08-DG04",
+    "family": "DIAGNOSE",
+    "title": "One-Zone Job Timeouts",
+    "evaluator_key": {
+      "target_behavior": "Under material ambiguity, keep multiple materially plausible causal explanations alive, distinguish symptom/proximate/root cause where useful, and tie the next action to evidence that separates those models rather than collapsing early.",
+      "observations": [
+        "Batch-job timeouts increased after a database index deployment.",
+        "Timeouts are concentrated in one availability zone.",
+        "Network retransmissions rose in that zone at roughly the same time.",
+        "Query plans on successful jobs show the intended new index."
+      ],
+      "not_observed": [
+        "No same-query comparison across zones and index states has been run.",
+        "Successful-query plans do not establish why failed jobs timed out."
+      ],
+      "plausible_hypotheses": [
+        "Index deployment created a pathological query-plan or lock behavior.",
+        "Availability-zone network degradation is the primary mechanism.",
+        "The index increases sensitivity to a zone-specific network or storage condition."
+      ],
+      "discriminating_evidence": [
+        "Route equivalent jobs across zones while holding index state fixed.",
+        "Temporarily disable the index on a small affected-zone cohort while preserving network path."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether reverting the index would restore service or merely remove a performance improvement while network impairment remains."
+      ],
+      "acceptable_interventions": [
+        "Use a narrow zone/index discriminator and route around the affected zone if feasible before broad rollback."
+      ],
+      "scoring_notes": [
+        "Reward recognizing that the zone concentration is mechanistically important without assuming it fully exonerates the index."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Batch-job timeouts jumped after a database index deployment. The timeouts are heavily concentrated in one availability zone, where network retransmissions also rose at about the same time. Successful jobs are using the intended new index. Reverting the index takes 45 minutes and removes an important performance improvement. What should we do next?",
+        "expected_revision": null
+      }
+    ]
+  },
+  {
+    "case_id": "RF-V08-DG05",
+    "family": "DIAGNOSE",
+    "title": "Coating Defects After Setpoint Change",
+    "evaluator_key": {
+      "target_behavior": "Under material ambiguity, keep multiple materially plausible causal explanations alive, distinguish symptom/proximate/root cause where useful, and tie the next action to evidence that separates those models rather than collapsing early.",
+      "observations": [
+        "Coating pinholes increased after a humidity setpoint change.",
+        "Most defects are from one curing oven.",
+        "A new solvent lot entered production on that oven during the same shift.",
+        "Plant-level humidity readings remain within the revised target range."
+      ],
+      "not_observed": [
+        "Local oven humidity, solvent properties, and oven airflow have not been independently checked.",
+        "Plant-level humidity does not prove local process conditions at the affected oven."
+      ],
+      "plausible_hypotheses": [
+        "Humidity setpoint reduced process margin.",
+        "New solvent lot changed evaporation or coating behavior.",
+        "Oven-local airflow or sensor bias created a local condition masked by plant telemetry."
+      ],
+      "discriminating_evidence": [
+        "Cross retained solvent lots on the affected oven under fixed local settings.",
+        "Measure local oven humidity/airflow and compare with another oven under the same plant setpoint."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether to reverse the plant humidity change, quarantine solvent, or service the affected oven."
+      ],
+      "acceptable_interventions": [
+        "Contain defective output and test local oven/solvent effects before a plant-wide setpoint reversal when feasible."
+      ],
+      "scoring_notes": [
+        "Reward distinguishing plant-level measurements from local process state."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Coating pinholes increased from 0.5% to 3.1% after we changed a plant humidity setpoint. Most defects are from one curing oven. A new solvent lot also entered production on that oven during the same shift. Plant-level humidity readings are within the revised target range. Reversing the plant setpoint affects every line. What should we do next?",
+        "expected_revision": null
+      }
+    ]
+  },
+  {
+    "case_id": "RF-V08-DG06",
+    "family": "DIAGNOSE",
+    "title": "Checkout Declines After Fraud Change",
+    "evaluator_key": {
+      "target_behavior": "Under material ambiguity, keep multiple materially plausible causal explanations alive, distinguish symptom/proximate/root cause where useful, and tie the next action to evidence that separates those models rather than collapsing early.",
+      "observations": [
+        "Checkout declines rose after a fraud-threshold change.",
+        "Most added declines are issuer soft-decline codes from one card BIN region.",
+        "The payment processor changed routing for that region the same afternoon.",
+        "Internal fraud-rule rejection counts increased only slightly."
+      ],
+      "not_observed": [
+        "No region-by-routing comparison has separated internal fraud decisions from issuer responses.",
+        "The fraud threshold may still alter transaction mix even if issuer codes dominate."
+      ],
+      "plausible_hypotheses": [
+        "Fraud-threshold change causes more transactions to fail or changes which transactions reach issuers.",
+        "Processor routing change increases issuer soft declines in the affected BIN region.",
+        "Threshold and routing interact by changing transaction characteristics or retry paths."
+      ],
+      "discriminating_evidence": [
+        "Compare issuer responses for the affected BIN region under old/new processor routes while holding fraud policy fixed.",
+        "Replay or shadow-score identical transactions under old/new fraud thresholds without changing external routing."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether relaxing fraud controls or restoring processor routing will reduce declines without increasing losses."
+      ],
+      "acceptable_interventions": [
+        "Avoid immediately weakening fraud controls solely because decline rate rose; separate issuer-routing and policy effects first."
+      ],
+      "scoring_notes": [
+        "Reward distinguishing internal decision codes from downstream issuer responses."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Checkout declines rose from 7% to 11% after we changed a fraud threshold. Most of the added declines are issuer soft-decline codes from one card BIN region. Our payment processor changed routing for that region the same afternoon. Internal fraud-rule rejection counts increased only slightly. Sales wants the fraud threshold relaxed immediately. What should we do next?",
+        "expected_revision": null
+      }
+    ]
+  },
+  {
+    "case_id": "RF-V08-RV01",
+    "family": "REVISE",
+    "title": "Autoscaler and Dependency Queue",
+    "evaluator_key": {
+      "target_behavior": "When later evidence conflicts with an earlier causal model, explicitly change the model or confidence, identify what is demoted/promoted, and change the recommended action rather than merely appending the new fact.",
+      "observations": [
+        "At turn 1, API latency appeared to rise after an autoscaler policy change.",
+        "At turn 2, raw traces place the onset before the policy change and show a dependency queue building first.",
+        "The autoscaler change may still affect recovery dynamics without initiating the incident."
+      ],
+      "plausible_hypotheses": [
+        "Autoscaler policy initiated latency by scaling too slowly.",
+        "Downstream dependency queue initiated latency; autoscaler behavior is secondary.",
+        "Both mechanisms contribute at different phases."
+      ],
+      "discriminating_evidence": [
+        "Use timestamps and queue depth to re-rank initiation mechanisms; compare recovery with autoscaler policy held fixed after dependency queue clears."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether reverting the autoscaler is relevant to immediate recovery or only later tuning."
+      ],
+      "acceptable_interventions": [
+        "Redirect immediate recovery to the dependency bottleneck while preserving a narrower secondary role for autoscaler tuning if supported."
+      ],
+      "scoring_notes": [
+        "The second response must materially re-rank causes and change action, not simply mention the new trace."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "API p99 latency climbed from 180 ms to 1.8 s shortly after we changed autoscaler scale-out thresholds. The fastest familiar action is to restore the old thresholds. What should we do now?",
+        "expected_revision": null
+      },
+      {
+        "turn": 2,
+        "agent_input": "New traces show the dependency request queue began growing 25 minutes before the autoscaler change. Worker saturation followed the queue growth; the new autoscaler policy went live later and added roughly four minutes to recovery after each burst. What should we do now?",
+        "expected_revision": "Demote the autoscaler change as the initiating mechanism, promote the dependency queue as primary, and retain the autoscaler only as a secondary recovery-amplification factor."
+      }
+    ]
+  },
+  {
+    "case_id": "RF-V08-RV02",
+    "family": "REVISE",
+    "title": "Warranty Claims and Climate",
+    "evaluator_key": {
+      "target_behavior": "When later evidence conflicts with an earlier causal model, explicitly change the model or confidence, identify what is demoted/promoted, and change the recommended action rather than merely appending the new fact.",
+      "observations": [
+        "At turn 1, warranty claims increased after a component supplier change.",
+        "At turn 2, the same failure mode appears in old-supplier units and is strongly concentrated in high-temperature regions.",
+        "New-supplier units may still show a modest excess within hot regions."
+      ],
+      "plausible_hypotheses": [
+        "New supplier is the primary cause.",
+        "Thermal operating environment is the primary driver across suppliers.",
+        "Supplier characteristics modify thermal sensitivity rather than initiate the failure alone."
+      ],
+      "discriminating_evidence": [
+        "Compare failure rates by supplier within matched temperature bands and by temperature within supplier."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether to stop the new supplier, change thermal protections, or do both selectively."
+      ],
+      "acceptable_interventions": [
+        "Shift from blanket supplier blame to temperature-centered mitigation and matched supplier comparison."
+      ],
+      "scoring_notes": [
+        "A strong second response should preserve the possible interaction while abandoning the original single-cause framing."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Warranty claims for a power module rose from 1.1% to 3.0% in the quarter after we introduced a new component supplier. Procurement can suspend that supplier this week. What should we do next?",
+        "expected_revision": null
+      },
+      {
+        "turn": 2,
+        "agent_input": "Matched serial data now show the same failure mode in units built with the old supplier, and failures for both suppliers are concentrated in regions with sustained ambient temperatures above 38 C. Within those hot regions, the new supplier is about 20% worse than the old one. What should we do now?",
+        "expected_revision": "Promote thermal environment as the primary common mechanism, demote supplier replacement as a complete explanation, and retain a smaller supplier-by-temperature interaction."
+      }
+    ]
+  },
+  {
+    "case_id": "RF-V08-RV03",
+    "family": "REVISE",
+    "title": "Landing Page and Traffic Mix",
+    "evaluator_key": {
+      "target_behavior": "When later evidence conflicts with an earlier causal model, explicitly change the model or confidence, identify what is demoted/promoted, and change the recommended action rather than merely appending the new fact.",
+      "observations": [
+        "At turn 1, conversion fell after a landing-page redesign.",
+        "At turn 2, only 30% of visitors saw the redesign while conversion fell similarly among unexposed visitors.",
+        "Paid-social traffic share increased sharply at the same time and has historically lower conversion."
+      ],
+      "plausible_hypotheses": [
+        "Redesign harmed conversion.",
+        "Traffic-source mix drove most of the aggregate decline.",
+        "Redesign may have a smaller subgroup effect."
+      ],
+      "discriminating_evidence": [
+        "Compare exposed and unexposed users within traffic source and use randomized assignment logs if available."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether reverting the redesign would recover conversion."
+      ],
+      "acceptable_interventions": [
+        "Do not attribute the aggregate decline primarily to the redesign after exposure data; investigate traffic mix and any residual treatment effect."
+      ],
+      "scoring_notes": [
+        "Reward changing the causal model based on exposure and subgroup evidence."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Site conversion fell from 4.8% to 4.1% during the week after a landing-page redesign. Marketing wants the old page restored today. What should we do next?",
+        "expected_revision": null
+      },
+      {
+        "turn": 2,
+        "agent_input": "Experiment logs show only 30% of visitors were actually exposed to the redesign, yet conversion fell by a similar amount among unexposed visitors. Paid-social traffic share also doubled that week, and that channel historically converts much lower. What should we do now?",
+        "expected_revision": "Substantially demote the redesign as the main explanation, promote traffic mix, and reserve a smaller redesign effect for within-source analysis."
+      }
+    ]
+  },
+  {
+    "case_id": "RF-V08-RV04",
+    "family": "REVISE",
+    "title": "Battery Drain and OS Patch",
+    "evaluator_key": {
+      "target_behavior": "When later evidence conflicts with an earlier causal model, explicitly change the model or confidence, identify what is demoted/promoted, and change the recommended action rather than merely appending the new fact.",
+      "observations": [
+        "At turn 1, battery complaints rose after an app update.",
+        "At turn 2, updated and non-updated users on the same OS build have similar drain, while a recent OS patch predicts the drain strongly.",
+        "A specific app background-sync feature may still exacerbate drain on the patched OS."
+      ],
+      "plausible_hypotheses": [
+        "App update is primary cause.",
+        "OS patch is primary cause.",
+        "App feature and OS patch interact."
+      ],
+      "discriminating_evidence": [
+        "Compare app versions within OS build and sync-feature states; reproduce drain with the patched OS under controlled app versions."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether app rollback would materially improve battery life."
+      ],
+      "acceptable_interventions": [
+        "Shift mitigation toward the OS interaction or feature-level containment rather than full app rollback if cohort data exonerates version."
+      ],
+      "scoring_notes": [
+        "Reward explicit re-ranking and action change while preserving interaction uncertainty."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Battery-drain complaints jumped after our mobile app update, and support is asking for an immediate rollback. What should we do next?",
+        "expected_revision": null
+      },
+      {
+        "turn": 2,
+        "agent_input": "Cohort data now show users on the same OS build have nearly identical drain whether or not they installed the app update. A phone OS patch released two days earlier strongly predicts the drain. One background-sync feature in our app appears to worsen the drain only on that patched OS. What should we do now?",
+        "expected_revision": "Demote the app-version rollback as the primary fix, promote the OS patch as the main driver, and retain the app sync feature as an interaction target."
+      }
+    ]
+  },
+  {
+    "case_id": "RF-V08-RV05",
+    "family": "REVISE",
+    "title": "Yield Loss and Irrigation",
+    "evaluator_key": {
+      "target_behavior": "When later evidence conflicts with an earlier causal model, explicitly change the model or confidence, identify what is demoted/promoted, and change the recommended action rather than merely appending the new fact.",
+      "observations": [
+        "At turn 1, yield loss followed a fertilizer formulation change.",
+        "At turn 2, untreated neighboring plots show similar loss and soil moisture logs reveal an irrigation-valve under-delivery across both groups.",
+        "The new fertilizer could still have a smaller interaction with water stress."
+      ],
+      "plausible_hypotheses": [
+        "Fertilizer change is primary cause.",
+        "Irrigation under-delivery is primary cause.",
+        "Fertilizer sensitivity interacts with water stress."
+      ],
+      "discriminating_evidence": [
+        "Compare treated and untreated plots at matched moisture levels and inspect yield recovery after irrigation correction."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether changing fertilizer is necessary once irrigation is corrected."
+      ],
+      "acceptable_interventions": [
+        "Correct irrigation first and preserve a smaller fertilizer interaction question for matched follow-up."
+      ],
+      "scoring_notes": [
+        "The second response should abandon fertilizer as the sole or dominant explanation."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Yield on several test plots fell about 12% after we switched fertilizer formulation. The agronomy team wants to switch back before the next application. What should we do next?",
+        "expected_revision": null
+      },
+      {
+        "turn": 2,
+        "agent_input": "New plot records show neighboring plots that kept the old fertilizer lost almost the same amount of yield. Soil-moisture logs also show one irrigation valve under-delivered water across both groups for most of the period. The new fertilizer plots may still be slightly worse at the lowest moisture levels. What should we do now?",
+        "expected_revision": "Promote irrigation under-delivery as the primary common cause, demote fertilizer reversion as the main fix, and retain a possible fertilizer-by-water-stress interaction."
+      }
+    ]
+  },
+  {
+    "case_id": "RF-V08-RV06",
+    "family": "REVISE",
+    "title": "Fraud Losses and Attack Onset",
+    "evaluator_key": {
+      "target_behavior": "When later evidence conflicts with an earlier causal model, explicitly change the model or confidence, identify what is demoted/promoted, and change the recommended action rather than merely appending the new fact.",
+      "observations": [
+        "At turn 1, fraud losses appeared to rise after a model threshold change.",
+        "At turn 2, backfilled timestamps show the attack began before the threshold change.",
+        "The lower threshold still increased approval of one attack subtype after the change."
+      ],
+      "plausible_hypotheses": [
+        "Threshold change initiated fraud increase.",
+        "External attack initiated the increase independently.",
+        "Threshold change amplified one subtype after onset."
+      ],
+      "discriminating_evidence": [
+        "Compare attack volume and approvals before/after threshold within attack subtype; shadow-score historical attack transactions under both thresholds."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether restoring the threshold is sufficient or only one containment step."
+      ],
+      "acceptable_interventions": [
+        "Treat the attack as primary, use threshold restoration selectively as amplification control, and add attack-specific mitigation."
+      ],
+      "scoring_notes": [
+        "Reward separating initiation from amplification and changing the containment plan accordingly."
+      ]
+    },
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Fraud losses rose sharply after we lowered a model threshold to reduce false declines. Risk wants the old threshold restored immediately. What should we do next?",
+        "expected_revision": null
+      },
+      {
+        "turn": 2,
+        "agent_input": "Backfilled event timestamps show the attack wave began about six hours before the threshold change. After the threshold change, approval rates increased mainly for one attack subtype, while the rest of the attack volume was already rising. What should we do now?",
+        "expected_revision": "Demote the threshold as the initiating cause, promote the external attack as primary, and retain the threshold as an amplifier for one subtype."
+      }
+    ]
+  }
+]
