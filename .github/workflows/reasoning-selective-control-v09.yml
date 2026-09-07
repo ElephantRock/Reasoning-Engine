@@ -1,0 +1,102 @@
+name: Reasoning Selective Control v0.9
+
+on:
+  workflow_dispatch:
+    inputs:
+      generation_replicates:
+        description: Stochastic target generations per case/condition
+        required: true
+        default: '3'
+      judge_votes:
+        description: Odd blinded behavior/quality votes per generated pair
+        required: true
+        default: '3'
+      target_model:
+        description: Z.AI target model ID
+        required: true
+        default: glm-5.1
+      judge_model:
+        description: Z.AI evaluator model ID
+        required: true
+        default: glm-5.1
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  selective-control-v09:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-v09-control]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 420
+    defaults:
+      run:
+        working-directory: benchmark
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      ZAI_JUDGE_API_KEY: ${{ secrets.ZAI_JUDGE_API_KEY }}
+      ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      ZAI_JUDGE_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      ZAI_TARGET_MODEL: ${{ inputs.target_model || 'glm-5.1' }}
+      ZAI_JUDGE_MODEL: ${{ inputs.judge_model || 'glm-5.1' }}
+      ZAI_JUDGE_TEMPERATURE: '0.2'
+      V09_GENERATION_REPLICATES: ${{ inputs.generation_replicates || '3' }}
+      V09_JUDGE_VOTES: ${{ inputs.judge_votes || '3' }}
+      V09_STRESS_DROP_GATE: '0.5'
+      V09_RECOVERY_LIFT_GATE: '0.5'
+      BENCHMARK_SUITE: combined
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Verify experiment configuration
+        shell: bash
+        run: |
+          if [ -z "$ZAI_API_KEY" ]; then
+            echo "ZAI_API_KEY repository secret is required." >&2
+            exit 1
+          fi
+          for value in "$V09_GENERATION_REPLICATES" "$V09_JUDGE_VOTES"; do
+            if ! [[ "$value" =~ ^[1-9][0-9]*$ ]]; then
+              echo "replicate/vote settings must be positive integers." >&2
+              exit 1
+            fi
+          done
+          if [ "$V09_GENERATION_REPLICATES" -ne 3 ]; then
+            echo "WARNING: preregistered v0.9 diagnostic uses exactly 3 target-generation replicates."
+          fi
+          if [ "$V09_JUDGE_VOTES" -lt 3 ] || [ $((V09_JUDGE_VOTES % 2)) -eq 0 ]; then
+            echo "judge votes must be an odd integer >= 3." >&2
+            exit 1
+          fi
+          if [ -z "$ZAI_JUDGE_API_KEY" ]; then
+            echo "ZAI_JUDGE_API_KEY is not set; evaluator will fall back to ZAI_API_KEY."
+          fi
+          if [ "$ZAI_TARGET_MODEL" = "$ZAI_JUDGE_MODEL" ]; then
+            echo "WARNING: same target/judge model; this remains development calibration rather than evaluator-independent validation."
+          fi
+
+      - name: Run selective control v0.9
+        run: python run_v09.py
+
+      - name: Upload v0.9 diagnostic results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reasoning-selective-control-v09-${{ github.run_id }}
+          path: benchmark/results_v09/
+          if-no-files-found: warn
+          retention-days: 30
