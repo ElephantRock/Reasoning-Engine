@@ -197,11 +197,11 @@ def quality_vote(
     focal_score = 0.5 if resolved == "TIE" else (1.0 if resolved == focal else 0.0)
     return {
         "case_id": case["case_id"],
-        "pair_id": case["pair_id"],
+        "case_pair_id": case["pair_id"],
+        "pair_id": spec["pair_id"],
         "family": case["family"],
         "variant": case["variant"],
         "replicate": run_x["replicate"],
-        "pair_spec": spec["pair_id"],
         "pair_role": spec["role"],
         "focal_condition": focal,
         "vote_index": vote_index,
@@ -285,7 +285,7 @@ def stress_summary(
 def aggregate_quality(votes: list[dict[str, Any]]) -> dict[str, Any]:
     result: dict[str, Any] = {}
     for spec in PAIR_SPECS:
-        spec_rows = [v for v in votes if v["pair_spec"] == spec["pair_id"]]
+        spec_rows = [v for v in votes if v["pair_id"] == spec["pair_id"]]
         by_variant: dict[str, Any] = {}
         for variant in VARIANTS:
             rows = [v for v in spec_rows if v["variant"] == variant]
@@ -308,17 +308,17 @@ def aggregate_quality(votes: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def paired_quality_interaction(votes: list[dict[str, Any]]) -> dict[str, Any]:
-    rows = [v for v in votes if v["pair_spec"] == "TARGET_vs_CONTROL"]
+    rows = [v for v in votes if v["pair_id"] == "TARGET_vs_CONTROL"]
     result: dict[str, Any] = {}
     for family in FAMILIES:
-        pair_ids = sorted({v["pair_id"] for v in rows if v["family"] == family})
+        pair_ids = sorted({v["case_pair_id"] for v in rows if v["family"] == family})
         pair_effects = []
         for pair_id in pair_ids:
             variant_scores = {}
             for variant in VARIANTS:
                 subset = [
                     v for v in rows
-                    if v["family"] == family and v["pair_id"] == pair_id and v["variant"] == variant
+                    if v["family"] == family and v["case_pair_id"] == pair_id and v["variant"] == variant
                 ]
                 by_rep = []
                 for rep in sorted({v["replicate"] for v in subset}):
