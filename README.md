@@ -20,7 +20,7 @@ The project currently asks, in order:
 
 1. **Does structured reasoning improve reasoning quality relative to an uncontrolled baseline?**
 2. **Which explicit controls reliably change reasoning behavior beyond the model's endogenous capability?**
-3. **When a behavior is successfully induced or recovered, does it improve reasoning quality?**
+3. **When a behavior is successfully induced, does it improve reasoning quality?**
 4. **Under what conditions does explicit control add value rather than redundant prompting?**
 5. **Do those effects replicate across cases, generations, model families, and independent evaluators?**
 6. **Only then: can the validated process be routed or compressed more cheaply?**
@@ -33,25 +33,19 @@ Quality is primary. Token count and latency remain descriptive diagnostics only.
 
 On 12 development/calibration cases:
 
-- **FULL vs BASELINE:** `0.7778`, 95% case-bootstrap interval `0.5833–0.9444`, 8 wins / 3 ties / 1 loss, mean repeated-judge agreement `0.9722`.
+- **FULL vs BASELINE:** `0.7778`, 95% case-bootstrap interval `0.5833–0.9444`, 8 wins / 3 ties / 1 loss.
 - **COMPACT vs BASELINE:** `0.8056`, interval `0.6250–0.9583`, 9 wins / 1 tie / 2 losses.
 - **FULL vs COMPACT:** `0.5833`, interval `0.4167–0.7500`, 6 wins / 3 ties / 3 losses.
 
-Interpretation: structured reasoning shows a strong quality signal over baseline on these development cases, but the full eight-stage protocol has not been shown superior to Compact.
+Interpretation: structured reasoning shows a strong quality signal over baseline on development cases, but the full eight-stage protocol has not been shown superior to Compact.
 
 See `docs/QUALITY_V0_5_RESULTS.md`.
 
 ### Stage Ablation v0.6.1 and replication
 
-v0.6.1 compared the production `FULL` prompt with `FULL` minus one explicit capability instruction.
+A leave-one-instruction-out experiment initially suggested several positive component effects, but a preregistered three-generation replication did not reproduce the original pattern.
 
-The original one-generation run suggested strong positive effects for `PREDICT`, `TEST`, `REVISE`, and `ENGINEER`, with a negative `DIAGNOSE` effect.
-
-A preregistered three-generation replication did **not** reproduce that pattern.
-
-Replication-only overall `FULL vs ABLATED` score: `0.433` with interval `0.250–0.606`.
-
-Combined four-generation stage scores, averaging generations within cases:
+Combined four-generation stage scores:
 
 - `DIAGNOSE`: `0.375`
 - `PREDICT`: `0.604`
@@ -59,110 +53,105 @@ Combined four-generation stage scores, averaging generations within cases:
 - `REVISE`: `0.458`
 - `ENGINEER`: `0.292`
 
-Combined overall score is approximately `0.492`.
+Combined overall score was approximately `0.492`.
 
-Inspection revealed the key identification problem:
+The key identification problem was that deleting an instruction often did **not** remove the underlying capability. The task wording and model priors could still elicit diagnosis, revision, or engineering.
 
-**removing an instruction does not necessarily remove the capability.**
-
-The task wording and model priors could still elicit diagnosis, revision, or engineering. Therefore v0.6.1 primarily measured the marginal effect of mentioning instruction fragments, not the causal value of the underlying capability.
+**Removing an instruction ≠ removing a capability.**
 
 See `docs/ABLATION_V0_6_1_REPLICATION_RESULTS.md`.
 
 ### Capability Identification v0.7
 
-v0.7 separated behavior manipulation from quality.
+v0.7 separated behavior manipulation from quality using `CONTROL`, generic `ATTENTION`, and capability-specific `TARGET` conditions.
 
-Three conditions were compared:
-
-- `CONTROL` — neutral reasoning core;
-- `ATTENTION` — CONTROL plus a generic extra quality-control pass;
-- `TARGET` — CONTROL plus a family-specific capability module.
-
-A separate blinded behavior judge measured whether TARGET actually increased target-behavior expression before quality effects were interpreted.
-
-Predeclared manipulation gate:
+Predeclared behavior gate:
 
 `TARGET behavior - CONTROL behavior >= 0.5` on a 0–4 scale.
 
 Results:
 
-- `ENGINEER`: behavior lift `+1.00`, gate **passed**; TARGET vs CONTROL quality `1.000`; TARGET vs ATTENTION `0.833`.
-- `DIAGNOSE`: behavior lift `+0.22`, gate **failed** because CONTROL was already near ceiling.
-- `REVISE`: behavior lift `+0.11`, gate **failed** because CONTROL was already near ceiling.
+- `ENGINEER`: pairwise behavior lift `+1.00`, TARGET vs CONTROL quality `1.000`, TARGET vs ATTENTION `0.833`.
+- `DIAGNOSE`: behavior lift `+0.22`; manipulation gate failed because CONTROL was already near ceiling.
+- `REVISE`: behavior lift `+0.11`; manipulation gate failed because CONTROL was already near ceiling.
 
-Interpretation: `ENGINEER` currently has positive instruction-mediated evidence. Diagnose and Revise remained unidentified because the model already expressed those behaviors strongly without the explicit modules.
+This made ENGINEER the strongest positive component candidate, while Diagnose and Revise remained unidentified.
 
 See `docs/CAPABILITY_IDENTIFICATION_V0_7.md`.
 
 ### Capability Screening v0.8
 
-v0.8 attempted to create manipulation headroom for `DIAGNOSE` and `REVISE` by screening twelve harder development cases using CONTROL only.
+v0.8 screened twelve harder Diagnose/Revise cases using CONTROL only to find behavioral headroom.
 
-Predeclared eligibility required:
+Eligibility required `CONTROL behavior <= 2.5/4` with at least one point of headroom.
 
-`CONTROL behavior <= 2.5/4`
+Observed CONTROL behavior remained approximately `3.83–4.00` for Diagnose and `4.00` for all Revise cases. No cases were eligible, so Stage 2 correctly did not run.
 
-with at least one point of headroom.
-
-Observed CONTROL behavior:
-
-- Diagnose cases: approximately `3.83–4.00`;
-- Revise cases: `4.00` across all six candidates.
-
-Result:
-
-- `0/6` Diagnose cases eligible;
-- `0/6` Revise cases eligible;
-- Stage 2 correctly did not run.
-
-Interpretation: on these development tasks, `glm-5.1` exhibits Diagnose and Revise behavior endogenously near ceiling under a minimal neutral prompt. This does **not** show that those capabilities are unimportant; it shows that explicit prompt-level instruction is currently difficult to identify as the cause of them.
-
-The resulting distinction is central:
+This strengthened a central distinction:
 
 **reasoning capability ≠ reasoning instruction**
 
-## Selective Control v0.9
+On these development tasks, `glm-5.1` often performs Diagnose and Revise endogenously without explicit stage instructions.
 
-The current experiment changes the research question from:
+### Selective Control v0.9
 
-> Does the model possess the capability?
+v0.9 tested whether adverse context would suppress endogenous reasoning and whether frozen capability modules could recover it.
 
-to:
+The run produced all 108 target generations, all 108 absolute behavior votes, all 108 paired behavior votes, and 323/324 quality votes before the GitHub-hosted runner time limit cancelled final report synthesis. Every primary `TARGET_vs_CONTROL` and `TARGET_vs_ATTENTION` quality vote completed.
 
-> **When adverse context suppresses endogenous reasoning, does explicit control recover the capability and improve quality beyond generic extra attention?**
+No family passed the preregistered stress-degradation gate:
 
-v0.9 uses six base problems, two each for:
+- `DIAGNOSE`: clean CONTROL `3.556`, stress CONTROL `3.722`, stress drop `-0.167`;
+- `REVISE`: `4.000 → 4.000`, stress drop `0.000`;
+- `ENGINEER`: `4.000 → 3.778`, stress drop `0.222`.
 
-- `DIAGNOSE`
-- `REVISE`
-- `ENGINEER`
+Therefore v0.9 did **not** establish stress-triggered selective recovery.
 
-Each base problem has paired variants:
+Descriptive quality nevertheless replicated a strong ENGINEER signal:
 
-- `CLEAN` — decisive evidence with little distraction;
-- `STRESS` — the same decisive evidence and correct action plus authority anchors, irrelevant metrics, conflicting stakeholder pressure, historical analogies, time pressure, or familiar-action bias.
+- TARGET vs CONTROL clean: `1.000`;
+- TARGET vs CONTROL stress: `0.972`;
+- TARGET vs ATTENTION clean: `1.000`;
+- TARGET vs ATTENTION stress: `1.000`.
 
-The production reasoning protocol is unchanged. Target modules are frozen byte-for-byte from v0.7.
+v0.9 also revealed a measurement warning: side-by-side behavior judging sometimes scored CONTROL materially lower than independent absolute judging, indicating a plausible contrast effect.
 
-Two behavioral gates must pass before stress-condition quality effects are interpreted:
+See `docs/SELECTIVE_CONTROL_V0_9_RESULTS.md`.
 
-1. **Stress gate:** `CLEAN CONTROL - STRESS CONTROL >= 0.5`
-2. **Recovery gate:** `STRESS TARGET - STRESS CONTROL >= 0.5`
+## Absolute Behavior Identification v0.10
 
-Only then are the following treated as selective-control evidence:
+The current experiment removes pairwise behavior scoring as the manipulation measure.
 
-- `TARGET vs CONTROL` under stress;
-- `TARGET vs ATTENTION` under stress;
-- `ATTENTION vs CONTROL` under stress.
+It tests two families:
 
-This tests a controller hypothesis:
+- `TEST` — the strongest unresolved positive directional signal from replicated v0.6.1;
+- `ENGINEER` — the positive-control family from v0.7/v0.9.
 
-**detect reasoning-risk condition → activate relevant capability control → verify outcome**
+Conditions remain:
 
-rather than forcing every stage on every problem.
+- `CONTROL` — neutral v0.7 core;
+- `ATTENTION` — generic extra quality-control pass;
+- `TARGET` — CONTROL plus the frozen capability module.
 
-See `docs/SELECTIVE_CONTROL_V0_9.md`.
+Every generated response is behavior-scored **independently** three times. No behavior judge sees two conditions side by side. The manipulation quantity is computed only afterward:
+
+`TARGET absolute behavior - CONTROL absolute behavior`
+
+Predeclared identification gate:
+
+`TARGET - CONTROL >= 0.5/4`
+
+Quality remains repeated blinded pairwise evaluation for:
+
+1. `TARGET_vs_CONTROL`;
+2. `TARGET_vs_ATTENTION`;
+3. `ATTENTION_vs_CONTROL`.
+
+A family's quality result is interpreted as instruction-mediated capability evidence only if the independent absolute behavior gate passes.
+
+Default run size is 4 cases × 3 conditions × 3 generations = 36 target generations, plus 108 single-response behavior judgments and 108 pairwise quality judgments. This is intentionally smaller than v0.9 to stay comfortably below hosted-runner limits.
+
+See `docs/ABSOLUTE_BEHAVIOR_IDENTIFICATION_V0_10.md`.
 
 ## Coupled systems
 
@@ -175,7 +164,7 @@ Protocol compliance is not evidence of improved reasoning by itself.
 
 ## Validation boundary
 
-All v0.5–v0.9 cases are development/calibration evidence.
+All v0.5–v0.10 cases are development/calibration evidence.
 
 Framework validation requires, after prompts and control policies are frozen:
 
