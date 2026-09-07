@@ -1,0 +1,159 @@
+name: Capability Identification v0.8 Static Check
+
+on:
+  pull_request:
+    paths:
+      - 'benchmark/run_v08.py'
+      - 'benchmark/capability_candidates_v08.json'
+      - '.github/workflows/reasoning-capability-v08.yml'
+      - '.github/workflows/capability-identification-v08-check.yml'
+      - 'docs/CAPABILITY_IDENTIFICATION_V0_8.md'
+      - 'docs/V0_7_RESULTS_AND_V0_8_PLAN.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: benchmark
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Validate syntax and JSON
+        run: |
+          python -m py_compile run_v08.py
+          python -m json.tool capability_candidates_v08.json > /dev/null
+
+      - name: Validate candidate bank and frozen modules
+        env:
+          OPENAI_API_KEY: unused-provider-shim
+          ZAI_API_KEY: unused-zai-shim
+          BENCHMARK_SUITE: combined
+        run: |
+          python - <<'PY'
+          import run_v07 as old
+          import run_v08 as r
+
+          assert len(r.CASES) == 12
+          assert set(r.FAMILIES) == {'DIAGNOSE', 'REVISE'}
+          assert set(r.TARGET_MODULES) == {'DIAGNOSE', 'REVISE'}
+          for family in r.FAMILIES:
+              assert sum(c['family'] == family for c in r.CASES) == 6
+              assert r.TARGET_MODULES[family] == old.TARGET_MODULES[family]
+
+          assert 'ENGINEER' not in r.TARGET_MODULES
+          for case in r.CASES:
+              assert r.system_for(case, 'CONTROL') == r.CONTROL
+              assert r.system_for(case, 'ATTENTION') == r.ATTENTION
+              assert r.system_for(case, 'TARGET') == r.CONTROL + r.TARGET_MODULES[case['family']]
+              assert r.TARGET_MODULES[case['family']] not in r.CONTROL
+              assert r.TARGET_MODULES[case['family']] not in r.ATTENTION
+
+          forbidden = {
+              'DIAGNOSE': ['diagnos', 'hypoth', 'root cause'],
+              'REVISE': ['revise', 'revision', 'update your model', 'reassess'],
+          }
+          for case in r.CASES:
+              prompt = ' '.join(t['agent_input'].lower() for t in case['turns'])
+              for token in forbidden[case['family']]:
+                  assert token not in prompt, (case['case_id'], token)
+
+          assert r.SCREEN_REPLICATES == 2
+          assert r.TEST_REPLICATES == 3
+          assert r.JUDGE_VOTES == 3
+          assert r.SCREEN_MAX_CONTROL == 2.5
+          assert r.MIN_HEADROOM == 1.0
+          assert r.SELECT_PER_FAMILY == 3
+          assert r.MIN_SELECTED == 2
+          assert r.MANIPULATION_LIFT_GATE == 0.5
+          print('v0.8 structure validated')
+          PY
+
+      - name: Validate screen selection integrity
+        env:
+          OPENAI_API_KEY: unused-provider-shim
+          ZAI_API_KEY: unused-zai-shim
+          BENCHMARK_SUITE: combined
+        run: |
+          python - <<'PY'
+          import inspect
+          import run_v08 as r
+
+          votes = []
+          means = {
+              'DIAGNOSE': [1.0, 1.5, 2.0, 2.4, 2.7, 3.2],
+              'REVISE': [0.5, 1.2, 2.1, 2.5, 2.8, 3.5],
+          }
+          for family, scores in means.items():
+              for i, score in enumerate(scores, 1):
+                  case_id = f'{family}-{i}'
+                  for rep in [1, 2]:
+                      for vote_index in [1, 2, 3]:
+                          votes.append({
+                              'family': family,
+                              'case_id': case_id,
+                              'screen_replicate': rep,
+                              'vote_index': vote_index,
+                              'score': score,
+                              # Deliberately irrelevant fields: selection must ignore them.
+                              'target_quality': 999 if i == 6 else -999,
+                              'target_behavior': 999 if i == 6 else -999,
+                          })
+          out = r.select_cases(votes)
+          assert out['DIAGNOSE']['selected_case_ids'] == ['DIAGNOSE-1', 'DIAGNOSE-2', 'DIAGNOSE-3']
+          assert out['REVISE']['selected_case_ids'] == ['REVISE-1', 'REVISE-2', 'REVISE-3']
+          assert out['DIAGNOSE']['proceed'] is True
+          assert out['REVISE']['proceed'] is True
+
+          src = inspect.getsource(r.main)
+          stage1, stage2 = src.split('# Stage 2:', 1)
+          assert 'generate(case, "CONTROL", replicate, "screen")' in stage1
+          assert 'generate(case, "TARGET", replicate, "screen")' not in stage1
+          assert 'generate(case, "ATTENTION", replicate, "screen")' not in stage1
+          assert 'for condition in ("CONTROL", "ATTENTION", "TARGET")' in stage2
+          print('screen selection integrity validated')
+          PY
+
+      - name: Validate insufficient-capacity behavior
+        env:
+          OPENAI_API_KEY: unused-provider-shim
+          ZAI_API_KEY: unused-zai-shim
+          BENCHMARK_SUITE: combined
+        run: |
+          python - <<'PY'
+          import run_v08 as r
+
+          votes = []
+          for family in r.FAMILIES:
+              for i in range(1, 7):
+                  score = 2.0 if i == 1 else 3.0
+                  for rep in [1, 2]:
+                      for v in [1, 2, 3]:
+                          votes.append({'family': family, 'case_id': f'{family}-{i}', 'score': score})
+          out = r.select_cases(votes)
+          assert out['DIAGNOSE']['proceed'] is False
+          assert out['REVISE']['proceed'] is False
+          print('insufficient capacity behavior validated')
+          PY
+
+      - name: Smoke import
+        env:
+          OPENAI_API_KEY: unused-provider-shim
+          ZAI_API_KEY: unused-zai-shim
+          BENCHMARK_SUITE: combined
+        run: python -c "import run_v08; print('run_v08 import ok')"
