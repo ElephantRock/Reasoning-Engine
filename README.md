@@ -18,11 +18,12 @@ Adaptive routing exists experimentally, but routing is deferred from the primary
 
 The project currently asks, in order:
 
-1. **Does explicit structured reasoning improve reasoning quality relative to an uncontrolled baseline?**
-2. **Which explicit reasoning instructions reliably change the intended reasoning behavior?**
-3. **When a behavior is successfully induced, does it improve reasoning quality?**
-4. **Do those effects replicate across cases, generations, and independent evaluators?**
-5. **Only then: can the validated process be routed or compressed more cheaply?**
+1. **Does structured reasoning improve reasoning quality relative to an uncontrolled baseline?**
+2. **Which explicit controls reliably change reasoning behavior beyond the model's endogenous capability?**
+3. **When a behavior is successfully induced or recovered, does it improve reasoning quality?**
+4. **Under what conditions does explicit control add value rather than redundant prompting?**
+5. **Do those effects replicate across cases, generations, model families, and independent evaluators?**
+6. **Only then: can the validated process be routed or compressed more cheaply?**
 
 Quality is primary. Token count and latency remain descriptive diagnostics only.
 
@@ -60,78 +61,136 @@ Combined four-generation stage scores, averaging generations within cases:
 
 Combined overall score is approximately `0.492`.
 
-Inspection of the raw response pairs revealed an identification problem: deleting an instruction fragment often did **not** remove the underlying reasoning behavior. The task wording and model priors could still elicit diagnosis, revision, or engineering. Therefore v0.6.1 primarily measures the marginal effect of mentioning an instruction fragment, not the causal value of possessing/executing the capability itself.
+Inspection revealed the key identification problem:
+
+**removing an instruction does not necessarily remove the capability.**
+
+The task wording and model priors could still elicit diagnosis, revision, or engineering. Therefore v0.6.1 primarily measured the marginal effect of mentioning instruction fragments, not the causal value of the underlying capability.
 
 See `docs/ABLATION_V0_6_1_REPLICATION_RESULTS.md`.
 
-## Capability Identification v0.7
+### Capability Identification v0.7
 
-v0.7 addresses that identification problem directly.
+v0.7 separated behavior manipulation from quality.
 
-It currently targets the three ambiguous/problematic families:
+Three conditions were compared:
+
+- `CONTROL` — neutral reasoning core;
+- `ATTENTION` — CONTROL plus a generic extra quality-control pass;
+- `TARGET` — CONTROL plus a family-specific capability module.
+
+A separate blinded behavior judge measured whether TARGET actually increased target-behavior expression before quality effects were interpreted.
+
+Predeclared manipulation gate:
+
+`TARGET behavior - CONTROL behavior >= 0.5` on a 0–4 scale.
+
+Results:
+
+- `ENGINEER`: behavior lift `+1.00`, gate **passed**; TARGET vs CONTROL quality `1.000`; TARGET vs ATTENTION `0.833`.
+- `DIAGNOSE`: behavior lift `+0.22`, gate **failed** because CONTROL was already near ceiling.
+- `REVISE`: behavior lift `+0.11`, gate **failed** because CONTROL was already near ceiling.
+
+Interpretation: `ENGINEER` currently has positive instruction-mediated evidence. Diagnose and Revise remained unidentified because the model already expressed those behaviors strongly without the explicit modules.
+
+See `docs/CAPABILITY_IDENTIFICATION_V0_7.md`.
+
+### Capability Screening v0.8
+
+v0.8 attempted to create manipulation headroom for `DIAGNOSE` and `REVISE` by screening twelve harder development cases using CONTROL only.
+
+Predeclared eligibility required:
+
+`CONTROL behavior <= 2.5/4`
+
+with at least one point of headroom.
+
+Observed CONTROL behavior:
+
+- Diagnose cases: approximately `3.83–4.00`;
+- Revise cases: `4.00` across all six candidates.
+
+Result:
+
+- `0/6` Diagnose cases eligible;
+- `0/6` Revise cases eligible;
+- Stage 2 correctly did not run.
+
+Interpretation: on these development tasks, `glm-5.1` exhibits Diagnose and Revise behavior endogenously near ceiling under a minimal neutral prompt. This does **not** show that those capabilities are unimportant; it shows that explicit prompt-level instruction is currently difficult to identify as the cause of them.
+
+The resulting distinction is central:
+
+**reasoning capability ≠ reasoning instruction**
+
+## Selective Control v0.9
+
+The current experiment changes the research question from:
+
+> Does the model possess the capability?
+
+to:
+
+> **When adverse context suppresses endogenous reasoning, does explicit control recover the capability and improve quality beyond generic extra attention?**
+
+v0.9 uses six base problems, two each for:
 
 - `DIAGNOSE`
 - `REVISE`
 - `ENGINEER`
 
-Each family gets two new development cases whose user prompts avoid explicitly requesting the target behavior.
+Each base problem has paired variants:
 
-Three conditions are generated:
+- `CLEAN` — decisive evidence with little distraction;
+- `STRESS` — the same decisive evidence and correct action plus authority anchors, irrelevant metrics, conflicting stakeholder pressure, historical analogies, time pressure, or familiar-action bias.
 
-- `CONTROL` — neutral reasoning core only;
-- `ATTENTION` — CONTROL plus a generic extra quality-control pass;
-- `TARGET` — CONTROL plus the family-specific capability module.
+The production reasoning protocol is unchanged. Target modules are frozen byte-for-byte from v0.7.
 
-The experiment separately measures:
+Two behavioral gates must pass before stress-condition quality effects are interpreted:
 
-1. **behavior manipulation:** did TARGET actually increase expression of the intended capability relative to CONTROL?
-2. **quality effect:** did TARGET improve reasoning quality?
-3. **specificity:** did TARGET outperform generic ATTENTION?
+1. **Stress gate:** `CLEAN CONTROL - STRESS CONTROL >= 0.5`
+2. **Recovery gate:** `STRESS TARGET - STRESS CONTROL >= 0.5`
 
-A separate blinded behavior judge scores target-behavior expression from 0–4. A separate blinded quality judge compares reasoning outcomes without being shown the target-behavior definition.
+Only then are the following treated as selective-control evidence:
 
-Both behavior and quality judgments are repeated with randomized A/B orientation.
+- `TARGET vs CONTROL` under stress;
+- `TARGET vs ATTENTION` under stress;
+- `ATTENTION vs CONTROL` under stress.
 
-Predeclared identification gate:
+This tests a controller hypothesis:
 
-`mean behavior lift = TARGET - CONTROL >= 0.5`
+**detect reasoning-risk condition → activate relevant capability control → verify outcome**
 
-If a family fails this gate, its quality difference is considered **non-identifying** for capability value.
+rather than forcing every stage on every problem.
 
-Default calibration settings:
-
-- 3 target-generation replicates per case/condition;
-- 3 quality votes per generated pair;
-- 3 behavior votes per TARGET-vs-CONTROL generated pair.
-
-See `docs/CAPABILITY_IDENTIFICATION_V0_7.md`.
+See `docs/SELECTIVE_CONTROL_V0_9.md`.
 
 ## Coupled systems
 
 The project maintains two coupled systems:
 
-1. **Reasoning engine** — the protocol and component hypotheses under test.
+1. **Reasoning engine** — the protocol and control hypotheses under test.
 2. **Evaluation engine** — adversarial measurement intended to falsify, refine, or reject those hypotheses.
 
 Protocol compliance is not evidence of improved reasoning by itself.
 
 ## Validation boundary
 
-All v0.5, v0.6.x, and v0.7 cases are development/calibration evidence.
+All v0.5–v0.9 cases are development/calibration evidence.
 
-Framework validation requires, after prompts and component definitions are frozen:
+Framework validation requires, after prompts and control policies are frozen:
 
 1. fresh held-out cases not used in prompt or benchmark development;
 2. multiple stochastic target generations per case;
 3. repeated blinded judgments;
 4. preferably a judge model independent of the target model;
-5. predeclared primary effects and interpretation thresholds.
+5. replication across model families/capability levels;
+6. predeclared primary effects and interpretation thresholds.
 
 Only after that should the project return to Adaptive routing and reasoning-cost optimization.
 
 ## Cost policy
 
-Target token usage and latency are recorded as descriptive diagnostics only. They do not enter current quality or component-identification decisions.
+Target token usage and latency are descriptive diagnostics only. They do not enter current quality or control-identification decisions.
 
 Later, cost becomes a constrained optimization problem:
 
@@ -159,4 +218,4 @@ The governing research loop is the framework applied to itself:
 
 **Observe benchmark failures → Diagnose → Derive → Hypothesize changes → Predict improvements → Test → Revise → Engineer**
 
-The immediate objective is **reproducibly better reasoning quality with experimentally identified mechanisms**, not lower token cost.
+The immediate objective is **reproducibly better reasoning quality with experimentally identified control mechanisms**, not lower token cost.
