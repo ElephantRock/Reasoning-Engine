@@ -164,6 +164,7 @@ jobs:
           run = Path('.github/workflows/reasoning-heldout-framework-validation-v1-glm53flash.yml').read_text()
           recovery = Path('.github/workflows/reasoning-heldout-framework-validation-v1-glm53flash-recovery.yml').read_text()
           secret_ref = '$' + '{{ secrets.' + 'ZAI_API_KEY }}'
+          matrix_ref = '$' + '{{ matrix.' + 'shard }}'
           assert '[probe-framework-judge-glm53flash]' in probe
           assert '[run-heldout-framework-v1-glm53flash]' in run
           assert '[resume-heldout-framework-v1-glm53flash]' in recovery
@@ -174,7 +175,7 @@ jobs:
           assert f'ZAI_JUDGE_API_KEY: {secret_ref}' in run
           assert f'ZAI_JUDGE_API_KEY: {secret_ref}' in recovery
           assert 'run-id: 34232674771' in recovery
-          assert 'framework-v1-glm53flash-shard-${{ matrix.shard }}-34232674771' in recovery
+          assert f'framework-v1-glm53flash-shard-{matrix_ref}-34232674771' in recovery
           assert 'matrix:\n        shard: [0, 1, 2, 3, 4, 5]' in recovery
           assert 'max-parallel: 2' in recovery
           assert 'python recover_framework_validation_v1_glm53flash.py' in recovery
