@@ -1,0 +1,183 @@
+name: Held-Out Framework Validation v1 Static Check
+
+on:
+  pull_request:
+    paths:
+      - 'benchmark/run_framework_validation_v1.py'
+      - 'benchmark/aggregate_framework_validation_v1.py'
+      - 'benchmark/heldout_cases_v1.json'
+      - 'docs/HELDOUT_FRAMEWORK_VALIDATION_V1_PREREG.md'
+      - '.github/workflows/reasoning-heldout-framework-validation-v1.yml'
+      - '.github/workflows/heldout-framework-validation-v1-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: benchmark
+    env:
+      OPENAI_API_KEY: unused-provider-shim
+      ZAI_API_KEY: unused-target-shim
+      ZAI_JUDGE_API_KEY: unused-judge-shim
+      ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      ZAI_TARGET_MODEL: glm-5.1
+      ZAI_JUDGE_MODEL: independent-static-judge
+      ZAI_JUDGE_BASE_URL: https://judge.invalid/v1
+      FRAMEWORK_TARGET_FAMILY: glm
+      FRAMEWORK_TARGET_PROVIDER: zai
+      FRAMEWORK_JUDGE_FAMILY: independent-family
+      FRAMEWORK_JUDGE_PROVIDER: independent-provider
+      FRAMEWORK_INDEPENDENT_EVALUATOR_ATTESTATION: 'true'
+      FRAMEWORK_GENERATION_REPLICATES: '3'
+      FRAMEWORK_JUDGE_VOTES: '3'
+      FRAMEWORK_SHARD_COUNT: '6'
+      FRAMEWORK_SHARD_INDEX: '0'
+      BENCHMARK_BOOTSTRAP_SAMPLES: '5000'
+      BENCHMARK_SUITE: combined
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Validate Python syntax
+        run: python -m py_compile run_framework_validation_v1.py aggregate_framework_validation_v1.py
+
+      - name: Validate frozen suite identity and design
+        run: |
+          test "$(git -C .. hash-object benchmark/heldout_cases_v1.json)" = '5fa2ab6f678728124b93ea9dd6c9158e5d6e9698'
+          python - <<'PY'
+          from collections import Counter
+          import run_framework_validation_v1 as r
+          assert len(r.CASES) == 36
+          assert Counter(c['routing_stratum'] for c in r.CASES) == Counter({'TEST': 9, 'ENGINEER': 9, 'BOTH': 6, 'NONE': 12})
+          assert r.CONDITIONS == ('CONTROL', 'COMPACT', 'FULL')
+          assert r.CONTROL is None
+          assert r.COMPACT == r.v03.pilot.COMPACT
+          assert r.FULL == r.v03.pilot.FULL
+          assert r.GENERATION_REPLICATES == 3
+          assert r.JUDGE_VOTES == 3
+          assert r.SHARD_COUNT == 6
+          assert [x['pair_id'] for x in r.PAIR_SPECS] == [
+              'FULL_vs_CONTROL', 'COMPACT_vs_CONTROL', 'FULL_vs_COMPACT'
+          ]
+          print('frozen suite and framework design validated')
+          PY
+
+      - name: Validate independent evaluator gates fail closed
+        run: |
+          python - <<'PY'
+          import run_framework_validation_v1 as r
+          r.independent_evaluator_preflight()
+
+          tests = []
+          tests.append(('model', lambda: setattr(r.v03, 'JUDGE_MODEL', r.v03.TARGET_MODEL), lambda: setattr(r.v03, 'JUDGE_MODEL', 'independent-static-judge')))
+          tests.append(('family', lambda: setattr(r, 'JUDGE_FAMILY', r.TARGET_FAMILY), lambda: setattr(r, 'JUDGE_FAMILY', 'independent-family')))
+          tests.append(('provider', lambda: setattr(r, 'JUDGE_PROVIDER', r.TARGET_PROVIDER), lambda: setattr(r, 'JUDGE_PROVIDER', 'independent-provider')))
+          tests.append(('endpoint', lambda: setattr(r.v03, 'JUDGE_BASE', r.v03.TARGET_BASE), lambda: setattr(r.v03, 'JUDGE_BASE', 'https://judge.invalid/v1')))
+          for name, mutate, restore in tests:
+              mutate()
+              try:
+                  r.independent_evaluator_preflight()
+              except RuntimeError as exc:
+                  assert 'independent evaluator required' in str(exc), (name, exc)
+              else:
+                  raise AssertionError(f'{name} independence gate did not fail')
+              finally:
+                  restore()
+
+          original = r.INDEPENDENCE_ATTESTATION
+          r.INDEPENDENCE_ATTESTATION = 'false'
+          try:
+              r.independent_evaluator_preflight()
+          except RuntimeError as exc:
+              assert 'ATTESTATION' in str(exc)
+          else:
+              raise AssertionError('attestation gate did not fail')
+          finally:
+              r.INDEPENDENCE_ATTESTATION = original
+          print('independent evaluator gates validated')
+          PY
+
+      - name: Validate judge connectivity probe is benchmark-free and parse-checked
+        run: |
+          python - <<'PY'
+          import run_framework_validation_v1 as r
+          calls = []
+          def fake(system, messages):
+              calls.append((system, messages))
+              return {'text': '{"ok":true}', 'usage': {'input_tokens': 1, 'output_tokens': 1, 'latency_ms': 1}}
+          original = r.v03.judge_call
+          r.v03.judge_call = fake
+          try:
+              usage = r.independent_evaluator_connectivity_check()
+              assert usage['input_tokens'] == 1
+              assert len(calls) == 1
+              wire = str(calls[0])
+              assert 'heldout' not in wire.lower()
+              assert 'case_id' not in wire.lower()
+          finally:
+              r.v03.judge_call = original
+          print('judge-only connectivity probe validated')
+          PY
+
+      - name: Validate aggregation thresholds and completeness constants
+        run: |
+          python - <<'PY'
+          import aggregate_framework_validation_v1 as a
+          assert a.PRIMARY_MIN_SCORE == 0.60
+          assert a.PRIMARY_CI_LOW_MIN_EXCLUSIVE == 0.50
+          assert a.SECONDARY_COMPACT_MIN_SCORE == 0.60
+          assert a.SECONDARY_COMPACT_CI_LOW_MIN_EXCLUSIVE == 0.50
+          assert a.STRATUM_HARM_FLOOR == 0.45
+          assert a.ARCH_FULL_DIRECTION == 0.55
+          assert a.ARCH_COMPACT_DIRECTION == 0.45
+          assert a.EXPECTED_RUNS == 324
+          assert a.EXPECTED_VOTES == 972
+          assert a.architecture_direction(0.56) == 'FULL'
+          assert a.architecture_direction(0.44) == 'COMPACT'
+          assert a.architecture_direction(0.50) == 'NO_MATERIAL_DIRECTIONAL_SEPARATION'
+          print('framework aggregation rules validated')
+          PY
+
+      - name: Validate workflow is manual, target-frozen, sharded, and preflight-gated
+        working-directory: .
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          text = Path('.github/workflows/reasoning-heldout-framework-validation-v1.yml').read_text()
+          assert 'workflow_dispatch:' in text
+          assert '\npush:' not in text
+          assert 'ZAI_TARGET_MODEL: glm-5.1' in text
+          assert 'ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4' in text
+          assert 'target_model:' not in text
+          assert 'target_family:' not in text
+          assert 'target_provider:' not in text
+          assert 'judge_model:' in text
+          assert 'judge_family:' in text
+          assert 'judge_provider:' in text
+          assert 'judge_base_url:' in text
+          assert 'independent_evaluator_connectivity_check' in text
+          assert 'matrix:\n        shard: [0, 1, 2, 3, 4, 5]' in text
+          assert 'max-parallel: 3' in text
+          assert 'needs: validate-preflight' in text
+          assert 'heldout_candidate_v1.json' not in text
+          print('manual framework validation workflow validated')
+          PY
+
+      - name: Smoke imports
+        run: python -c "import run_framework_validation_v1, aggregate_framework_validation_v1; print('framework validation imports ok')"
