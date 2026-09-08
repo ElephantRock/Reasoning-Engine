@@ -1,0 +1,1694 @@
+[
+  {
+    "case_id": "HV1-T01",
+    "domain": "science_measurement",
+    "routing_stratum": "TEST",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A photometry team sees a repeatable 2.1% brightness dip in one target on three nights. Comparison stars on the same frames are stable. On all three nights the target landed on detector column 812 because the pointing was repeated. Historical flat-field residuals around that column are 1.5–2.5%. The event timing also matches the candidate orbital period. What conclusion is warranted now, and what should the team do next?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "2.1% dip repeated on three nights",
+        "comparison stars stable",
+        "target on detector column 812 each night",
+        "historical residuals near column 812 are of comparable magnitude",
+        "timing matches candidate period"
+      ],
+      "not_observed": [
+        "same target has not yet been measured off column 812 at the relevant phase",
+        "no calibration sweep across column 812 from the same nights"
+      ],
+      "plausible_hypotheses": [
+        "astrophysical transit",
+        "detector-column response artifact",
+        "interaction between source position and reduction"
+      ],
+      "discriminating_evidence": [
+        "repeat the relevant phase with deliberate dithering off column 812",
+        "measure a stable source or calibration illumination across column 812 under the same reduction"
+      ],
+      "decision_critical_uncertainties": [
+        "whether the dip follows orbital phase when detector position changes"
+      ],
+      "constraints": [
+        "limited telescope time: only one additional night before scheduling review"
+      ],
+      "acceptable_interventions": [
+        "prioritize the observation that separates sky-fixed from detector-fixed explanations"
+      ],
+      "scoring_notes": [
+        "Do not treat period agreement as decisive while detector position is perfectly confounded with event occurrence."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": true,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-T02",
+    "domain": "manufacturing",
+    "routing_stratum": "TEST",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A coating line’s blister reject rate rose from 0.7% to 4.8% this week. Three things changed within 24 hours: a new resin lot arrived, outside humidity increased sharply, and line 2’s oven zone B was recalibrated. Line 1 uses the same resin lot but a different oven and is at 1.0% rejects; line 2 runs mostly on the night shift when humidity is highest. What should operations conclude and do next?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "rejects rose 0.7% to 4.8%",
+        "new resin lot",
+        "higher humidity",
+        "oven zone B recalibrated",
+        "line 1 same resin at 1.0%",
+        "line 2 mostly runs during highest humidity"
+      ],
+      "not_observed": [
+        "line 2 has not been run under low humidity since the increase",
+        "oven profile has not been independently checked after recalibration"
+      ],
+      "plausible_hypotheses": [
+        "humidity-driven moisture defect",
+        "line 2 oven profile error",
+        "resin-lot contribution interacting with line conditions"
+      ],
+      "discriminating_evidence": [
+        "run a short matched line-2 production window under controlled low humidity while independently logging oven temperatures",
+        "verify oven zone B against an independent reference before changing resin"
+      ],
+      "decision_critical_uncertainties": [
+        "humidity and oven state remain partly confounded on line 2"
+      ],
+      "constraints": [
+        "scrapping the resin lot would stop two lines and is costly"
+      ],
+      "acceptable_interventions": [
+        "seek a matched comparison that changes one leading factor at a time"
+      ],
+      "scoring_notes": [
+        "Same-resin performance on line 1 weakens a simple resin-only explanation but does not eliminate interaction effects."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": true,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-T03",
+    "domain": "public_services",
+    "routing_stratum": "TEST",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "An online benefits application saw abandonment rise from 18% to 29% after a weekend release. The release included a new five-page form and a switch to a different SMS verification vendor. Analytics show most abandonment occurs before the verification screen, but event logging on the new form is incomplete for mobile users. Call-center reports also mention delayed verification codes. What should the program team infer at this point?"
+      },
+      {
+        "turn": 2,
+        "agent_input": "A later log repair shows mobile users who reached the verification screen abandoned at the old rate, while abandonment increased sharply on page 3 of the new form across both desktop and mobile. How should the team update its position?",
+        "expected_revision": "The form flow becomes the leading explanation; verification delay should be demoted as the main cause while remaining a service issue."
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "abandonment rose after two simultaneous changes",
+        "early analytics placed many exits before verification",
+        "mobile event logging initially incomplete",
+        "call center reported code delays",
+        "later repaired logs localize increase to page 3 across devices"
+      ],
+      "not_observed": [
+        "causal reason for page-3 exits is not directly measured"
+      ],
+      "plausible_hypotheses": [
+        "form-flow friction",
+        "verification delay",
+        "measurement artifact from incomplete logging"
+      ],
+      "discriminating_evidence": [
+        "instrument page-level interactions and compare completion after a reversible page-3 simplification or matched traffic split"
+      ],
+      "decision_critical_uncertainties": [
+        "which page-3 element causes the friction"
+      ],
+      "constraints": [
+        "benefit access should not be disrupted by a broad rollback without evidence"
+      ],
+      "acceptable_interventions": [
+        "narrowly address page-3 friction while separately monitoring verification service"
+      ],
+      "scoring_notes": [
+        "The second turn should materially demote verification as the primary abandonment mechanism."
+      ]
+    },
+    "design_metadata": {
+      "sequential": true,
+      "has_distractors": true,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-T04",
+    "domain": "finance",
+    "routing_stratum": "TEST",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A market-neutral fund’s daily tracking error doubled after two operational changes: equity hedges began executing 20 minutes later, and the pricing pipeline started using a new close-price vendor for thinly traded bonds. The excess error is concentrated on days with large late-session equity moves and on days with illiquid-bond holdings. Either change could explain part of it. What should the risk team do before changing the strategy?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "tracking error doubled",
+        "hedges execute 20 minutes later",
+        "new bond close-price vendor",
+        "error clusters with late equity moves",
+        "error also clusters with illiquid-bond exposure"
+      ],
+      "not_observed": [
+        "true economic P&L under alternative bond marks is not yet reconciled",
+        "counterfactual hedge timing has not been replayed"
+      ],
+      "plausible_hypotheses": [
+        "late hedge timing creates real exposure",
+        "new marks create apparent tracking error",
+        "both contribute"
+      ],
+      "discriminating_evidence": [
+        "replay hedge timing on historical intraday prices and separately recompute NAV with the prior/vendor-independent bond marks"
+      ],
+      "decision_critical_uncertainties": [
+        "relative contribution of real exposure versus valuation noise"
+      ],
+      "constraints": [
+        "strategy changes incur trading cost and mandate implications"
+      ],
+      "acceptable_interventions": [
+        "separate economic exposure from measurement effects before altering portfolio construction"
+      ],
+      "scoring_notes": [
+        "Do not collapse two independently plausible contributors into one."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": true,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-T05",
+    "domain": "logistics",
+    "routing_stratum": "TEST",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A cross-dock network’s missed-departure rate rose after a new pallet-slotting algorithm went live. In the same month, one major carrier changed its inbound appointment policy. Sites using the algorithm have more misses, but those sites also receive most freight from that carrier. What can be said now, and what evidence would be most useful?"
+      },
+      {
+        "turn": 2,
+        "agent_input": "A small sister site using the new algorithm but almost no freight from that carrier has unchanged departure performance. A legacy-algorithm site that receives heavy freight from the carrier shows the same increase in late inbound arrivals as the affected sites, but fewer missed departures. How should this change the assessment?",
+        "expected_revision": "Carrier lateness is supported as a contributor; the algorithm may amplify its effect because legacy sites absorb the same lateness with fewer missed departures."
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "algorithm rollout and carrier policy overlap",
+        "algorithm sites have more misses",
+        "exposure to carrier is confounded",
+        "sister site with algorithm and low carrier exposure is stable",
+        "legacy site with carrier exposure has more late arrivals but fewer missed departures"
+      ],
+      "not_observed": [
+        "no controlled swap of slotting policy under comparable carrier mix"
+      ],
+      "plausible_hypotheses": [
+        "carrier lateness",
+        "slotting algorithm reduces slack or resilience",
+        "interaction between late arrivals and slotting"
+      ],
+      "discriminating_evidence": [
+        "compare matched arrival lateness distributions while replaying or shadow-running legacy versus new slotting on the same freight"
+      ],
+      "decision_critical_uncertainties": [
+        "whether slotting itself increases missed departures conditional on identical inbound lateness"
+      ],
+      "constraints": [
+        "must keep docks operating during analysis"
+      ],
+      "acceptable_interventions": [
+        "use shadow/replay analysis before reverting network-wide"
+      ],
+      "scoring_notes": [
+        "Second turn should favor an interaction model rather than a single-cause story."
+      ]
+    },
+    "design_metadata": {
+      "sequential": true,
+      "has_distractors": true,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-T06",
+    "domain": "energy",
+    "routing_stratum": "TEST",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A battery-storage site’s measured round-trip efficiency fell from 89% to 82% over six weeks. The period spans hotter ambient conditions and a firmware update to state-of-charge calibration. Cell internal resistance from maintenance checks is unchanged. Cooling energy rose, while the reported energy discharged at the low end of state of charge also changed discontinuously after the firmware update. What should the operator infer and do next?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "reported efficiency fell 89% to 82%",
+        "ambient temperatures increased",
+        "SOC calibration firmware changed",
+        "cell internal resistance unchanged",
+        "cooling energy rose",
+        "reported discharge changes discontinuously near low SOC after firmware"
+      ],
+      "not_observed": [
+        "meter-calibrated energy balance independent of firmware has not been computed"
+      ],
+      "plausible_hypotheses": [
+        "real auxiliary-load loss from cooling",
+        "accounting/calibration artifact from SOC update",
+        "both"
+      ],
+      "discriminating_evidence": [
+        "compute efficiency from revenue-grade AC meters excluding firmware-derived SOC accounting and run matched cycles at controlled thermal conditions"
+      ],
+      "decision_critical_uncertainties": [
+        "fraction of loss that is physical versus measurement/calibration"
+      ],
+      "constraints": [
+        "battery cycling must remain within warranty limits"
+      ],
+      "acceptable_interventions": [
+        "use metered energy and controlled thermal comparison before capacity or cell replacement decisions"
+      ],
+      "scoring_notes": [
+        "Unchanged internal resistance weakens a cell-degradation explanation."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": true,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-T07",
+    "domain": "software_ops",
+    "routing_stratum": "TEST",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A file-transfer service began reporting checksum mismatches shortly after a compiler upgrade and a reverse-proxy change that enabled response compression. Mismatches occur only for downloads larger than 64 MB and only in two regions. Those regions received both changes on the same day. CPU and memory metrics are normal. What should the team do next?"
+      },
+      {
+        "turn": 2,
+        "agent_input": "A shadow request sent through the old proxy but the new binary in one affected region has no mismatch; the same binary through the new proxy reproduces the mismatch. How should the team change its confidence and immediate action?",
+        "expected_revision": "The proxy path should become the leading mechanism; the compiler upgrade should be demoted for this symptom."
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "mismatches start after two co-deployed changes",
+        "only >64 MB",
+        "only two regions",
+        "resource metrics normal",
+        "shadow path isolates new proxy as reproducing condition"
+      ],
+      "not_observed": [
+        "specific proxy transformation responsible is not yet localized"
+      ],
+      "plausible_hypotheses": [
+        "proxy compression/streaming boundary defect",
+        "compiler-generated corruption",
+        "regional infrastructure interaction"
+      ],
+      "discriminating_evidence": [
+        "compare compressed versus uncompressed proxy paths for identical large objects and inspect byte-range boundaries"
+      ],
+      "decision_critical_uncertainties": [
+        "whether compression/stream handling is necessary for corruption"
+      ],
+      "constraints": [
+        "service must preserve download integrity; rollback can be regional"
+      ],
+      "acceptable_interventions": [
+        "disable new compression path regionally while collecting boundary-level traces"
+      ],
+      "scoring_notes": [
+        "Second turn should not preserve equal weight on the compiler once the path-isolation evidence arrives."
+      ]
+    },
+    "design_metadata": {
+      "sequential": true,
+      "has_distractors": true,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-T08",
+    "domain": "education",
+    "routing_stratum": "TEST",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A university’s introductory statistics course saw median online-quiz scores fall by 11 points this term. The quiz interface was redesigned, and the question bank also shifted toward more multi-step items. Student surveys complain about the interface, but item-level analysis shows the largest score drops are on newly introduced questions. Older questions delivered in the new interface also fell slightly. What should the course team conclude before changing grading policy?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "median score down 11 points",
+        "interface redesigned",
+        "question mix became more multi-step",
+        "surveys criticize interface",
+        "new items show largest drop",
+        "old items in new interface show smaller drop"
+      ],
+      "not_observed": [
+        "same item set has not been compared across old and new interfaces"
+      ],
+      "plausible_hypotheses": [
+        "harder item mix",
+        "interface friction",
+        "both"
+      ],
+      "discriminating_evidence": [
+        "compare common-anchor items across interface versions or run a small crossover using identical items"
+      ],
+      "decision_critical_uncertainties": [
+        "magnitude of interface effect independent of item difficulty"
+      ],
+      "constraints": [
+        "grading policy affects all students and should not be changed on ambiguous attribution"
+      ],
+      "acceptable_interventions": [
+        "preserve grading policy while estimating interface-versus-item contribution"
+      ],
+      "scoring_notes": [
+        "Survey complaints are relevant but not a substitute for matched item evidence."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": true,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-T09",
+    "domain": "retail_ops",
+    "routing_stratum": "TEST",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "An apparel retailer’s return rate rose from 9% to 14% after switching to thinner shipping boxes. The increase coincided with a holiday promotion that brought many first-time customers. Damage-related returns rose modestly, while fit-related returns rose much more. The box supplier is being blamed because timing lines up. What should the retailer infer and what analysis should come next?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "overall returns rose",
+        "box change and holiday promotion coincide",
+        "first-time customer share increased",
+        "damage returns rose modestly",
+        "fit returns rose substantially"
+      ],
+      "not_observed": [
+        "return rates for comparable customer cohorts and SKUs before/after are not yet matched"
+      ],
+      "plausible_hypotheses": [
+        "customer-mix/promotion effect",
+        "packaging damage effect",
+        "SKU-mix effect"
+      ],
+      "discriminating_evidence": [
+        "compare matched SKU/customer cohorts and separate damage-coded returns from fit-coded returns across packaging periods"
+      ],
+      "decision_critical_uncertainties": [
+        "size of packaging effect on non-damage returns"
+      ],
+      "constraints": [
+        "supplier replacement would disrupt peak-season supply"
+      ],
+      "acceptable_interventions": [
+        "avoid attributing fit-driven increase to packaging without matched evidence"
+      ],
+      "scoring_notes": [
+        "Timing alone does not support a packaging-dominant explanation."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": true,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-E01",
+    "domain": "software_ops",
+    "routing_stratum": "ENGINEER",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Database traces show that a nightly analytics batch holds row locks for 8–12 minutes and directly causes the 01:00 API timeout spike. The business cannot pause analytics for more than one night, cannot take API downtime, and audit requires the batch to remain complete by 05:00. What should the team implement?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "lock-holding batch directly coincides with API timeout spike",
+        "lock duration 8-12 minutes",
+        "completion deadline 05:00"
+      ],
+      "not_observed": [
+        "exact best chunk size is not established"
+      ],
+      "plausible_hypotheses": [
+        "confirmed lock contention from batch transaction scope"
+      ],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": [
+        "batch must finish by 05:00",
+        "API downtime not allowed",
+        "analytics pause limited to one night",
+        "auditability required"
+      ],
+      "acceptable_interventions": [
+        "chunk batch transactions with bounded commit size",
+        "stage rollout on subset/table partition",
+        "monitor lock wait and batch completion",
+        "rollback to prior batch path if completion or consistency thresholds fail"
+      ],
+      "scoring_notes": [
+        "A strong answer links intervention to lock duration, stages the change, defines measurable rollback criteria, and preserves the deadline."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": false,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-E02",
+    "domain": "manufacturing",
+    "routing_stratum": "ENGINEER",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Process mapping and controlled trials show that static charge at the film-unwind station attracts airborne dust and causes the surface defects. The plant can stop the line for at most 45 minutes per shift, solvent chemistry cannot change this quarter, and any electrical change must pass safety review. What implementation plan is justified?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "controlled trials tie static charge to dust defects",
+        "solvent chemistry fixed this quarter",
+        "short maintenance windows",
+        "electrical changes require safety review"
+      ],
+      "not_observed": [],
+      "plausible_hypotheses": [
+        "confirmed electrostatic dust attraction"
+      ],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": [
+        "<=45 minute stop per shift",
+        "no solvent change",
+        "safety review required"
+      ],
+      "acceptable_interventions": [
+        "install/validate ionization or grounding improvement in staged window",
+        "verify charge level and defect rate before/after",
+        "retain reversible setup and rollback if charge or safety criteria fail",
+        "monitor ozone/electrical side effects if relevant"
+      ],
+      "scoring_notes": [
+        "Do not recommend broad chemistry changes or irreversible line redesign before a reversible static-control intervention is tried."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": false,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-E03",
+    "domain": "public_services",
+    "routing_stratum": "ENGINEER",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A six-week process study shows that housing-assistance cases spend 62% of total elapsed time waiting for a single supervisory approval queue; downstream teams are usually idle when that queue builds. Policy requires supervisor sign-off, headcount cannot increase this fiscal year, and emergency cases must remain prioritized. What should the agency change?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "62% of elapsed time is in supervisor approval queue",
+        "downstream idle during queue buildup",
+        "sign-off requirement fixed",
+        "headcount fixed",
+        "emergency priority required"
+      ],
+      "not_observed": [],
+      "plausible_hypotheses": [
+        "confirmed approval-queue bottleneck"
+      ],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": [
+        "cannot remove sign-off",
+        "no extra headcount",
+        "protect emergency priority"
+      ],
+      "acceptable_interventions": [
+        "introduce scheduled approval blocks or work-pull limits",
+        "standardize pre-review packets to reduce rework",
+        "pilot with non-emergency subset",
+        "monitor queue age, rework, emergency SLA, and downstream starvation",
+        "rollback if emergency performance degrades"
+      ],
+      "scoring_notes": [
+        "A strong answer changes flow around the known bottleneck without pretending the statutory sign-off can be removed."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": false,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-E04",
+    "domain": "energy",
+    "routing_stratum": "ENGINEER",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Field measurements confirm that feeder over-voltage events are driven by rooftop-solar inverters using a reactive-power default that is too weak for this feeder. Updated settings reduce voltage excursions in simulation and a 20-home field sample without reducing real-power output. The utility must avoid simultaneous changes to thousands of devices and must preserve customer generation. What rollout is justified?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "default reactive setting is confirmed mechanism",
+        "simulation and 20-home field sample support updated setting",
+        "real-power output preserved in sample"
+      ],
+      "not_observed": [
+        "rare seasonal edge cases remain possible"
+      ],
+      "plausible_hypotheses": [
+        "confirmed inverter-setting contribution"
+      ],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": [
+        "avoid fleetwide simultaneous change",
+        "preserve customer generation",
+        "grid-code compliance"
+      ],
+      "acceptable_interventions": [
+        "phased feeder-by-feeder rollout",
+        "predefined voltage and output thresholds",
+        "canary groups",
+        "rollback profile stored",
+        "monitor oscillation, customer output, and neighboring-feeder effects"
+      ],
+      "scoring_notes": [
+        "Prefer staged reversible configuration deployment over one-shot fleetwide change."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": false,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-E05",
+    "domain": "logistics",
+    "routing_stratum": "ENGINEER",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Video review and damage tagging show that 78% of pallet-corner crush incidents occur when forklifts approach from the narrow-side aisle at rack row C; the same pallets handled from the wide side rarely show damage. The aisle cannot be widened for six months, throughput may fall by at most 3%, and emergency access must remain clear. What should the warehouse do?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "damage concentrated on narrow-side approach at row C",
+        "wide-side handling rarely damages same pallets",
+        "aisle widening delayed six months"
+      ],
+      "not_observed": [],
+      "plausible_hypotheses": [
+        "confirmed handling-geometry mechanism"
+      ],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": [
+        "throughput loss <=3%",
+        "emergency access clear",
+        "no near-term aisle widening"
+      ],
+      "acceptable_interventions": [
+        "temporary one-way approach rule or designated turn point",
+        "protective corner guides if compatible",
+        "pilot one shift",
+        "monitor damage, throughput, near misses",
+        "revert if safety/throughput thresholds fail"
+      ],
+      "scoring_notes": [
+        "Intervention should target handling geometry, not packaging globally."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": false,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-E06",
+    "domain": "science_measurement",
+    "routing_stratum": "ENGINEER",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A lab study confirms that a chromatography autosampler carries 0.6–0.9% of the prior high-concentration sample into the next vial because the current needle-wash cycle is too short. Extending the wash by 12 seconds cuts carryover below 0.1% in repeated runs. The lab must preserve comparability with an ongoing study and cannot reduce daily sample capacity by more than 8%. What should the lab implement?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "carryover confirmed from short wash",
+        "12-second extension reduces carryover below 0.1%",
+        "ongoing study needs comparability"
+      ],
+      "not_observed": [],
+      "plausible_hypotheses": [
+        "confirmed wash-cycle carryover"
+      ],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": [
+        "capacity loss <=8%",
+        "preserve study comparability",
+        "document method changes"
+      ],
+      "acceptable_interventions": [
+        "stage extended wash on high-to-low transitions or all samples depending throughput math",
+        "bridge old/new method with documented overlap samples",
+        "monitor carryover controls and throughput",
+        "rollback/escalate if capacity or comparability thresholds fail"
+      ],
+      "scoring_notes": [
+        "A strong answer includes bridging/monitoring because measurement comparability is a first-class constraint."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": false,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-E07",
+    "domain": "finance",
+    "routing_stratum": "ENGINEER",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Treasury has traced most weekly cash-forecast misses to a rules engine that ignores local settlement holidays for three currencies. When corrected calendars are applied offline, 87% of the error disappears. The firm cannot miss payroll or margin calls, and the new calendar source has not yet run in production. What should treasury implement?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "holiday omission explains 87% of error offline",
+        "three currencies affected",
+        "new calendar source unproven in production"
+      ],
+      "not_observed": [],
+      "plausible_hypotheses": [
+        "confirmed settlement-calendar mechanism"
+      ],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": [
+        "payroll and margin-call safety",
+        "production source is new"
+      ],
+      "acceptable_interventions": [
+        "shadow-run new calendar feed",
+        "dual-calculate forecasts",
+        "canary one currency",
+        "alerts on divergence",
+        "fallback to current source/manual override",
+        "monitor missed settlements and forecast error before expanding"
+      ],
+      "scoring_notes": [
+        "Do not flip all currencies at once when a safe parallel path exists."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": false,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-E08",
+    "domain": "retail_ops",
+    "routing_stratum": "ENGINEER",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Temperature loggers and dock video show that chilled-goods spoilage is driven by 18–25 minute periods with the receiving door left open while mixed pallets are sorted. Product remains in specification when door-open time stays below 8 minutes. The store cannot add labor and delivery windows are fixed. What operational change is justified?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "spoilage tied to 18-25 minute open-door sorting",
+        "<8 minutes stays in spec",
+        "labor and delivery windows fixed"
+      ],
+      "not_observed": [],
+      "plausible_hypotheses": [
+        "confirmed dock-exposure mechanism"
+      ],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": [
+        "no added labor",
+        "fixed delivery windows",
+        "food-safety limits"
+      ],
+      "acceptable_interventions": [
+        "pre-sort manifests/pallet zones before door opening",
+        "close door between batches",
+        "visual timer or alarm",
+        "pilot by shift",
+        "monitor door-open minutes, unload duration, spoilage, worker safety",
+        "rollback process if throughput or safety degrades"
+      ],
+      "scoring_notes": [
+        "The plan should reduce exposure time rather than merely add temperature logging."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": false,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-E09",
+    "domain": "education",
+    "routing_stratum": "ENGINEER",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A time study shows that instructors spend about 40% of grading time copying the same rubric explanations into individual submissions. A comment bank integrated into the learning system reproduces those explanations accurately in a pilot and cuts grading time by 28%. Faculty policy requires individualized feedback and instructors must retain final control over comments. What should the department roll out?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "40% grading time spent duplicating rubric explanations",
+        "comment bank pilot cut time 28%",
+        "individualized feedback required",
+        "instructor final control required"
+      ],
+      "not_observed": [],
+      "plausible_hypotheses": [
+        "confirmed repetitive-comment workflow bottleneck"
+      ],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": [
+        "individualization required",
+        "instructor retains control",
+        "avoid grade-quality regression"
+      ],
+      "acceptable_interventions": [
+        "phased comment-bank rollout with editable templates",
+        "sample audit for feedback quality",
+        "monitor turnaround and student appeals",
+        "easy disable/rollback",
+        "retain free-text requirement for case-specific comments"
+      ],
+      "scoring_notes": [
+        "A strong answer uses automation as assistive, not as a replacement for individualized judgment."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": false,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-B01",
+    "domain": "logistics",
+    "routing_stratum": "BOTH",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "An electric delivery fleet has developed afternoon charging failures at one depot. Two explanations fit the timing: utility voltage sag during nearby industrial load peaks, or charger cabinets overheating in direct sun. The failures cluster between 14:00 and 17:00; depot voltage dashboards are sampled only every 15 minutes, and cabinet temperature is logged every minute. What should the fleet manager do next?"
+      },
+      {
+        "turn": 2,
+        "agent_input": "High-resolution portable meters show voltage remains within specification during three failures. Cabinet logs show each failure begins within two minutes of internal temperature crossing 68°C, and shading one cabinet prevents the failure on a comparable day. The depot needs a durable fix before next month’s hotter period, but cannot replace all chargers immediately. What should it do now?",
+        "expected_revision": "Voltage sag should be demoted; thermal protection becomes the supported mechanism, followed by a staged thermal mitigation plan."
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "failures occur afternoons",
+        "initial voltage sampling coarse",
+        "cabinet temperature high-resolution",
+        "later high-resolution voltage remains normal",
+        "temperature threshold precedes failures",
+        "shading prevents comparable failure"
+      ],
+      "not_observed": [
+        "long-term effectiveness of each thermal mitigation option"
+      ],
+      "plausible_hypotheses": [
+        "utility voltage sag",
+        "charger thermal shutdown"
+      ],
+      "discriminating_evidence": [
+        "high-resolution voltage during failures",
+        "temperature intervention on matched cabinet"
+      ],
+      "decision_critical_uncertainties": [
+        "which thermal mitigation is durable through hotter conditions"
+      ],
+      "constraints": [
+        "cannot replace all chargers immediately",
+        "must maintain delivery charging capacity"
+      ],
+      "acceptable_interventions": [
+        "temporary shade/ventilation canary",
+        "thermal monitoring thresholds",
+        "phased retrofit",
+        "rollback if electrical/safety indicators worsen"
+      ],
+      "scoring_notes": [
+        "First separate electrical-supply from thermal mechanisms; after turn 2, design around the thermal mechanism with staged safeguards."
+      ]
+    },
+    "design_metadata": {
+      "sequential": true,
+      "has_distractors": true,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-B02",
+    "domain": "manufacturing",
+    "routing_stratum": "BOTH",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A precision grinding cell’s part diameter drifts upward over the first two hours of each shift. Wheel wear and machine thermal expansion are both plausible. Tool-use counts vary by shift, and the machine starts from different overnight temperatures. What should the process team do next?"
+      },
+      {
+        "turn": 2,
+        "agent_input": "On three starts with a fresh wheel, diameter still drifts in proportion to spindle-housing temperature. Holding the machine at operating temperature for 45 minutes before the first part nearly eliminates the drift. The plant cannot afford a permanent 45-minute idle period. What should be changed?",
+        "expected_revision": "Thermal expansion should become the leading mechanism; the solution should reduce or compensate warm-up drift without imposing a full idle period."
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "diameter drift early in shift",
+        "wheel wear and temperature initially confounded",
+        "fresh-wheel runs still drift with spindle temperature",
+        "preheating nearly eliminates drift"
+      ],
+      "not_observed": [
+        "best low-cost compensation method"
+      ],
+      "plausible_hypotheses": [
+        "wheel wear",
+        "machine thermal expansion"
+      ],
+      "discriminating_evidence": [
+        "fresh-wheel cold starts versus thermally stabilized starts"
+      ],
+      "decision_critical_uncertainties": [
+        "how to control thermal state without losing 45 minutes"
+      ],
+      "constraints": [
+        "throughput loss must be small",
+        "dimensional tolerance must be maintained"
+      ],
+      "acceptable_interventions": [
+        "controlled warm-up cycle during setup",
+        "temperature-based offset compensation with validation",
+        "first-piece verification",
+        "monitor drift and tool wear separately",
+        "rollback compensation if overcorrection occurs"
+      ],
+      "scoring_notes": [
+        "Do not keep wheel wear equally weighted after fresh-wheel evidence."
+      ]
+    },
+    "design_metadata": {
+      "sequential": true,
+      "has_distractors": true,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-B03",
+    "domain": "software_ops",
+    "routing_stratum": "BOTH",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A payment-event pipeline produces duplicate downstream records during traffic spikes. Client retries and broker redelivery are both plausible. Application logs show duplicate IDs, but request logs are sampled and broker acknowledgement timing is not yet joined to processing completion. What should the team do before changing retry settings?"
+      },
+      {
+        "turn": 2,
+        "agent_input": "Joined traces show the application finishes processing, then the broker acknowledgement exceeds its deadline; the broker redelivers the same message and the second delivery is processed again. Client request IDs are single-shot for the affected events. How should the team proceed?",
+        "expected_revision": "Broker redelivery after completed processing is established as the main path; action should make processing idempotent and/or acknowledgement handling resilient."
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "duplicates during spikes",
+        "initial logs cannot distinguish client versus broker",
+        "joined traces show processing completes before ack timeout",
+        "broker redelivers same message",
+        "client request IDs are not retried"
+      ],
+      "not_observed": [
+        "relative contribution of rare other duplicate paths"
+      ],
+      "plausible_hypotheses": [
+        "client retry",
+        "broker redelivery after ack timeout"
+      ],
+      "discriminating_evidence": [
+        "joined trace linking processing completion, ack latency, and redelivery"
+      ],
+      "decision_critical_uncertainties": [
+        "safe way to eliminate duplicate side effects without losing events"
+      ],
+      "constraints": [
+        "no payment loss",
+        "backward compatibility",
+        "zero-downtime rollout"
+      ],
+      "acceptable_interventions": [
+        "idempotency key enforcement at side-effect boundary",
+        "canary deployment",
+        "ack latency monitoring",
+        "dead-letter/fallback plan",
+        "rollback if event loss or latency thresholds regress"
+      ],
+      "scoring_notes": [
+        "After mechanism resolution, favor an idempotent side-effect design rather than merely increasing retry timers."
+      ]
+    },
+    "design_metadata": {
+      "sequential": true,
+      "has_distractors": true,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-B04",
+    "domain": "public_services",
+    "routing_stratum": "BOTH",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A city inspection program has a high no-show rate in two districts. One team blames reminder timing; another blames route schedules that create four-hour arrival windows. Historical records are messy because both districts adopted new reminder software and new route templates together. What evidence should the city seek before a broad policy change?"
+      },
+      {
+        "turn": 2,
+        "agent_input": "For six weeks, one district kept the same route windows but shifted reminders from 24 hours to 2 hours before arrival; no-shows were unchanged. A neighboring district kept reminder timing but narrowed arrival windows from four hours to 90 minutes; no-shows fell from 22% to 11%. The city can change routing rules next quarter but cannot add inspectors. What should it do?",
+        "expected_revision": "Reminder timing should be demoted; arrival-window uncertainty becomes the supported mechanism and the plan should redesign routing under fixed headcount."
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "historical changes confounded",
+        "reminder-only shift had no effect",
+        "narrower arrival window halved no-shows",
+        "headcount fixed"
+      ],
+      "not_observed": [
+        "generalization to every district"
+      ],
+      "plausible_hypotheses": [
+        "reminder timing",
+        "arrival-window uncertainty"
+      ],
+      "discriminating_evidence": [
+        "separate reminder-only and window-only changes"
+      ],
+      "decision_critical_uncertainties": [
+        "how to narrow windows without reducing daily inspection capacity"
+      ],
+      "constraints": [
+        "no added inspectors",
+        "service coverage must remain equitable"
+      ],
+      "acceptable_interventions": [
+        "pilot route clustering and appointment batching",
+        "publish narrower windows",
+        "monitor no-shows, travel time, daily completions, district equity",
+        "rollback if capacity falls materially"
+      ],
+      "scoring_notes": [
+        "The second turn provides directional evidence strong enough to shift action toward routing-window design."
+      ]
+    },
+    "design_metadata": {
+      "sequential": true,
+      "has_distractors": true,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-B05",
+    "domain": "energy",
+    "routing_stratum": "BOTH",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A district cooling plant has intermittent pump cavitation alarms during high demand. Engineers suspect either a partially blocked inlet strainer or a control setpoint that drives flow too aggressively. Suction pressure and commanded speed both change around alarms, but the existing logs are one-minute averages. What should the team do next?"
+      },
+      {
+        "turn": 2,
+        "agent_input": "A temporary high-frequency logger shows suction pressure collapsing before commanded speed changes. Inspection finds the inlet strainer 55% occluded; cleaning it eliminates alarms during a comparable high-demand day. The plant needs a prevention plan without adding a second pump this year. What should be done?",
+        "expected_revision": "The inlet restriction should become the supported mechanism; prevention should focus on strainer condition and early-warning controls."
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "alarms at high demand",
+        "initial averaged logs ambiguous",
+        "high-frequency data show suction pressure leads speed change",
+        "strainer 55% occluded",
+        "cleaning eliminates comparable alarms"
+      ],
+      "not_observed": [
+        "future fouling rate"
+      ],
+      "plausible_hypotheses": [
+        "inlet restriction",
+        "aggressive control setpoint"
+      ],
+      "discriminating_evidence": [
+        "higher-frequency temporal ordering and physical inspection"
+      ],
+      "decision_critical_uncertainties": [
+        "how to prevent recurrence with existing assets"
+      ],
+      "constraints": [
+        "no second pump this year",
+        "maintain service continuity"
+      ],
+      "acceptable_interventions": [
+        "differential-pressure monitoring",
+        "condition-based cleaning threshold",
+        "staged alarm limits",
+        "maintenance access plan",
+        "monitor energy use and false alarms"
+      ],
+      "scoring_notes": [
+        "After cleaning removes the failure, avoid a controller-retuning-first solution."
+      ]
+    },
+    "design_metadata": {
+      "sequential": true,
+      "has_distractors": true,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-B06",
+    "domain": "science_measurement",
+    "routing_stratum": "BOTH",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A spectroscopy lab sees baseline drift during long runs. Lamp aging and room-temperature variation are both plausible. The drift is slow enough that the two covary over the workday. What evidence would most reduce uncertainty?"
+      },
+      {
+        "turn": 2,
+        "agent_input": "A temperature-controlled overnight run still shows the drift, and logged lamp intensity falls in the same direction. Replacing the lamp restores a flat baseline on a reference standard. The lab has 200 study samples left and needs continuity with earlier data. What should it do?",
+        "expected_revision": "Lamp aging becomes the supported mechanism; replacement must be paired with bridging calibration for continuity."
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "baseline drift over long runs",
+        "temperature and lamp age initially covary",
+        "drift persists under controlled temperature",
+        "lamp intensity falls with drift",
+        "replacement restores reference baseline"
+      ],
+      "not_observed": [
+        "size of calibration offset between old and new lamp for study samples"
+      ],
+      "plausible_hypotheses": [
+        "room temperature",
+        "lamp aging"
+      ],
+      "discriminating_evidence": [
+        "temperature-controlled run and reference standard before/after lamp replacement"
+      ],
+      "decision_critical_uncertainties": [
+        "how to preserve study comparability across lamp change"
+      ],
+      "constraints": [
+        "200 samples remain",
+        "continuity with earlier data required"
+      ],
+      "acceptable_interventions": [
+        "run bridge standards and a subset of archived samples",
+        "document correction if justified",
+        "monitor reference baseline",
+        "keep old-lamp records and rollback only if new lamp introduces larger instability"
+      ],
+      "scoring_notes": [
+        "A strong answer resolves cause then protects longitudinal comparability."
+      ]
+    },
+    "design_metadata": {
+      "sequential": true,
+      "has_distractors": true,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-N01",
+    "domain": "finance",
+    "routing_stratum": "NONE",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A grant fund has $600,000 to allocate. Project A returns an expected $1.40 of verified benefit per dollar and can receive at most $250,000. Project B returns $1.25 per dollar and can receive at most $300,000. Project C returns $1.10 per dollar with no stated cap. Funds are divisible and all three estimates are already contractually verified. How should the fund allocate the $600,000 to maximize verified benefit?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "budget $600k",
+        "A return 1.40 cap 250k",
+        "B return 1.25 cap 300k",
+        "C return 1.10 no cap"
+      ],
+      "not_observed": [],
+      "plausible_hypotheses": [],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": [
+        "allocate exactly $600k",
+        "respect caps"
+      ],
+      "acceptable_interventions": [
+        "A $250k; B $300k; C $50k"
+      ],
+      "scoring_notes": [
+        "This is deterministic constrained allocation; do not invent causal uncertainty."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": false,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-N02",
+    "domain": "education",
+    "routing_stratum": "NONE",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A course grade is 20% homework, 30% midterm, and 50% final. A student has 92 in homework and 78 on the midterm. What final-exam score is required for an overall course grade of at least 85, assuming no rounding before the final course grade?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "weights 20/30/50",
+        "homework 92",
+        "midterm 78",
+        "target 85"
+      ],
+      "not_observed": [],
+      "plausible_hypotheses": [],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": [
+        "no intermediate rounding"
+      ],
+      "acceptable_interventions": [
+        "solve weighted-average inequality"
+      ],
+      "scoring_notes": [
+        "Required final score is 86.4."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": false,
+      "requires_action": false,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-N03",
+    "domain": "logistics",
+    "routing_stratum": "NONE",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A driver has 3.5 hours of legal driving time remaining. Route X takes 2.2 hours and delivers 18 pallets. Route Y takes 3.1 hours and delivers 25 pallets. Route Z takes 1.6 hours and delivers 12 pallets. Only one route can be completed today, all travel-time estimates are fixed, and each pallet has equal value. Which route should be chosen?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "3.5 hours remaining",
+        "X 2.2h 18 pallets",
+        "Y 3.1h 25 pallets",
+        "Z 1.6h 12 pallets",
+        "one route only"
+      ],
+      "not_observed": [],
+      "plausible_hypotheses": [],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": [
+        "route must fit legal time",
+        "maximize pallets"
+      ],
+      "acceptable_interventions": [
+        "choose Y"
+      ],
+      "scoring_notes": [
+        "No extra uncertainty analysis is needed because times are stipulated fixed."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": false,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-N04",
+    "domain": "software_ops",
+    "routing_stratum": "NONE",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "An access rule allows a request only when `(employee AND managed_device) OR break_glass` is true, and any request from a blocked country is denied afterward. A request has employee=true, managed_device=false, break_glass=true, blocked_country=true. Should access be allowed?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "boolean rule given",
+        "break_glass true",
+        "blocked_country true",
+        "final deny rule applies afterward"
+      ],
+      "not_observed": [],
+      "plausible_hypotheses": [],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": [
+        "apply rule order exactly"
+      ],
+      "acceptable_interventions": [
+        "deny access"
+      ],
+      "scoring_notes": [
+        "The blocked-country rule overrides the earlier allow condition."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": false,
+      "requires_action": false,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-N05",
+    "domain": "public_services",
+    "routing_stratum": "NONE",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A city triage queue uses a fixed priority score: safety risk 0–5 counts double, service interruption 0–5 counts once, and waiting days contribute 0.1 point each. Case A has safety 4, interruption 2, waiting 10 days. Case B has safety 3, interruption 5, waiting 20 days. Higher score goes first. Which case is first?"
+      },
+      {
+        "turn": 2,
+        "agent_input": "Case C is then added with safety 5, interruption 0, and waiting 0 days. Which case is first now?",
+        "expected_revision": "B remains first because B scores 13, C scores 10, and A scores 11."
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "formula fixed",
+        "A: safety4 interruption2 wait10",
+        "B: safety3 interruption5 wait20",
+        "later C: safety5 interruption0 wait0"
+      ],
+      "not_observed": [],
+      "plausible_hypotheses": [],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": [
+        "apply stated scoring rule"
+      ],
+      "acceptable_interventions": [
+        "turn 1: B first",
+        "turn 2: B remains first"
+      ],
+      "scoring_notes": [
+        "A scores 11; B scores 13; C scores 10. Apply the fixed rule without redesigning policy."
+      ]
+    },
+    "design_metadata": {
+      "sequential": true,
+      "has_distractors": false,
+      "requires_action": false,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-N06",
+    "domain": "manufacturing",
+    "routing_stratum": "NONE",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A line starts 10,000 units. Station 1 scraps 2% of incoming units. Station 2 scraps 3% of the units that reach it. Station 3 has no scrap. How many good units leave the line, assuming scrap rates apply exactly and fractional units can be treated mathematically?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "10,000 start",
+        "2% scrap then 3% scrap"
+      ],
+      "not_observed": [],
+      "plausible_hypotheses": [],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": [
+        "apply rates sequentially"
+      ],
+      "acceptable_interventions": [
+        "9506 good units"
+      ],
+      "scoring_notes": [
+        "Compute 10000*0.98*0.97."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": false,
+      "requires_action": false,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-N07",
+    "domain": "retail_ops",
+    "routing_stratum": "NONE",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A store sets reorder quantity as `forecast demand + safety stock - on-hand - confirmed inbound`, floored at zero. For a product, forecast demand is 420 units, safety stock 80, on-hand 170, and confirmed inbound 110. What quantity should be reordered?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "formula fixed",
+        "forecast420",
+        "safety80",
+        "on-hand170",
+        "inbound110"
+      ],
+      "not_observed": [],
+      "plausible_hypotheses": [],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": [
+        "floor at zero"
+      ],
+      "acceptable_interventions": [
+        "220 units"
+      ],
+      "scoring_notes": [
+        "Straight application of fixed policy."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": false,
+      "requires_action": false,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-N08",
+    "domain": "science_measurement",
+    "routing_stratum": "NONE",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A sensor specification allows drift of at most 0.30% of full scale per year. Full scale is 2,000 units. A calibration check finds a 4.8-unit change over one year. Is the sensor within specification, and by how much?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "limit 0.30% of 2000",
+        "measured drift 4.8 units"
+      ],
+      "not_observed": [],
+      "plausible_hypotheses": [],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": [
+        "compare same units"
+      ],
+      "acceptable_interventions": [
+        "limit is 6.0 units; sensor is within by 1.2 units"
+      ],
+      "scoring_notes": [
+        "No causal attribution is required."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": false,
+      "requires_action": false,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-N09",
+    "domain": "energy",
+    "routing_stratum": "NONE",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A facility pays a demand charge based on its single highest 15-minute average each month. Schedule A produces peaks of 820, 790, and 805 kW on the three relevant days. Schedule B produces 760, 770, and 768 kW. Energy consumption and all other charges are identical. Which schedule has the lower demand-charge basis, and by how much?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "demand charge uses monthly max 15-min average",
+        "A peaks 820/790/805",
+        "B peaks 760/770/768",
+        "other charges identical"
+      ],
+      "not_observed": [],
+      "plausible_hypotheses": [],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": [
+        "compare maximums"
+      ],
+      "acceptable_interventions": [
+        "B basis 770 kW vs A 820 kW; 50 kW lower"
+      ],
+      "scoring_notes": [
+        "No broader energy strategy is needed."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": false,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-N10",
+    "domain": "finance",
+    "routing_stratum": "NONE",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A ledger should balance to zero. Entries are +125,000 receivable, -80,000 cash, -30,000 revenue adjustment, and -10,000 fee accrual. What residual remains?"
+      },
+      {
+        "turn": 2,
+        "agent_input": "A missing -5,000 bank charge is then found. What is the corrected residual?",
+        "expected_revision": "The residual moves from +5,000 to zero."
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "initial entries sum +5,000",
+        "later missing -5,000 charge"
+      ],
+      "not_observed": [],
+      "plausible_hypotheses": [],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": [
+        "use signed arithmetic"
+      ],
+      "acceptable_interventions": [
+        "initial residual +5,000; corrected zero"
+      ],
+      "scoring_notes": [
+        "Second turn is deterministic arithmetic correction."
+      ]
+    },
+    "design_metadata": {
+      "sequential": true,
+      "has_distractors": false,
+      "requires_action": false,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-N11",
+    "domain": "education",
+    "routing_stratum": "NONE",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "Three exams need rooms at 09:00. Exam A has 120 students, B has 80, C has 60. Rooms hold 150, 100, and 70 respectively, and each room can host only one exam. Assign rooms so every exam fits."
+      },
+      {
+        "turn": 2,
+        "agent_input": "The 100-seat room becomes unavailable. A fourth room holding 90 becomes available. Is there still a feasible assignment for all three exams?",
+        "expected_revision": "A must use 150; B can use 90; C can use 70, so the assignment remains feasible."
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "exam sizes 120/80/60",
+        "initial rooms150/100/70",
+        "later rooms150/90/70"
+      ],
+      "not_observed": [],
+      "plausible_hypotheses": [],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": [
+        "one exam per room",
+        "capacity must be sufficient"
+      ],
+      "acceptable_interventions": [
+        "initial A150 B100 C70; later A150 B90 C70"
+      ],
+      "scoring_notes": [
+        "This is a constraint-satisfaction problem with exact capacities."
+      ]
+    },
+    "design_metadata": {
+      "sequential": true,
+      "has_distractors": false,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  },
+  {
+    "case_id": "HV1-N12",
+    "domain": "retail_ops",
+    "routing_stratum": "NONE",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A product sells for $50 with a $30 unit cost. Promotion P1 discounts price by 10% and is known to increase unit volume from 1,000 to 1,250 with no other effects. Promotion P2 keeps price at $50 and gives a $5 gift whose cost is $3; it is known to increase volume to 1,150 with no other effects. Which promotion produces more gross contribution, using the stipulated outcomes?"
+      }
+    ],
+    "evaluator_key": {
+      "observations": [
+        "base price50 cost30",
+        "P1 price45 volume1250",
+        "P2 price50 plus gift cost3 volume1150",
+        "outcomes stipulated"
+      ],
+      "not_observed": [],
+      "plausible_hypotheses": [],
+      "discriminating_evidence": [],
+      "decision_critical_uncertainties": [],
+      "constraints": [
+        "use stipulated volumes and costs"
+      ],
+      "acceptable_interventions": [
+        "P1 contribution (45-30)*1250=18,750; P2 (50-30-3)*1150=19,550; choose P2"
+      ],
+      "scoring_notes": [
+        "Do not add unprovided customer-behavior uncertainty."
+      ]
+    },
+    "design_metadata": {
+      "sequential": false,
+      "has_distractors": false,
+      "requires_action": true,
+      "freshness_attestation": "Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases."
+    }
+  }
+]
