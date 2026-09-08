@@ -2,15 +2,10 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
-import os
 from pathlib import Path
 from typing import Any
-
-os.environ.setdefault("OPENAI_API_KEY", "unused-selection-shim")
-os.environ.setdefault("ZAI_API_KEY", "unused-selection-shim")
-os.environ.setdefault("BENCHMARK_SUITE", "combined")
-import run_heldout_v1 as hv1  # noqa: E402
 
 SOURCE_V011_RUN_ID = 34182916670
 DECISION_PROTOCOL_COMMIT = "c29ab7766f01e3345f2e01ccb0b2969555138e5f"
@@ -18,6 +13,19 @@ FIDELITY_MIN = 0.15
 QUALITY_MIN = 0.667
 CASE_FLOOR = 0.50
 FAMILIES = ("TEST", "ENGINEER")
+
+# Frozen before v0.11 outcomes. These are SHA-256 hashes of the exact module
+# strings used by the held-out runner:
+# TEST = run_v06.STAGE_ADDONS["TEST"]
+# ENGINEER = run_v07.TARGET_MODULES["ENGINEER"]
+FROZEN_MODULE_SHA256 = {
+    "TEST": "65e71b8d51d126e335257273f0328c8b634dff8184d746260e8c0e4246e8caf2",
+    "ENGINEER": "a3cda45729c09f7dfb414ffafcd91cbf9322ddb2e41910622e1f1f9288811cfa",
+}
+
+
+def sha256_text(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 def evaluate_family(report: dict[str, Any], family: str) -> dict[str, Any]:
@@ -61,7 +69,7 @@ def evaluate_family(report: dict[str, Any], family: str) -> dict[str, Any]:
     }
 
 
-def select_candidate(report: dict[str, Any]) -> dict[str, Any]:
+def validate_report_identity(report: dict[str, Any]) -> None:
     if report.get("measurement_version") != "0.11-behavioral-fidelity-identification":
         raise RuntimeError("expected the frozen v0.11 behavioral-fidelity report")
     if report.get("families") != ["TEST", "ENGINEER"]:
@@ -73,9 +81,21 @@ def select_candidate(report: dict[str, Any]) -> dict[str, Any]:
     if int(report.get("quality_votes_per_pair", -1)) != 3:
         raise RuntimeError("v0.11 quality vote count mismatch")
 
+    modules = report.get("target_modules")
+    if not isinstance(modules, dict) or set(modules) != set(FAMILIES):
+        raise RuntimeError("v0.11 target module set mismatch")
+    observed_hashes = {family: sha256_text(str(modules[family])) for family in FAMILIES}
+    if observed_hashes != FROZEN_MODULE_SHA256:
+        raise RuntimeError(
+            f"v0.11 target modules do not match frozen TEST/ENGINEER hashes: {observed_hashes}"
+        )
+
+
+def select_candidate(report: dict[str, Any]) -> dict[str, Any]:
+    validate_report_identity(report)
     record = {family: evaluate_family(report, family) for family in FAMILIES}
     selected = [family for family in FAMILIES if record[family]["selected"]]
-    hashes = {family: hv1.sha256_text(hv1.FROZEN_MODULES[family]) for family in selected}
+    hashes = {family: FROZEN_MODULE_SHA256[family] for family in selected}
 
     return {
         "candidate_version": "heldout-v1-frozen-candidate",
