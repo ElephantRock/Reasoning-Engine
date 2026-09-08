@@ -1,0 +1,90 @@
+name: Held-Out Validation v1 Static Check
+
+on:
+  pull_request:
+    paths:
+      - 'benchmark/heldout_cases_v1.json'
+      - 'benchmark/heldout_case_schema_v1.json'
+      - 'docs/HELDOUT_VALIDATION_V1_PREREG.md'
+      - '.github/workflows/heldout-v1-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate JSON syntax
+        run: |
+          python -m json.tool benchmark/heldout_cases_v1.json > /dev/null
+          python -m json.tool benchmark/heldout_case_schema_v1.json > /dev/null
+
+      - name: Validate frozen held-out structure
+        run: |
+          python - <<'PY'
+          import json, re
+          from collections import Counter
+          from pathlib import Path
+
+          cases = json.loads(Path('benchmark/heldout_cases_v1.json').read_text())
+          assert len(cases) == 36
+          assert len({c['case_id'] for c in cases}) == 36
+          assert all(c['case_id'].startswith('HV1-') for c in cases)
+
+          strata = Counter(c['routing_stratum'] for c in cases)
+          assert strata == Counter({'TEST': 9, 'ENGINEER': 9, 'BOTH': 6, 'NONE': 12}), strata
+
+          domains = Counter(c['domain'] for c in cases)
+          assert len(domains) >= 6, domains
+          assert max(domains.values()) <= 8, domains
+
+          meta = [c['design_metadata'] for c in cases]
+          assert sum(m['sequential'] for m in meta) >= 12
+          assert sum(m['has_distractors'] for m in meta) >= 12
+          assert sum(m['requires_action'] for m in meta) >= 12
+
+          attestation = 'Not reused, paraphrased, or structurally cloned from v0.5-v0.11 development cases.'
+          assert all(m['freshness_attestation'] == attestation for m in meta)
+
+          required_eval = {
+              'observations', 'not_observed', 'plausible_hypotheses',
+              'discriminating_evidence', 'decision_critical_uncertainties',
+              'constraints', 'acceptable_interventions', 'scoring_notes'
+          }
+          stage_names = ('observe','diagnose','derive','hypothesize','predict','test','revise','engineer')
+          for c in cases:
+              assert set(c) == {'case_id','domain','routing_stratum','turns','evaluator_key','design_metadata'}
+              assert required_eval.issubset(c['evaluator_key'])
+              assert len(c['turns']) >= 1
+              for i, turn in enumerate(c['turns'], 1):
+                  assert turn['turn'] == i
+                  prompt = turn['agent_input'].lower()
+                  for stage in stage_names:
+                      assert not re.search(rf'\b{stage}\b', prompt), (c['case_id'], stage)
+
+          # Exact balanced-domain authoring target for this frozen suite.
+          assert len(domains) == 9 and set(domains.values()) == {4}, domains
+          print('held-out v1 suite structure validated')
+          print('strata:', dict(strata))
+          print('domains:', dict(domains))
+          print('sequential:', sum(m['sequential'] for m in meta))
+          print('distractor:', sum(m['has_distractors'] for m in meta))
+          print('requires_action:', sum(m['requires_action'] for m in meta))
+          PY
+
+      - name: Validate no execution marker
+        run: |
+          if grep -R '\[run-heldout-v1\]' benchmark/heldout_cases_v1.json docs/HELDOUT_VALIDATION_V1_PREREG.md .github/workflows/heldout-v1-check.yml; then
+            echo 'Held-out authoring PR must not launch validation.' >&2
+            exit 1
+          fi
