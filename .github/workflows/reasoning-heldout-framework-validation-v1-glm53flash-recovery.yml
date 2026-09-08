@@ -1,0 +1,151 @@
+name: Reasoning Held-Out Framework Validation v1 — GLM-5.3-Flash Recovery
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  actions: read
+  contents: read
+
+env:
+  ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+  ZAI_JUDGE_API_KEY: ${{ secrets.ZAI_API_KEY }}
+  ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4
+  ZAI_TARGET_MODEL: glm-5.1
+  ZAI_JUDGE_BASE_URL: https://api.z.ai/api/coding/paas/v4
+  ZAI_JUDGE_MODEL: glm-5.3-flash
+  FRAMEWORK_TARGET_FAMILY: glm
+  FRAMEWORK_TARGET_PROVIDER: zai
+  FRAMEWORK_JUDGE_FAMILY: glm
+  FRAMEWORK_JUDGE_PROVIDER: zai
+  FRAMEWORK_CROSS_MODEL_SAME_FAMILY_ATTESTATION: 'true'
+  FRAMEWORK_GENERATION_REPLICATES: '3'
+  FRAMEWORK_JUDGE_VOTES: '3'
+  FRAMEWORK_SHARD_COUNT: '6'
+  BENCHMARK_BOOTSTRAP_SAMPLES: '5000'
+  BENCHMARK_SUITE: combined
+  SOURCE_RUN_ID: '34232674771'
+
+jobs:
+  validate-preflight:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[resume-heldout-framework-v1-glm53flash]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: benchmark
+    env:
+      FRAMEWORK_SHARD_INDEX: '0'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Verify Z.AI credential exists
+        shell: bash
+        run: test -n "$ZAI_API_KEY" || { echo 'ZAI_API_KEY is missing.' >&2; exit 1; }
+      - name: Verify frozen recovery configuration and judge connectivity
+        run: |
+          python - <<'PY'
+          import recover_framework_validation_v1_glm53flash as r
+          import run_framework_validation_v1_glm53flash as tier
+          tier.cross_model_same_family_preflight()
+          usage = r.recovery_connectivity_check()
+          print({'preflight': 'ok', 'source_run_id': r.SOURCE_RUN_ID, 'judge_model': r.base.v03.JUDGE_MODEL, 'usage': usage})
+          PY
+
+  shard:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[resume-heldout-framework-v1-glm53flash]')
+    needs: validate-preflight
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5]
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    defaults:
+      run:
+        working-directory: benchmark
+    env:
+      FRAMEWORK_SHARD_INDEX: ${{ matrix.shard }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Restore source-run shard checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          name: framework-v1-glm53flash-shard-${{ matrix.shard }}-34232674771
+          path: benchmark/results_framework_validation_v1
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: 34232674771
+      - name: Resume only missing judge votes
+        run: python recover_framework_validation_v1_glm53flash.py
+      - name: Upload recovered shard results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: framework-v1-glm53flash-recovered-shard-${{ matrix.shard }}-${{ github.run_id }}
+          path: |
+            benchmark/results_framework_validation_v1/framework_v1_runs_shard_${{ matrix.shard }}.jsonl
+            benchmark/results_framework_validation_v1/framework_v1_votes_shard_${{ matrix.shard }}.jsonl
+            benchmark/results_framework_validation_v1/framework_v1_meta_shard_${{ matrix.shard }}.json
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate:
+    if: always() && needs.validate-preflight.result == 'success' && needs.shard.result == 'success'
+    needs: [validate-preflight, shard]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: benchmark
+    env:
+      FRAMEWORK_SHARD_INDEX: '0'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Download recovered shard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: framework-v1-glm53flash-recovered-shard-*-${{ github.run_id }}
+          path: benchmark/results_framework_validation_v1
+          merge-multiple: true
+      - name: Aggregate frozen held-out results with recovery provenance
+        run: python aggregate_framework_validation_v1_glm53flash_recovery.py
+      - name: Upload recovered final report
+        uses: actions/upload-artifact@v4
+        with:
+          name: framework-v1-glm53flash-recovered-report-${{ github.run_id }}
+          path: |
+            benchmark/results_framework_validation_v1/framework_v1_glm53flash_report.json
+            benchmark/results_framework_validation_v1/framework_v1_report.json
+            benchmark/results_framework_validation_v1/framework_v1_meta_shard_*.json
+          if-no-files-found: error
+          retention-days: 30
