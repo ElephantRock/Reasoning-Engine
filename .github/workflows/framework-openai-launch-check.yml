@@ -1,0 +1,47 @@
+name: Framework Validation OpenAI Launch Static Check
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/reasoning-heldout-framework-validation-v1-openai.yml'
+      - '.github/workflows/framework-openai-launch-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate frozen marker-gated launch profile
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('.github/workflows/reasoning-heldout-framework-validation-v1-openai.yml')
+          text = p.read_text()
+          assert 'push:\n    branches: [main]' in text
+          assert "[run-heldout-framework-v1-openai]" in text
+          assert "contains(github.event.head_commit.message, '[run-heldout-framework-v1-openai]')" in text
+          assert 'ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4' in text
+          assert 'ZAI_TARGET_MODEL: glm-5.1' in text
+          assert 'FRAMEWORK_TARGET_FAMILY: glm' in text
+          assert 'FRAMEWORK_TARGET_PROVIDER: zai' in text
+          assert 'ZAI_JUDGE_BASE_URL: https://api.openai.com/v1' in text
+          assert 'ZAI_JUDGE_MODEL: gpt-5.6-sol' in text
+          assert 'FRAMEWORK_JUDGE_FAMILY: gpt' in text
+          assert 'FRAMEWORK_JUDGE_PROVIDER: openai' in text
+          assert 'ZAI_JUDGE_API_KEY: ${{ secrets.OPENAI_API_KEY }}' in text
+          assert 'independent_evaluator_preflight' in text
+          assert 'independent_evaluator_connectivity_check' in text
+          assert 'needs: validate-preflight' in text
+          assert 'matrix:\n        shard: [0, 1, 2, 3, 4, 5]' in text
+          assert 'max-parallel: 3' in text
+          assert 'FRAMEWORK_GENERATION_REPLICATES: \'3\'' in text
+          assert 'FRAMEWORK_JUDGE_VOTES: \'3\'' in text
+          assert 'python run_framework_validation_v1.py' in text
+          assert 'python aggregate_framework_validation_v1.py' in text
+          assert 'heldout_candidate_v1.json' not in text
+          print('marker-gated OpenAI-judged framework launch profile validated')
+          PY
