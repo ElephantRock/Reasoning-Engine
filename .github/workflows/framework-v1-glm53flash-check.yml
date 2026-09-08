@@ -108,12 +108,13 @@ jobs:
           from pathlib import Path
           probe = Path('.github/workflows/framework-glm53flash-judge-probe.yml').read_text()
           run = Path('.github/workflows/reasoning-heldout-framework-validation-v1-glm53flash.yml').read_text()
+          secret_ref = '$' + '{{ secrets.' + 'ZAI_API_KEY }}'
           assert '[probe-framework-judge-glm53flash]' in probe
           assert '[run-heldout-framework-v1-glm53flash]' in run
           assert 'ZAI_JUDGE_MODEL: glm-5.3-flash' in probe
           assert 'ZAI_JUDGE_MODEL: glm-5.3-flash' in run
-          assert 'ZAI_JUDGE_API_KEY: ${{ secrets.ZAI_API_KEY }}' in probe
-          assert 'ZAI_JUDGE_API_KEY: ${{ secrets.ZAI_API_KEY }}' in run
+          assert f'ZAI_JUDGE_API_KEY: {secret_ref}' in probe
+          assert f'ZAI_JUDGE_API_KEY: {secret_ref}' in run
           assert 'needs: validate-preflight' in run
           assert 'matrix:\n        shard: [0, 1, 2, 3, 4, 5]' in run
           assert 'max-parallel: 3' in run
