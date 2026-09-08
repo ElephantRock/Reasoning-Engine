@@ -1,0 +1,64 @@
+name: Framework OpenAI Judge Probe
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[probe-framework-judge-openai]')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: benchmark
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      ZAI_JUDGE_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      ZAI_TARGET_MODEL: glm-5.1
+      ZAI_JUDGE_BASE_URL: https://api.openai.com/v1
+      ZAI_JUDGE_MODEL: gpt-5.6-sol
+      FRAMEWORK_TARGET_FAMILY: glm
+      FRAMEWORK_TARGET_PROVIDER: zai
+      FRAMEWORK_JUDGE_FAMILY: gpt
+      FRAMEWORK_JUDGE_PROVIDER: openai
+      FRAMEWORK_INDEPENDENT_EVALUATOR_ATTESTATION: 'true'
+      FRAMEWORK_GENERATION_REPLICATES: '3'
+      FRAMEWORK_JUDGE_VOTES: '3'
+      FRAMEWORK_SHARD_COUNT: '6'
+      FRAMEWORK_SHARD_INDEX: '0'
+      BENCHMARK_SUITE: combined
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Verify credentials exist
+        shell: bash
+        run: |
+          test -n "$ZAI_API_KEY" || { echo 'ZAI_API_KEY is missing.' >&2; exit 1; }
+          test -n "$OPENAI_API_KEY" || { echo 'OPENAI_API_KEY is missing.' >&2; exit 1; }
+
+      - name: Run independent judge-only preflight
+        run: |
+          python - <<'PY'
+          import run_framework_validation_v1 as r
+          r.independent_evaluator_preflight()
+          usage = r.independent_evaluator_connectivity_check()
+          print('OpenAI independent judge preflight passed; probe usage:', usage)
+          PY
