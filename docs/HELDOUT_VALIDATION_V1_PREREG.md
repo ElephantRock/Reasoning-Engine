@@ -6,9 +6,9 @@ Role: first genuinely fresh validation phase after development/calibration. This
 
 ## Objective
 
-Test whether the frozen candidate reasoning controller improves reasoning quality on fresh cases that were not used to design, tune, select, or measure the development-stage prompts.
+Test whether the frozen **modular intervention policy** improves reasoning quality on fresh cases that were not used to design, tune, select, or measure the development-stage prompts.
 
-The validation target is not protocol compliance. The primary outcome is reasoning quality.
+Held-out v1 validates module value under preregistered task strata. It does **not** validate an autonomous router. The validation target is reasoning quality, not protocol compliance.
 
 ## Candidate selection
 
@@ -23,16 +23,20 @@ For each of TEST and ENGINEER:
 
 A module that passes is frozen verbatim. A module that fails is excluded. No wording changes are permitted after v0.11.
 
-## Frozen routing policy
+## Frozen task-stratum intervention policy
 
-Routing is rule-based and fixed before validation results.
+Each held-out case is assigned a task stratum by the case author **before any candidate output is generated**.
 
-- TEST trigger: use TEST only when the problem contains material mechanism uncertainty and the next justified decision can be materially improved by evidence that separates or falsifies competing explanations.
-- ENGINEER trigger: use ENGINEER only when a mechanism is sufficiently supported and the task requires an intervention/design under constraints where robustness, reversibility, monitoring, rollback, side effects, or second-order effects are materially decision-relevant.
-- BOTH trigger: if both rules hold, apply TEST first and ENGINEER second.
-- NONE: use the neutral CONTROL core only.
+Assignment rules:
 
-The router may activate only modules that survived v0.11 selection. The routing rule itself may not be tuned on held-out outcomes.
+- TEST: material mechanism uncertainty is present and the next justified decision can be materially improved by evidence that separates or falsifies competing explanations.
+- ENGINEER: a mechanism is sufficiently supported and the task requires an intervention/design under constraints where robustness, reversibility, monitoring, rollback, side effects, or second-order effects are materially decision-relevant.
+- BOTH: both rules hold; apply TEST first and ENGINEER second.
+- NONE: neither rule holds; use the neutral CONTROL core only.
+
+The validation harness applies only modules that survived v0.11 selection, according to the preregistered case stratum. The stratum label is never shown to the target model or quality judge.
+
+This is intentionally **oracle-stratified module validation**. A positive result supports the value of the frozen modules when the relevant task class is known; it does not establish that an automated router can recognize that class reliably. Autonomous routing remains a separate future experiment.
 
 ## Held-out suite
 
@@ -57,11 +61,11 @@ Case prompts must not use the framework stage names or directly instruct the tar
 
 Primary comparison:
 
-`CANDIDATE_CONTROLLER vs CONTROL`
+`CANDIDATE_POLICY vs CONTROL`
 
 Secondary specificity comparison:
 
-`CANDIDATE_CONTROLLER vs ATTENTION`
+`CANDIDATE_POLICY vs ATTENTION`
 
 Development reference comparison, descriptive only:
 
@@ -94,7 +98,7 @@ A human-reviewed audit subset of at least 12 cases is recommended even when an i
 
 ## Primary endpoint
 
-For each case, compute the case-level CANDIDATE_CONTROLLER score against CONTROL after vote aggregation and generation averaging. The primary endpoint is the mean across 36 cases.
+For each case, compute the case-level CANDIDATE_POLICY score against CONTROL after vote aggregation and generation averaging. The primary endpoint is the mean across 36 cases.
 
 The primary success criterion is deliberately stricter than merely exceeding 0.5:
 
@@ -105,15 +109,15 @@ This threshold is fixed before held-out outputs exist.
 
 ## Specificity/support criterion
 
-`CANDIDATE_CONTROLLER vs ATTENTION` is supporting evidence, not the primary endpoint.
+`CANDIDATE_POLICY vs ATTENTION` is supporting evidence, not the primary endpoint.
 
-Support is considered directionally consistent if its point estimate is `>= 0.55`. Failure of this secondary criterion does not erase a positive primary result, but it weakens the claim that gains are attributable to the specific controller rather than generic extra deliberation.
+Support is considered directionally consistent if its point estimate is `>= 0.55`. Failure of this secondary criterion does not erase a positive primary result, but it weakens the claim that gains are attributable to the specific modules rather than generic extra deliberation.
 
 ## Harm / robustness checks
 
 Report, without post-hoc exclusion:
 
-- score by routing stratum: TEST, ENGINEER, BOTH, NONE;
+- score by task stratum: TEST, ENGINEER, BOTH, NONE;
 - score by domain;
 - score on sequential vs single-turn cases;
 - score on distractor/stress vs clean cases;
@@ -121,7 +125,7 @@ Report, without post-hoc exclusion:
 - judge agreement and unanimity;
 - output-token and latency diagnostics.
 
-A candidate is not considered robust if any preregistered routing stratum with at least 6 cases has a mean primary score `< 0.45`, even if the overall endpoint passes.
+A candidate is not considered robust if any preregistered task stratum with at least 6 cases has a mean primary score `< 0.45`, even if the overall endpoint passes.
 
 ## Missing data and failures
 
@@ -134,7 +138,7 @@ Provider/runtime failures may be retried only under a logged deterministic retry
 Once any held-out candidate output or quality judgment has been observed:
 
 - no prompt/module wording changes;
-- no routing-rule changes;
+- no task-stratum reassignment;
 - no threshold changes;
 - no case removals or replacements except objective corruption/runtime defects documented before outcome inspection;
 - no evaluator rubric changes.
@@ -143,7 +147,9 @@ A failed validation remains a failed validation. Any subsequent redesign starts 
 
 ## Interpretation
 
-If the primary endpoint and robustness checks pass, the project may claim that the frozen candidate controller improved reasoning quality on this held-out suite under the tested target/evaluator configuration.
+If the primary endpoint and robustness checks pass, the project may claim that the frozen modular intervention policy improved reasoning quality on this held-out suite when applied to preregistered task strata under the tested target/evaluator configuration.
+
+It may **not** claim that autonomous routing has been validated. Routing must later be tested by comparing an automated routing decision against the preregistered task labels and by measuring end-to-end quality with the router making those decisions itself.
 
 It still should not claim universal reasoning improvement without replication across additional model families and evaluators.
 
