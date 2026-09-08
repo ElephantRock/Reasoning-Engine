@@ -5,9 +5,13 @@ on:
     paths:
       - 'benchmark/run_framework_validation_v1_glm53flash.py'
       - 'benchmark/aggregate_framework_validation_v1_glm53flash.py'
+      - 'benchmark/recover_framework_validation_v1_glm53flash.py'
+      - 'benchmark/aggregate_framework_validation_v1_glm53flash_recovery.py'
       - 'docs/HELDOUT_FRAMEWORK_VALIDATION_V1_GLM53FLASH_PREREG.md'
+      - 'docs/HELDOUT_FRAMEWORK_VALIDATION_V1_GLM53FLASH_RECOVERY.md'
       - '.github/workflows/framework-glm53flash-judge-probe.yml'
       - '.github/workflows/reasoning-heldout-framework-validation-v1-glm53flash.yml'
+      - '.github/workflows/reasoning-heldout-framework-validation-v1-glm53flash-recovery.yml'
       - '.github/workflows/framework-v1-glm53flash-check.yml'
   workflow_dispatch:
 
@@ -46,7 +50,12 @@ jobs:
       - name: Install dependencies
         run: python -m pip install -r benchmark/requirements.txt
       - name: Validate Python syntax
-        run: python -m py_compile benchmark/run_framework_validation_v1_glm53flash.py benchmark/aggregate_framework_validation_v1_glm53flash.py
+        run: |
+          python -m py_compile \
+            benchmark/run_framework_validation_v1_glm53flash.py \
+            benchmark/aggregate_framework_validation_v1_glm53flash.py \
+            benchmark/recover_framework_validation_v1_glm53flash.py \
+            benchmark/aggregate_framework_validation_v1_glm53flash_recovery.py
       - name: Validate frozen scientific design and cross-model classification
         working-directory: benchmark
         run: |
@@ -87,6 +96,48 @@ jobs:
               b.v03.JUDGE_MODEL = original
           print('cross-model gate validated')
           PY
+      - name: Validate outcome-blind JSON format handling
+        working-directory: benchmark
+        run: |
+          python - <<'PY'
+          import json
+          import recover_framework_validation_v1_glm53flash as r
+
+          assert r.parse_first_json_object('{"winner":"A"}') == {'winner': 'A'}
+          assert r.parse_first_json_object('```json\n{"winner":"B"}\n```') == {'winner': 'B'}
+          assert r.parse_first_json_object('{"winner":"TIE"}\nextra prose') == {'winner': 'TIE'}
+          assert r.parse_first_json_object('prefix {"winner":"A"} suffix') == {'winner': 'A'}
+          try:
+              r.parse_first_json_object('{"winner" "A"}')
+          except json.JSONDecodeError:
+              pass
+          else:
+              raise AssertionError('malformed JSON was silently repaired')
+          assert r.MAX_FORMAT_ATTEMPTS == 3
+          print('JSON handling accepts complete objects and never repairs malformed JSON')
+          PY
+      - name: Validate checkpoint recovery forbids target regeneration
+        working-directory: benchmark
+        run: |
+          python - <<'PY'
+          import recover_framework_validation_v1_glm53flash as r
+          b = r.base
+          shard_cases = [case for i, case in enumerate(b.CASES) if i % b.SHARD_COUNT == b.SHARD_INDEX]
+          runs = [
+              {'case_id': case_id, 'condition': condition, 'replicate': replicate}
+              for case_id, condition, replicate in sorted(r.expected_run_keys(shard_cases))
+          ]
+          _, votes = r.validate_checkpoint(runs, [], shard_cases)
+          assert len(runs) == r.EXPECTED_RUNS_PER_SHARD == 54
+          assert votes == set()
+          try:
+              r.validate_checkpoint(runs[:-1], [], shard_cases)
+          except RuntimeError as exc:
+              assert 'refuses target regeneration' in str(exc)
+          else:
+              raise AssertionError('missing target run did not fail closed')
+          print('target regeneration guard validated')
+          PY
       - name: Validate report tier labeling and frozen thresholds
         working-directory: benchmark
         run: |
@@ -94,29 +145,39 @@ jobs:
           from pathlib import Path
           import aggregate_framework_validation_v1 as a
           text = Path('aggregate_framework_validation_v1_glm53flash.py').read_text()
+          recovery = Path('aggregate_framework_validation_v1_glm53flash_recovery.py').read_text()
           assert a.PRIMARY_MIN_SCORE == 0.60
           assert a.PRIMARY_CI_LOW_MIN_EXCLUSIVE == 0.50
           assert a.STRATUM_HARM_FLOOR == 0.45
           assert 'Tier-1B cross-model same-family' in text
           assert 'independent_evaluator' in text
           assert 'False' in text
-          print('report tier and thresholds validated')
+          assert 'source_run_id' in recovery
+          assert 'target_outputs_regenerated' in recovery
+          print('report tier, recovery provenance, and thresholds validated')
           PY
-      - name: Validate probe and paid workflow marker gates
+      - name: Validate original and recovery workflow marker gates
         run: |
           python - <<'PY'
           from pathlib import Path
           probe = Path('.github/workflows/framework-glm53flash-judge-probe.yml').read_text()
           run = Path('.github/workflows/reasoning-heldout-framework-validation-v1-glm53flash.yml').read_text()
+          recovery = Path('.github/workflows/reasoning-heldout-framework-validation-v1-glm53flash-recovery.yml').read_text()
           secret_ref = '$' + '{{ secrets.' + 'ZAI_API_KEY }}'
           assert '[probe-framework-judge-glm53flash]' in probe
           assert '[run-heldout-framework-v1-glm53flash]' in run
+          assert '[resume-heldout-framework-v1-glm53flash]' in recovery
           assert 'ZAI_JUDGE_MODEL: glm-5.3-flash' in probe
           assert 'ZAI_JUDGE_MODEL: glm-5.3-flash' in run
+          assert 'ZAI_JUDGE_MODEL: glm-5.3-flash' in recovery
           assert f'ZAI_JUDGE_API_KEY: {secret_ref}' in probe
           assert f'ZAI_JUDGE_API_KEY: {secret_ref}' in run
-          assert 'needs: validate-preflight' in run
-          assert 'matrix:\n        shard: [0, 1, 2, 3, 4, 5]' in run
-          assert 'max-parallel: 3' in run
-          print('marker-gated workflows validated')
+          assert f'ZAI_JUDGE_API_KEY: {secret_ref}' in recovery
+          assert 'run-id: 34232674771' in recovery
+          assert 'framework-v1-glm53flash-shard-${{ matrix.shard }}-34232674771' in recovery
+          assert 'matrix:\n        shard: [0, 1, 2, 3, 4, 5]' in recovery
+          assert 'max-parallel: 2' in recovery
+          assert 'python recover_framework_validation_v1_glm53flash.py' in recovery
+          assert 'python aggregate_framework_validation_v1_glm53flash_recovery.py' in recovery
+          print('marker-gated recovery workflow validated')
           PY
