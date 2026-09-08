@@ -1,0 +1,199 @@
+[
+  {
+    "case_id": "RF-V11-TS01",
+    "family": "TEST",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A beverage filling line began intermittently underfilling bottles after two changes made during the same maintenance window: a PLC firmware update and replacement of a compressed-air regulator. The underfill alarms appear only on the two fastest product sizes. Pressure logs at the main manifold look normal, and the PLC vendor says the firmware change should not affect valve timing. Production can tolerate a 20-minute canary on one filler, but not a full-line rollback. What should we do next, and how should the possible observations change the decision?"
+      }
+    ],
+    "evaluator_key": {
+      "target_behavior": "Use discriminating, falsification-capable evidence with prospective outcome branches and explicit update rules rather than confirmation-only checking.",
+      "fidelity_criteria": [
+        {"id": "T1", "text": "Chooses evidence or an action whose materially different outcomes separate the leading mechanisms rather than merely confirm one favored explanation."},
+        {"id": "T2", "text": "States prospective, materially different observations expected under at least two leading mechanisms before the outcome is known."},
+        {"id": "T3", "text": "Maps at least two possible outcomes to explicit changes in causal belief, confidence, or the next decision."},
+        {"id": "T4", "text": "Controls or explicitly addresses the dominant confound and identifies what result would weaken or falsify the favored mechanism."},
+        {"id": "T5", "text": "Selects a feasible, decision-relevant next evidence step under the stated constraints and explains why it is more informative than an obvious alternative."}
+      ],
+      "observations": [
+        "Underfills began after a PLC firmware update and compressed-air regulator replacement performed in the same window.",
+        "Only the two fastest product sizes show the issue.",
+        "Main-manifold pressure logs appear normal.",
+        "A 20-minute canary on one filler is allowed; a full-line rollback is not."
+      ],
+      "not_observed": [
+        "Valve-level pressure during the fast fill cycle has not been measured.",
+        "Firmware has not been reverted while holding the regulator configuration fixed.",
+        "The regulator has not been bypassed while holding firmware fixed."
+      ],
+      "plausible_hypotheses": [
+        "Firmware changed effective valve timing or scheduling under the fastest recipes.",
+        "The new regulator has transient droop that is invisible in coarse manifold logs.",
+        "The two changes interact under peak pneumatic demand."
+      ],
+      "discriminating_evidence": [
+        "A single-variable canary that holds one change fixed while reversing or bypassing the other, with high-frequency valve-level pressure and timing telemetry.",
+        "Prospective outcome branches that distinguish firmware, pneumatic, and interaction explanations."
+      ],
+      "decision_critical_uncertainties": [
+        "Whether the issue follows firmware state, local transient pressure behavior, or their interaction."
+      ],
+      "constraints": [
+        "No full-line rollback.",
+        "Only a 20-minute canary on one filler is available."
+      ],
+      "acceptable_interventions": [
+        "Use a one-filler single-variable canary with high-frequency local telemetry and a precommitted outcome-to-action rule."
+      ],
+      "scoring_notes": [
+        "A strong answer should prefer a single-variable discriminating canary over generic monitoring or simultaneous rollback of both changes.",
+        "It should say what different outcomes imply before the canary runs."
+      ]
+    }
+  },
+  {
+    "case_id": "RF-V11-TS02",
+    "family": "TEST",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A fraud-detection service developed a 9% latency regression after a model refresh and a feature-store client upgrade shipped together. CPU is unchanged, feature-store request count is unchanged, and the slow requests are concentrated in transactions with many sparse categorical fields. A previous model refresh caused a similar symptom, so the team wants to roll back the model immediately. You can run one controlled 15-minute canary before choosing which component to revert. What is the most informative next move, and how should each plausible result change the action?"
+      }
+    ],
+    "evaluator_key": {
+      "target_behavior": "Use discriminating, falsification-capable evidence with prospective outcome branches and explicit update rules rather than confirmation-only checking.",
+      "fidelity_criteria": [
+        {"id": "T1", "text": "Chooses evidence or an action whose materially different outcomes separate the leading mechanisms rather than merely confirm one favored explanation."},
+        {"id": "T2", "text": "States prospective, materially different observations expected under at least two leading mechanisms before the outcome is known."},
+        {"id": "T3", "text": "Maps at least two possible outcomes to explicit changes in causal belief, confidence, or the next decision."},
+        {"id": "T4", "text": "Controls or explicitly addresses the dominant confound and identifies what result would weaken or falsify the favored mechanism."},
+        {"id": "T5", "text": "Selects a feasible, decision-relevant next evidence step under the stated constraints and explains why it is more informative than an obvious alternative."}
+      ],
+      "observations": [
+        "Latency regressed 9% after model refresh and feature-store client upgrade shipped together.",
+        "CPU and feature-store request count are unchanged.",
+        "Slow requests cluster on transactions with many sparse categorical fields.",
+        "A previous model refresh produced a similar symptom, creating an anchoring risk."
+      ],
+      "not_observed": [
+        "Neither component has been isolated in a controlled canary.",
+        "Per-feature serialization/deserialization cost has not been compared across client versions."
+      ],
+      "plausible_hypotheses": [
+        "The refreshed model performs more expensive sparse-feature processing.",
+        "The upgraded feature-store client has higher encoding/decoding overhead on sparse categorical payloads.",
+        "An interaction between the refreshed model's access pattern and the new client produces the regression."
+      ],
+      "discriminating_evidence": [
+        "A single-variable canary that reverts one component while holding the other and the transaction mix constant, with per-stage latency instrumentation.",
+        "Prospective outcome branches that distinguish model, client, and interaction effects."
+      ],
+      "decision_critical_uncertainties": [
+        "Which changed component actually drives the regression and whether the historical analogy is misleading."
+      ],
+      "constraints": [
+        "Only one 15-minute controlled canary is available before the rollback decision."
+      ],
+      "acceptable_interventions": [
+        "Choose the canary that most cleanly isolates one component and precommit the interpretation of improvement, no change, and partial improvement."
+      ],
+      "scoring_notes": [
+        "Do not reward rolling back the model merely because a previous model refresh looked similar.",
+        "A strong answer should make the canary falsification-capable and outcome-conditioned."
+      ]
+    }
+  },
+  {
+    "case_id": "RF-V11-EN01",
+    "family": "ENGINEER",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A cold-storage warehouse has confirmed that a specific family of evaporator temperature probes drifts upward by 1.5-2.0 C after several hours of compressor vibration. The drift causes unnecessary defrost cycles, but lowering the threshold too far risks missing a real warming event. The warehouse cannot shut down an aisle for more than 12 minutes at a time, replacement probes are available for only 30% of positions this week, and food-safety alarms must remain active. Give the operating plan for this week and the path to a durable fix."
+      }
+    ],
+    "evaluator_key": {
+      "target_behavior": "Translate a supported mechanism into a robust action under constraints with mechanism fit, staged reversibility, monitoring/rollback, and second-order controls.",
+      "fidelity_criteria": [
+        {"id": "E1", "text": "Links each major action explicitly to the supported mechanism rather than proposing generic remediation."},
+        {"id": "E2", "text": "Compares or appropriately sequences reversible and harder-to-reverse actions, avoiding unnecessary irreversible commitment."},
+        {"id": "E3", "text": "Defines concrete monitoring plus precommitted rollback, stop, or escalation criteria for the temporary mitigation."},
+        {"id": "E4", "text": "Identifies material side effects, feedback, or second-order risks and includes compensating controls."},
+        {"id": "E5", "text": "Respects operational constraints and defines a feasible completion or exit path that removes the temporary workaround once the durable fix is in place."}
+      ],
+      "observations": [
+        "A specific probe family drifts upward 1.5-2.0 C after hours of compressor vibration.",
+        "Drift causes unnecessary defrost cycles.",
+        "Lowering the threshold too far risks missing genuine warming.",
+        "Only 30% of positions can receive replacement probes this week.",
+        "Aisle shutdowns are limited to 12 minutes and food-safety alarms must remain active."
+      ],
+      "decision_critical_uncertainties": [
+        "How much threshold margin exists at each position before true warming detection is compromised.",
+        "Whether drift severity varies enough by location to prioritize replacements."
+      ],
+      "constraints": [
+        "No aisle shutdown longer than 12 minutes.",
+        "Only 30% replacement capacity this week.",
+        "Food-safety alarms must remain active."
+      ],
+      "acceptable_interventions": [
+        "Use bounded temporary compensation only where measured signal margin permits it.",
+        "Prioritize replacement by drift severity and safety margin during short maintenance windows.",
+        "Use independent temperature verification and explicit stop/rollback thresholds.",
+        "Restore nominal configuration and retire the workaround after replacement."
+      ],
+      "scoring_notes": [
+        "A strong answer should not disable food-safety alarms or rely on threshold lowering without a bounded safety margin.",
+        "It should treat threshold compensation as temporary and reversible, with a durable replacement path."
+      ]
+    }
+  },
+  {
+    "case_id": "RF-V11-EN02",
+    "family": "ENGINEER",
+    "turns": [
+      {
+        "turn": 1,
+        "agent_input": "A package-sorting hub has confirmed that a new supplier's glossy labels cause one scanner model to double-read the tracking suffix under high-angle lighting. The rule that rejects duplicate suffixes also blocks real duplicate-label fraud, so operations cannot simply remove it. The hub can change scanner configuration remotely, can route at most 8% of packages to manual review without missing dispatch SLAs, and replacement scanners will arrive over the next month. Define what should change now, how it should be rolled out, and how you would know when to stop or reverse the temporary measures."
+      }
+    ],
+    "evaluator_key": {
+      "target_behavior": "Translate a supported mechanism into a robust action under constraints with mechanism fit, staged reversibility, monitoring/rollback, and second-order controls.",
+      "fidelity_criteria": [
+        {"id": "E1", "text": "Links each major action explicitly to the supported mechanism rather than proposing generic remediation."},
+        {"id": "E2", "text": "Compares or appropriately sequences reversible and harder-to-reverse actions, avoiding unnecessary irreversible commitment."},
+        {"id": "E3", "text": "Defines concrete monitoring plus precommitted rollback, stop, or escalation criteria for the temporary mitigation."},
+        {"id": "E4", "text": "Identifies material side effects, feedback, or second-order risks and includes compensating controls."},
+        {"id": "E5", "text": "Respects operational constraints and defines a feasible completion or exit path that removes the temporary workaround once the durable fix is in place."}
+      ],
+      "observations": [
+        "Glossy labels from a new supplier cause one scanner model to double-read the tracking suffix under high-angle lighting.",
+        "The duplicate-suffix rejection rule also catches real duplicate-label fraud.",
+        "Scanner configuration can be changed remotely.",
+        "Manual review capacity is capped at 8% of packages.",
+        "Replacement scanners arrive over the next month."
+      ],
+      "decision_critical_uncertainties": [
+        "Which remote configuration change reduces double-read errors without materially increasing missed fraud or unreadable labels.",
+        "How much traffic can safely be shifted to manual review within the SLA cap."
+      ],
+      "constraints": [
+        "Do not remove fraud protection globally.",
+        "Manual review cannot exceed 8% of packages.",
+        "Replacement is staged over a month."
+      ],
+      "acceptable_interventions": [
+        "Apply a scanner-model/label-cohort-specific reversible configuration mitigation rather than removing the fraud rule globally.",
+        "Canary the change and monitor false duplicate rejects, fraud catches, unreadable-label rate, and manual-review load.",
+        "Use explicit rollback thresholds and phase out the mitigation as affected scanners are replaced or label stock changes."
+      ],
+      "scoring_notes": [
+        "A strong answer should preserve fraud protection outside the affected mechanism and use a staged, reversible mitigation.",
+        "It should define concrete monitoring and exit criteria rather than leaving the temporary exception permanent."
+      ]
+    }
+  }
+]
