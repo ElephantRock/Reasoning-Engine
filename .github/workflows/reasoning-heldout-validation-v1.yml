@@ -22,7 +22,7 @@ on:
         required: true
         type: string
       judge_base_url:
-        description: OpenAI-compatible endpoint for the independent judge
+        description: OpenAI-compatible endpoint for the independent judge; must differ from the target endpoint
         required: true
         type: string
       independent_evaluator_attestation:
@@ -96,6 +96,12 @@ jobs:
           }
           test "${HELDOUT_TARGET_FAMILY,,}" != "${HELDOUT_JUDGE_FAMILY,,}" || {
             echo 'Judge model family must differ from target family.' >&2
+            exit 1
+          }
+          target_endpoint="${ZAI_BASE_URL%/}"
+          judge_endpoint="${ZAI_JUDGE_BASE_URL%/}"
+          test "$target_endpoint" != "$judge_endpoint" || {
+            echo 'Judge endpoint/provider must differ from the target endpoint for held-out validation.' >&2
             exit 1
           }
           python - <<'PY'
