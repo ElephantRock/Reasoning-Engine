@@ -1,0 +1,62 @@
+name: Framework GLM-5.3-Flash Judge Probe
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[probe-framework-judge-glm53flash]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: benchmark
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      ZAI_JUDGE_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      ZAI_TARGET_MODEL: glm-5.1
+      ZAI_JUDGE_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      ZAI_JUDGE_MODEL: glm-5.3-flash
+      FRAMEWORK_TARGET_FAMILY: glm
+      FRAMEWORK_TARGET_PROVIDER: zai
+      FRAMEWORK_JUDGE_FAMILY: glm
+      FRAMEWORK_JUDGE_PROVIDER: zai
+      FRAMEWORK_CROSS_MODEL_SAME_FAMILY_ATTESTATION: 'true'
+      FRAMEWORK_GENERATION_REPLICATES: '3'
+      FRAMEWORK_JUDGE_VOTES: '3'
+      FRAMEWORK_SHARD_COUNT: '6'
+      FRAMEWORK_SHARD_INDEX: '0'
+      BENCHMARK_SUITE: combined
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Verify Z.AI credential exists
+        shell: bash
+        run: test -n "$ZAI_API_KEY" || { echo 'ZAI_API_KEY is missing.' >&2; exit 1; }
+
+      - name: Run GLM-5.3-Flash judge-only preflight
+        run: |
+          python - <<'PY'
+          import run_framework_validation_v1_glm53flash as r
+          r.cross_model_same_family_preflight()
+          usage = r.cross_model_connectivity_check()
+          print({'probe': 'ok', 'judge_model': r.base.v03.JUDGE_MODEL, 'usage': usage})
+          PY
