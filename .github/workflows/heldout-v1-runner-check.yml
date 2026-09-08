@@ -175,6 +175,9 @@ jobs:
           assert 'needs: validate-preflight' in text
           assert 'ZAI_JUDGE_API_KEY' in text
           assert 'independent_evaluator_attestation' in text
+          assert 'target_endpoint="${ZAI_BASE_URL%/}"' in text
+          assert 'judge_endpoint="${ZAI_JUDGE_BASE_URL%/}"' in text
+          assert 'Judge endpoint/provider must differ from the target endpoint' in text
           assert 'Aggregate case-clustered validation result' in text
           assert '[run-heldout-v1]' not in text
           print('manual sharded held-out workflow validated')
