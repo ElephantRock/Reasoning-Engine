@@ -80,9 +80,9 @@ jobs:
           try:
               r.cross_model_same_family_preflight()
           except RuntimeError as exc:
-              assert 'distinct target and judge model IDs' in str(exc)
+              assert 'judge model must be exactly' in str(exc)
           else:
-              raise AssertionError('same-model judge did not fail')
+              raise AssertionError('wrong/same-model judge did not fail')
           finally:
               b.v03.JUDGE_MODEL = original
           print('cross-model gate validated')
