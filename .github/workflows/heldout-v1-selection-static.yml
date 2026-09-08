@@ -1,0 +1,102 @@
+name: Held-Out v1 Candidate Selection Static Check
+
+on:
+  pull_request:
+    paths:
+      - 'benchmark/select_heldout_candidate_v1.py'
+      - '.github/workflows/heldout-v1-selection-static.yml'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate Python syntax
+        run: python -m py_compile benchmark/select_heldout_candidate_v1.py
+      - name: Validate frozen thresholds and source
+        working-directory: benchmark
+        run: |
+          python - <<'PY'
+          import select_heldout_candidate_v1 as s
+          assert s.SOURCE_V011_RUN_ID == 34182916670
+          assert s.DECISION_PROTOCOL_COMMIT == 'c29ab7766f01e3345f2e01ccb0b2969555138e5f'
+          assert s.FIDELITY_MIN == 0.15
+          assert s.QUALITY_MIN == 0.667
+          assert s.CASE_FLOOR == 0.50
+          assert s.FAMILIES == ('TEST', 'ENGINEER')
+          PY
+      - name: Validate deterministic selection rule
+        working-directory: benchmark
+        run: |
+          python - <<'PY'
+          import copy
+          import select_heldout_candidate_v1 as s
+
+          def family(fid, qc, qa, c1=0.75, c2=0.75, a1=0.75, a2=0.75):
+              return {
+                  'fid': fid,
+                  'qc': {'score': qc, 'case_scores': {'x1': c1, 'x2': c2}},
+                  'qa': {'score': qa, 'case_scores': {'x1': a1, 'x2': a2}},
+              }
+
+          def report(test, eng):
+              return {
+                  'measurement_version': '0.11-behavioral-fidelity-identification',
+                  'families': ['TEST', 'ENGINEER'],
+                  'generation_replicates': 3,
+                  'fidelity_votes_per_response': 3,
+                  'quality_votes_per_pair': 3,
+                  'fidelity_results': {
+                      'TEST': {'target_minus_control': test['fid']},
+                      'ENGINEER': {'target_minus_control': eng['fid']},
+                  },
+                  'quality_results': {
+                      'TARGET_vs_CONTROL': {'by_family': {'TEST': test['qc'], 'ENGINEER': eng['qc']}},
+                      'TARGET_vs_ATTENTION': {'by_family': {'TEST': test['qa'], 'ENGINEER': eng['qa']}},
+                  },
+              }
+
+          passing = family(0.15, 0.667, 0.667, 0.50, 0.75, 0.50, 0.75)
+          failing_fidelity = family(0.149999, 0.90, 0.90)
+          out = s.select_candidate(report(passing, failing_fidelity))
+          assert out['selected_modules'] == ['TEST']
+          assert set(out['module_sha256']) == {'TEST'}
+          assert out['selection_record']['families']['TEST']['selected'] is True
+          assert out['selection_record']['families']['ENGINEER']['selected'] is False
+
+          failing_quality = family(0.30, 0.666999, 0.90)
+          failing_floor = family(0.30, 0.90, 0.90, c1=0.499999)
+          out = s.select_candidate(report(failing_quality, failing_floor))
+          assert out['selected_modules'] == []
+          assert out['selection_record']['all_modules_failed'] is True
+
+          both = family(0.30, 0.90, 0.90)
+          out = s.select_candidate(report(both, copy.deepcopy(both)))
+          assert out['selected_modules'] == ['TEST', 'ENGINEER']
+          assert set(out['module_sha256']) == {'TEST', 'ENGINEER'}
+          PY
+      - name: Validate malformed reports fail closed
+        working-directory: benchmark
+        run: |
+          python - <<'PY'
+          import select_heldout_candidate_v1 as s
+          bad = {
+              'measurement_version': 'wrong',
+              'families': ['TEST', 'ENGINEER'],
+              'generation_replicates': 3,
+              'fidelity_votes_per_response': 3,
+              'quality_votes_per_pair': 3,
+          }
+          try:
+              s.select_candidate(bad)
+          except RuntimeError:
+              pass
+          else:
+              raise AssertionError('malformed v0.11 report did not fail closed')
+          PY
+      - name: Validate selector does not ship a candidate
+        run: test ! -e benchmark/heldout_candidate_v1.json
