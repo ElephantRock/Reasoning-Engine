@@ -1,0 +1,169 @@
+name: Selective Routing v1 Static Check
+
+on:
+  pull_request:
+    paths:
+      - 'benchmark/selective_router_v1.py'
+      - 'benchmark/run_selective_routing_v1.py'
+      - 'benchmark/aggregate_selective_routing_v1.py'
+      - 'benchmark/routing_validation_cases_v1.json'
+      - 'docs/SELECTIVE_ROUTING_V1_PREREG.md'
+      - '.github/workflows/reasoning-selective-routing-v1.yml'
+      - '.github/workflows/selective-routing-v1-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      ZAI_API_KEY: unused-static-key
+      ZAI_JUDGE_API_KEY: unused-static-key
+      ROUTER_V1_API_KEY: unused-static-key
+      ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      ZAI_JUDGE_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      ROUTER_V1_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      ZAI_TARGET_MODEL: glm-5.1
+      ZAI_JUDGE_MODEL: glm-5.3-flash
+      ROUTER_V1_MODEL: glm-5.3-flash
+      ROUTING_V1_GENERATION_REPLICATES: '3'
+      ROUTING_V1_JUDGE_VOTES: '3'
+      ROUTING_V1_SHARD_COUNT: '6'
+      ROUTING_V1_SHARD_INDEX: '0'
+      ROUTING_V1_SAME_FAMILY_ATTESTATION: 'true'
+      BENCHMARK_BOOTSTRAP_SAMPLES: '5000'
+      BENCHMARK_SUITE: combined
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+      - run: python -m pip install -r benchmark/requirements.txt
+      - name: Validate Python syntax and case JSON
+        run: |
+          python -m py_compile \
+            benchmark/selective_router_v1.py \
+            benchmark/run_selective_routing_v1.py \
+            benchmark/aggregate_selective_routing_v1.py
+          python -m json.tool benchmark/routing_validation_cases_v1.json >/dev/null
+      - name: Validate fresh suite structure
+        run: |
+          python - <<'PY'
+          import json
+          from collections import Counter
+          from pathlib import Path
+          cases = json.loads(Path('benchmark/routing_validation_cases_v1.json').read_text())
+          assert len(cases) == 48
+          assert len({c['case_id'] for c in cases}) == 48
+          domains = Counter(c['domain'] for c in cases)
+          assert len(domains) == 12 and set(domains.values()) == {4}, domains
+          labels = Counter(c['author_route_label'] for c in cases)
+          assert labels == {'FULL_VALUE': 24, 'CONTROL_VALUE': 24}, labels
+          assert sum(bool(c['design_metadata']['sequential']) for c in cases) == 12
+          assert sum(bool(c['design_metadata']['has_distractors']) for c in cases) >= 24
+          assert sum(bool(c['design_metadata']['requires_action']) for c in cases) >= 24
+          assert sum(bool(c['design_metadata'].get('adversarial_surface')) for c in cases) >= 10
+          assert all(c['design_metadata']['freshness_attestation'].startswith('New routing-validation case') for c in cases)
+          old = json.loads(Path('benchmark/heldout_cases_v1.json').read_text())
+          assert not ({c['case_id'] for c in cases} & {c['case_id'] for c in old})
+          print('fresh 48-case routing suite structure validated')
+          PY
+      - name: Validate router input isolation and frozen action space
+        working-directory: benchmark
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import selective_router_v1 as router
+          import run_selective_routing_v1 as runner
+          text = Path('selective_router_v1.py').read_text()
+          runner_text = Path('run_selective_routing_v1.py').read_text()
+          assert router.ROUTER_MODEL == 'glm-5.3-flash'
+          assert router.MAX_FORMAT_ATTEMPTS == 3
+          assert 'author_route_label' not in text
+          assert 'evaluator_key' not in text
+          assert 'turns[0]["agent_input"]' in text
+          assert runner.CONDITIONS == ('CONTROL', 'FULL')
+          assert 'COMPACT' not in runner.CONDITIONS
+          assert runner.FULL == runner.v03.pilot.FULL
+          assert 'route_case(case)' in runner_text
+          print('router isolation and binary action space validated')
+          PY
+      - name: Validate format parser policy
+        working-directory: benchmark
+        run: |
+          python - <<'PY'
+          import json
+          import selective_router_v1 as router
+          import run_selective_routing_v1 as runner
+          assert router.parse_first_json_object('{"mode":"CONTROL","signals":[],"confidence":1}\nextra')['mode'] == 'CONTROL'
+          assert runner.parse_first_json_object('prefix {"winner":"A"} suffix') == {'winner':'A'}
+          try:
+              runner.parse_first_json_object('{"winner" "A"}')
+          except json.JSONDecodeError:
+              pass
+          else:
+              raise AssertionError('malformed JSON was repaired')
+          assert runner.MAX_FORMAT_ATTEMPTS == 3
+          print('format policy validated')
+          PY
+      - name: Validate frozen aggregation gates and policy math
+        working-directory: benchmark
+        run: |
+          python - <<'PY'
+          import aggregate_selective_routing_v1 as a
+          assert a.EXPECTED_CASES == 48
+          assert a.EXPECTED_RUNS == 288
+          assert a.EXPECTED_VOTES == 432
+          assert a.BENEFIT_MIN_SCORE == 0.60
+          assert a.BENEFIT_CI_LOW_EXCLUSIVE == 0.50
+          assert a.PRESERVATION_MIN_SCORE == 0.50
+          assert a.PRESERVATION_CI_LOW_EXCLUSIVE == 0.45
+          assert a.MAX_FULL_INVOCATION == 0.65
+          routes = [
+              {'case_id':'A','selected_mode':'FULL'},
+              {'case_id':'B','selected_mode':'CONTROL'},
+          ]
+          reps = []
+          for replicate in (1,2,3):
+              reps += [
+                  {'case_id':'A','replicate':replicate,'full_score':1.0},
+                  {'case_id':'B','replicate':replicate,'full_score':0.0},
+              ]
+          full, rvc, rvf = a.policy_scores(routes, reps)
+          assert full == {'A':1.0,'B':0.0}
+          assert rvc == {'A':1.0,'B':0.5}
+          assert rvf == {'A':0.5,'B':1.0}
+          print('policy math and frozen gates validated')
+          PY
+      - name: Validate paid workflow is marker-gated and sharded
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          workflow = Path('.github/workflows/reasoning-selective-routing-v1.yml').read_text()
+          marker = '[run-selective-routing-v1]'
+          assert marker in workflow
+          assert 'matrix:\n        shard: [0, 1, 2, 3, 4, 5]' in workflow
+          assert 'max-parallel: 3' in workflow
+          assert 'ZAI_TARGET_MODEL: glm-5.1' in workflow
+          assert 'ZAI_JUDGE_MODEL: glm-5.3-flash' in workflow
+          assert 'ROUTER_V1_MODEL: glm-5.3-flash' in workflow
+          assert "ROUTING_V1_GENERATION_REPLICATES: '3'" in workflow
+          assert "ROUTING_V1_JUDGE_VOTES: '3'" in workflow
+          assert "BENCHMARK_BOOTSTRAP_SAMPLES: '5000'" in workflow
+          assert 'if: always()' in workflow
+          assert 'python aggregate_selective_routing_v1.py' in workflow
+          print('paid workflow gating/sharding validated')
+          PY
+      - name: Smoke import
+        working-directory: benchmark
+        run: |
+          python - <<'PY'
+          import selective_router_v1
+          import run_selective_routing_v1
+          import aggregate_selective_routing_v1
+          print('selective routing v1 imports ok')
+          PY
