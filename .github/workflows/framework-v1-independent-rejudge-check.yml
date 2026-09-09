@@ -168,6 +168,7 @@ jobs:
           from pathlib import Path
           workflow = Path('.github/workflows/reasoning-heldout-framework-validation-v1-independent-rejudge.yml').read_text()
           secret_ref = '$' + '{{ secrets.' + 'INDEPENDENT_JUDGE_API_KEY }}'
+          matrix_ref = '$' + '{{ matrix.' + 'shard }}'
           assert '[run-heldout-framework-v1-independent-rejudge]' in workflow
           assert f'ZAI_JUDGE_API_KEY: {secret_ref}' in workflow
           assert 'INDEPENDENT_JUDGE_BASE_URL' in workflow
@@ -175,7 +176,7 @@ jobs:
           assert 'INDEPENDENT_JUDGE_FAMILY' in workflow
           assert 'INDEPENDENT_JUDGE_PROVIDER' in workflow
           assert 'run-id: 34270142523' in workflow
-          assert 'framework-v1-glm53flash-recovered-shard-${{ matrix.shard }}-34270142523' in workflow
+          assert f'framework-v1-glm53flash-recovered-shard-{matrix_ref}-34270142523' in workflow
           assert 'python rejudge_framework_validation_v1_independent.py' in workflow
           assert 'python aggregate_framework_validation_v1_independent_rejudge.py' in workflow
           assert 'max-parallel: 2' in workflow
