@@ -118,40 +118,55 @@ v0.9 also revealed a measurement warning: side-by-side behavior judging sometime
 
 See `docs/SELECTIVE_CONTROL_V0_9_RESULTS.md`.
 
-## Absolute Behavior Identification v0.10
+### Absolute Behavior Identification v0.10
 
-The current experiment removes pairwise behavior scoring as the manipulation measure.
+v0.10 removes pairwise behavior scoring as the manipulation measure and tests `TEST` and `ENGINEER` with independent absolute behavior judgments before quality interpretation.
 
-It tests two families:
-
-- `TEST` — the strongest unresolved positive directional signal from replicated v0.6.1;
-- `ENGINEER` — the positive-control family from v0.7/v0.9.
-
-Conditions remain:
-
-- `CONTROL` — neutral v0.7 core;
-- `ATTENTION` — generic extra quality-control pass;
-- `TARGET` — CONTROL plus the frozen capability module.
-
-Every generated response is behavior-scored **independently** three times. No behavior judge sees two conditions side by side. The manipulation quantity is computed only afterward:
-
-`TARGET absolute behavior - CONTROL absolute behavior`
-
-Predeclared identification gate:
-
-`TARGET - CONTROL >= 0.5/4`
-
-Quality remains repeated blinded pairwise evaluation for:
-
-1. `TARGET_vs_CONTROL`;
-2. `TARGET_vs_ATTENTION`;
-3. `ATTENTION_vs_CONTROL`.
-
-A family's quality result is interpreted as instruction-mediated capability evidence only if the independent absolute behavior gate passes.
-
-Default run size is 4 cases × 3 conditions × 3 generations = 36 target generations, plus 108 single-response behavior judgments and 108 pairwise quality judgments. This is intentionally smaller than v0.9 to stay comfortably below hosted-runner limits.
+Its role is component/control identification on development tasks, separate from framework-level held-out validation.
 
 See `docs/ABSOLUTE_BEHAVIOR_IDENTIFICATION_V0_10.md`.
+
+### Held-Out Framework Validation v1 — Tier-1B
+
+The frozen FULL framework has now passed its preregistered held-out primary endpoint under a distinct same-family evaluator.
+
+Design:
+
+- 36 fresh held-out cases;
+- 3 target-generation replicates per case/condition;
+- 3 blinded randomized judge votes per generated pair;
+- target `glm-5.1`;
+- judge `glm-5.3-flash`;
+- same GLM family and Z.AI provider.
+
+Primary FULL vs CONTROL result:
+
+- score: **`0.6898`**;
+- 95% case-clustered CI: **`0.6096–0.7685`**;
+- case-level direction: `26` wins / `2` ties / `8` losses;
+- preregistered statistical threshold: passed;
+- preregistered task-stratum robustness floor: passed;
+- **`validation_pass = true`** for this Tier-1B evaluation.
+
+Secondary results:
+
+- COMPACT vs CONTROL: `0.5864`, CI `0.5077–0.6667`; secondary success rule failed because the point estimate did not reach `0.60`;
+- FULL vs COMPACT: **`0.5957`**, CI **`0.5417–0.6543`**; preregistered direction favored FULL.
+
+The effect is heterogeneous rather than universal:
+
+- ENGINEER stratum: FULL vs CONTROL `0.9012`;
+- TEST stratum: `0.7901`;
+- BOTH: `0.6296`;
+- NONE: `0.4861`;
+- cases requiring action: `0.7375`;
+- cases not requiring action: `0.4921`.
+
+Interpretation: the frozen FULL protocol improves held-out reasoning quality on average relative to an uncontrolled baseline under a distinct same-family judge, with strongest value on test- and engineering-oriented tasks. This does not establish that full-depth explicit reasoning is beneficial on every task.
+
+The source execution encountered a judge JSON-format failure. Recovery preserved all 324 target outputs, retained 369 valid votes, completed only the 603 missing preregistered votes, regenerated zero target outputs, and produced the complete 972-vote report.
+
+See `docs/HELDOUT_FRAMEWORK_VALIDATION_V1_GLM53FLASH_RESULTS.md`.
 
 ## Coupled systems
 
@@ -164,18 +179,19 @@ Protocol compliance is not evidence of improved reasoning by itself.
 
 ## Validation boundary
 
-All v0.5–v0.10 cases are development/calibration evidence.
+Development/calibration evidence remains separate from held-out evidence.
 
-Framework validation requires, after prompts and control policies are frozen:
+The project now has a positive **Tier-1B cross-model, same-family held-out result** for FULL vs CONTROL. Because the evaluator is `glm-5.3-flash` while the target is `glm-5.1`, the result is stronger than same-model judging, but it is **not independent-provider or independent-family validation**.
 
-1. fresh held-out cases not used in prompt or benchmark development;
-2. multiple stochastic target generations per case;
-3. repeated blinded judgments;
-4. preferably a judge model independent of the target model;
-5. replication across model families/capability levels;
-6. predeclared primary effects and interpretation thresholds.
+The next strongest validation step is:
 
-Only after that should the project return to Adaptive routing and reasoning-cost optimization.
+1. preserve the frozen held-out design and result;
+2. evaluate with a genuinely independent model family/provider when credentials are available, preferably with a human-reviewed subset;
+3. replicate framework-level effects across target model families/capability levels;
+4. use the observed heterogeneity to formulate a preregistered selective-control/routing hypothesis without tuning on the held-out suite;
+5. only then optimize reasoning cost subject to preserving validated quality.
+
+The existing 36-case held-out suite is now exposed and must not be reused as a fresh holdout for prompt tuning.
 
 ## Cost policy
 
@@ -197,7 +213,7 @@ Default target model:
 
 `glm-5.1`
 
-The evaluator can use a different key/model/endpoint; independent evaluation remains a future requirement for strong validation claims.
+The Tier-1B held-out evaluator was `glm-5.3-flash` on the same provider. Independent-family/provider evaluation remains required for a stronger validation claim.
 
 ## Research discipline
 
@@ -207,4 +223,4 @@ The governing research loop is the framework applied to itself:
 
 **Observe benchmark failures → Diagnose → Derive → Hypothesize changes → Predict improvements → Test → Revise → Engineer**
 
-The immediate objective is **reproducibly better reasoning quality with experimentally identified control mechanisms**, not lower token cost.
+The immediate objective is now **replicate the held-out framework effect under independent evaluation and identify when FULL depth adds value**, before returning to routing or cost optimization.
