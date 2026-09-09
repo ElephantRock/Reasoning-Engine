@@ -25,7 +25,7 @@ Routing is binary in v1:
 
 `COMPACT` is deliberately excluded from the routing action space because it did not pass the preregistered secondary held-out success threshold in Framework Validation v1.
 
-The router is a separate classification call using `glm-5.3-flash` on the existing Z.AI endpoint. It sees only the user input available at routing time. It never sees evaluator keys, expected-route labels, target responses, judge votes, or future turns.
+The router is a separate classification call using `glm-5.3-flash` on the existing Z.AI endpoint. It sees only the user input available at routing time. It never sees evaluator keys, author route labels, target responses, judge votes, or future turns.
 
 Frozen router prompt:
 
@@ -37,15 +37,15 @@ Router temperature is fixed to `0` where supported. One route decision is made p
 
 Use exactly `benchmark/routing_validation_cases_v1.json` once frozen by merge.
 
-Planned suite size: `40` cases.
+Final suite size: `48` cases. The initial planning minimum was 40; before any model output existed, eight additional already-authored fresh cases were retained to improve domain coverage. No scientific threshold or route rule changed as a consequence.
 
 Design balance:
 
-- 10 domains × 4 cases each;
-- 20 author-designed `FULL_VALUE` cases and 20 `CONTROL_VALUE` cases for diagnostics only;
-- at least 8 sequential cases;
-- at least 12 distractor/misleading-surface cases;
-- at least 20 action-requiring cases;
+- 12 domains × 4 cases each;
+- 24 author-designed `FULL_VALUE` cases and 24 `CONTROL_VALUE` cases for diagnostics only;
+- 12 sequential cases;
+- at least 24 distractor/misleading-surface cases;
+- at least 24 action-requiring cases;
 - at least 10 adversarial surface mismatches, including CONTROL-value cases that mention tests/experiments and FULL-value cases without framework-stage vocabulary.
 
 The author-designed route labels are **not** ground truth for the primary endpoint. They are reported only as diagnostic classification metadata. Routing validity is determined by blinded response quality.
@@ -117,7 +117,7 @@ Only if both quality gates pass, routing efficiency is evaluated.
 
 The selectivity guard passes if:
 
-- FULL invocation rate <= `0.65` across the 40 cases.
+- FULL invocation rate <= `0.65` across the 48 cases.
 
 Target token and latency totals remain descriptive. They do not rescue a quality-gate failure.
 
