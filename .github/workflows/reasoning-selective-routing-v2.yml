@@ -1,0 +1,124 @@
+name: Reasoning Selective Routing v2
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  validate-preflight:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-selective-routing-v2]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      ZAI_JUDGE_API_KEY: ${{ secrets.ZAI_JUDGE_API_KEY }}
+      ROUTER_V1_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      ZAI_JUDGE_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      ROUTER_V1_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      ZAI_TARGET_MODEL: glm-5.1
+      ZAI_JUDGE_MODEL: glm-5.3-flash
+      ROUTER_V1_MODEL: glm-5.3-flash
+      ZAI_JUDGE_TEMPERATURE: '0.2'
+      ROUTING_V2_SAME_FAMILY_ATTESTATION: 'true'
+      BENCHMARK_SUITE: combined
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+      - run: python -m pip install -r benchmark/requirements.txt
+      - name: Verify frozen v2 configuration and benchmark-free connectivity
+        working-directory: benchmark
+        run: python preflight_selective_routing_v2.py
+
+  shard:
+    needs: validate-preflight
+    if: needs.validate-preflight.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5]
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      ZAI_JUDGE_API_KEY: ${{ secrets.ZAI_JUDGE_API_KEY }}
+      ROUTER_V1_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      ZAI_JUDGE_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      ROUTER_V1_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      ZAI_TARGET_MODEL: glm-5.1
+      ZAI_JUDGE_MODEL: glm-5.3-flash
+      ROUTER_V1_MODEL: glm-5.3-flash
+      ZAI_JUDGE_TEMPERATURE: '0.2'
+      ROUTING_V2_GENERATION_REPLICATES: '3'
+      ROUTING_V2_JUDGE_VOTES: '3'
+      ROUTING_V2_SHARD_COUNT: '6'
+      ROUTING_V2_SHARD_INDEX: ${{ matrix.shard }}
+      ROUTING_V2_SAME_FAMILY_ATTESTATION: 'true'
+      BENCHMARK_BOOTSTRAP_SAMPLES: '5000'
+      BENCHMARK_SUITE: combined
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+      - run: python -m pip install -r benchmark/requirements.txt
+      - name: Run routing utility validation shard
+        working-directory: benchmark
+        run: python run_selective_routing_v2.py
+      - name: Upload shard checkpoint/results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selective-routing-v2-shard-${{ matrix.shard }}-${{ github.run_id }}
+          path: |
+            benchmark/results_routing_validation_v2/routing_v2_routes_shard_${{ matrix.shard }}.jsonl
+            benchmark/results_routing_validation_v2/routing_v2_runs_shard_${{ matrix.shard }}.jsonl
+            benchmark/results_routing_validation_v2/routing_v2_votes_shard_${{ matrix.shard }}.jsonl
+            benchmark/results_routing_validation_v2/routing_v2_meta_shard_${{ matrix.shard }}.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  aggregate:
+    needs: shard
+    if: needs.shard.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      BENCHMARK_BOOTSTRAP_SAMPLES: '5000'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download all v2 routing shard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: selective-routing-v2-shard-*-${{ github.run_id }}
+          path: benchmark/results_routing_validation_v2
+          merge-multiple: true
+      - name: Aggregate frozen routing utility result
+        working-directory: benchmark
+        run: python aggregate_selective_routing_v2.py
+      - name: Upload final v2 routing report
+        uses: actions/upload-artifact@v4
+        with:
+          name: selective-routing-v2-report-${{ github.run_id }}
+          path: benchmark/results_routing_validation_v2/routing_v2_report.json
+          retention-days: 30

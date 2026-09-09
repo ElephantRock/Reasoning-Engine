@@ -1,0 +1,95 @@
+name: Selective Routing v2 Static Check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - selective-routing-v2
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r benchmark/requirements.txt
+      - name: Validate Python syntax
+        run: |
+          python -m py_compile \
+            benchmark/load_routing_validation_v2.py \
+            benchmark/preflight_selective_routing_v2.py \
+            benchmark/run_selective_routing_v2.py \
+            benchmark/aggregate_selective_routing_v2.py
+      - name: Validate fresh suite structure
+        run: python benchmark/load_routing_validation_v2.py
+      - name: Validate unchanged v1 router freeze
+        run: |
+          test "$(git hash-object benchmark/selective_router_v1.py)" = "a64fb4ed1dba3c7509163ab62831c2fe0cd81cc6"
+      - name: Validate frozen configuration without network
+        env:
+          ZAI_API_KEY: static-dummy
+          ZAI_JUDGE_API_KEY: static-dummy-judge
+          ROUTER_V1_API_KEY: static-dummy
+          ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4
+          ZAI_JUDGE_BASE_URL: https://api.z.ai/api/coding/paas/v4
+          ROUTER_V1_BASE_URL: https://api.z.ai/api/coding/paas/v4
+          ZAI_TARGET_MODEL: glm-5.1
+          ZAI_JUDGE_MODEL: glm-5.3-flash
+          ROUTER_V1_MODEL: glm-5.3-flash
+          ROUTING_V2_SAME_FAMILY_ATTESTATION: 'true'
+          BENCHMARK_SUITE: combined
+        working-directory: benchmark
+        run: |
+          python - <<'PY'
+          from preflight_selective_routing_v2 import validate_frozen_configuration
+          x = validate_frozen_configuration()
+          assert x['n_cases'] == 48
+          assert len(x['suite_sha256']) == 64
+          assert x['router_git_blob'] == 'a64fb4ed1dba3c7509163ab62831c2fe0cd81cc6'
+          print(x)
+          PY
+      - name: Validate paired preservation math and frozen thresholds
+        env:
+          BENCHMARK_BOOTSTRAP_SAMPLES: '5000'
+        working-directory: benchmark
+        run: |
+          python - <<'PY'
+          import aggregate_selective_routing_v2 as a
+          assert a.FRAMEWORK_MIN_SCORE == 0.60
+          assert a.BENEFIT_MIN_SCORE == 0.60
+          assert a.QUALITY_CI_LOW_EXCLUSIVE == 0.50
+          assert a.NONINFERIORITY_MARGIN == -0.05
+          assert a.MAX_FULL_INVOCATION == 0.65
+          d = {'a': -0.02, 'b': 0.0, 'c': -0.01, 'd': 0.01}
+          s = a.summarize_delta(d, 'static-v2')
+          assert abs(s['delta'] - (-0.005)) < 1e-12
+          assert s['n_cases'] == 4
+          PY
+      - name: Validate shard isolation and paid workflow gate
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          runner = Path('benchmark/run_selective_routing_v2.py').read_text()
+          workflow = Path('.github/workflows/reasoning-selective-routing-v2.yml').read_text()
+          prereg = Path('docs/SELECTIVE_ROUTING_V2_PREREG.md').read_text()
+          assert 'from preflight_selective_routing_v2 import validate_frozen_configuration' in runner
+          assert 'connectivity()' not in runner
+          assert '[run-selective-routing-v2]' in workflow
+          assert 'max-parallel: 3' in workflow
+          assert 'shard: [0, 1, 2, 3, 4, 5]' in workflow
+          assert workflow.count('python preflight_selective_routing_v2.py') == 1
+          assert 'needs: validate-preflight' in workflow
+          assert 'ROUTING_V2_SHARD_INDEX:' in workflow
+          assert 'routing_validation_v2/manifest.json' in prereg
+          assert 'CI95_low(Delta) > -0.05' in prereg
+          assert 'FULL invocation rate <= `0.65`' in prereg
+          assert 'router prompt, model, action space, and parsing policy must not change' in prereg
+          PY
