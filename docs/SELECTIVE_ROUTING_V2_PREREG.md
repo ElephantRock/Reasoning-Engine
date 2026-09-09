@@ -39,7 +39,7 @@ The router prompt, model, action space, and parsing policy must not change in v2
 
 ## Fresh v2 suite
 
-Use exactly `benchmark/routing_validation_cases_v2.json` once frozen by merge.
+Use exactly the manifest-closed suite rooted at `benchmark/routing_validation_v2/manifest.json` once frozen by merge. The manifest lists exactly 12 domain JSON files; no other case file is part of the v2 suite.
 
 Planned size: **48 cases** across **12 domains**, four cases per domain.
 
@@ -59,7 +59,7 @@ Suite requirements:
 - boundary cases distributed across every domain;
 - no reuse, paraphrase, or structural clone of v1 routing cases, Framework Validation v1 cases, or v0.5–v0.11 development cases.
 
-No v2 case may be removed or relabeled after any v2 model output exists.
+The exact manifest and all listed domain files are frozen together by the merge commit and a deterministic combined suite digest. No v2 case may be added, removed, edited, or relabeled after any v2 model output exists.
 
 ## Target and evaluator
 
@@ -199,7 +199,7 @@ Each shard writes checkpoint artifacts incrementally. If a shard fails after tar
 Once any v2 target output or route exists:
 
 - do not edit router prompt/model/action space;
-- do not edit cases or author strata;
+- do not edit the manifest or any listed case file;
 - do not edit FULL or CONTROL definitions;
 - do not edit judge rubric;
 - do not edit replicate/vote counts;
