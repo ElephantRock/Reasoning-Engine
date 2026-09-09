@@ -1,0 +1,30 @@
+{
+  "suite_version": "selective-routing-v2-utility-validation",
+  "status": "fresh-unexposed-before-first-run",
+  "expected_cases": 48,
+  "expected_domains": 12,
+  "cases_per_domain": 4,
+  "expected_labels": {
+    "CLEAR_FULL": 12,
+    "CLEAR_CONTROL": 12,
+    "BOUNDARY": 24
+  },
+  "minimum_sequential": 12,
+  "minimum_requires_action": 16,
+  "minimum_distractor_or_surface_mismatch": 16,
+  "domain_files": [
+    "aviation_operations.json",
+    "agriculture.json",
+    "construction.json",
+    "data_platform.json",
+    "education_admin.json",
+    "environmental_monitoring.json",
+    "insurance_claims.json",
+    "laboratory_operations.json",
+    "logistics.json",
+    "procurement.json",
+    "reliability_engineering.json",
+    "workforce_operations.json"
+  ],
+  "note": "Author route labels are diagnostics only. Validation success is determined by blinded quality and preregistered policy gates."
+}
