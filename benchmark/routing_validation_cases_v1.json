@@ -1,0 +1,440 @@
+[
+  {
+    "case_id": "RV1-SCI01",
+    "domain": "science_research",
+    "author_route_label": "FULL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A lab's enzyme yield fell from 82% to 61% across four runs. The change began the same week a new buffer lot arrived and the incubator was serviced. Runs using the new buffer were all performed in the serviced incubator, so the two factors are confounded. A second incubator is available for only one run before the next production batch. What conclusion is justified and how should the team use that one run?"}],
+    "evaluator_key": {
+      "observations": ["yield fell 82% to 61%", "buffer-lot and incubator changes are confounded", "only one discriminating run is available"],
+      "not_observed": ["new buffer has not been tested in the second incubator", "old buffer has not been retested in the serviced incubator"],
+      "plausible_hypotheses": ["buffer-lot effect", "incubator-service effect", "interaction"],
+      "discriminating_evidence": ["use the scarce run to break the buffer/incubator confound"],
+      "constraints": ["one run before production"],
+      "scoring_notes": ["Do not assign cause from the synchronized changes; prioritize information value of the one available run."]
+    },
+    "design_metadata": {"sequential": false, "has_distractors": true, "requires_action": true, "adversarial_surface": true, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-SCI02",
+    "domain": "science_research",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "For tomorrow's calibration test, a technician needs 100 mL of a 1× solution from a 5× stock. Ignoring volume contraction, how many milliliters of stock and water are needed?"}],
+    "evaluator_key": {"observations": ["final volume 100 mL", "stock concentration 5×", "target concentration 1×"], "scoring_notes": ["Use C1V1=C2V2: 20 mL stock plus 80 mL water. No causal investigation is needed."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": false, "adversarial_surface": true, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-SCI03",
+    "domain": "science_research",
+    "author_route_label": "FULL_VALUE",
+    "turns": [
+      {"turn": 1, "agent_input": "A field sensor network reports a 12% overnight rise in methane at three adjacent stations. A firmware update was installed at all three stations that afternoon, but a nearby maintenance crew also vented a pipeline for twenty minutes. Wind direction during the rise is uncertain because one anemometer failed. What position should the research team take now?"},
+      {"turn": 2, "agent_input": "Archived weather radar later shows the wind carried the maintenance plume away from all three stations during the increase, while a portable reference sensor placed beside one station reproduces the station's higher reading. How should the position change?", "expected_revision": "The maintenance-plume explanation should be demoted; a real local concentration change becomes more plausible while the shared firmware remains less likely because the independent reference sensor agrees."}
+    ],
+    "evaluator_key": {"observations": ["three stations rose together", "shared firmware update", "pipeline vent occurred", "wind initially uncertain", "later wind data points plume away", "independent reference sensor confirms higher methane"], "plausible_hypotheses": ["real concentration change", "firmware artifact", "maintenance plume"], "scoring_notes": ["Initial answer should preserve alternatives; second turn must revise materially toward a real concentration change and away from vent/firmware explanations."]},
+    "design_metadata": {"sequential": true, "has_distractors": true, "requires_action": true, "adversarial_surface": true, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-SCI04",
+    "domain": "science_research",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "In an experiment, five repeated readings are 9.99, 10.00, 10.01, 10.00, and 10.00, while the certified value is 10.50. Is the measurement precise, accurate, both, or neither? Give the short reason."}],
+    "evaluator_key": {"observations": ["readings are tightly clustered near 10.00", "certified value is 10.50"], "scoring_notes": ["Precise but inaccurate: low spread, substantial systematic offset."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": false, "adversarial_surface": true, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+
+  {
+    "case_id": "RV1-SW01",
+    "domain": "software_operations",
+    "author_route_label": "FULL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "An API's p99 latency rose from 420 ms to 1.4 s after two changes deployed within an hour: a cache TTL was reduced from 10 minutes to 30 seconds, and a new enterprise customer began sending a much larger proportion of uncached queries. CPU is flat, database read IOPS doubled, and cache hit rate fell from 91% to 54%. Rolling back either change is possible, but the enterprise launch is contractually sensitive. What should the on-call team do?"}],
+    "evaluator_key": {"observations": ["p99 rose sharply", "TTL shortened", "traffic mix changed", "DB reads doubled", "cache hits fell", "CPU flat"], "plausible_hypotheses": ["TTL reduction drives misses", "new query mix drives misses", "both interact"], "constraints": ["customer launch is contractually sensitive", "both changes reversible"], "scoring_notes": ["Avoid reflexively rolling back the customer; use reversible configuration/traffic evidence to separate contributors and protect latency."]},
+    "design_metadata": {"sequential": false, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-SW02",
+    "domain": "software_operations",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A load test sent 25,000 requests and 375 returned HTTP 5xx responses. What was the 5xx error rate as a percentage?"}],
+    "evaluator_key": {"observations": ["375 failures out of 25,000 requests"], "scoring_notes": ["375/25000 × 100 = 1.5%."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": false, "adversarial_surface": true, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-SW03",
+    "domain": "software_operations",
+    "author_route_label": "FULL_VALUE",
+    "turns": [
+      {"turn": 1, "agent_input": "A message-processing service begins accumulating queue lag after a morning release. The release changed retry backoff, while the cloud provider also reported intermittent storage latency in the same region. Application error counts are only slightly higher, but consumer throughput is down 35%. The team can revert the retry change or fail over storage, each with operational risk. What should they do first?"},
+      {"turn": 2, "agent_input": "A canary with the old retry backoff but the same regional storage immediately returns to normal throughput, while storage latency remains elevated. What should the team conclude and change?", "expected_revision": "The retry change should become the leading causal factor for throughput loss; storage latency may remain a background issue but is weakened as the primary mechanism."}
+    ],
+    "evaluator_key": {"observations": ["queue lag follows release", "retry backoff changed", "regional storage latency also elevated", "old-backoff canary recovers despite same storage"], "scoring_notes": ["Use the canary as discriminating evidence and revise toward the retry configuration as the primary cause."]},
+    "design_metadata": {"sequential": true, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-SW04",
+    "domain": "software_operations",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A log shows events at 14:03:12, 14:03:08, 14:04:01, and 14:03:55 UTC. Put them in chronological order."}],
+    "evaluator_key": {"observations": ["four UTC timestamps are supplied"], "scoring_notes": ["Order: 14:03:08, 14:03:12, 14:03:55, 14:04:01."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": false, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+
+  {
+    "case_id": "RV1-MF01",
+    "domain": "manufacturing",
+    "author_route_label": "FULL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A stamping plant's crack reject rate rose from 0.4% to 3.6%. During the same shift, coil supplier B replaced supplier A and press 4 received a lubrication-system adjustment. Presses 1–3 using supplier B remain near normal rejects; press 4 has almost all the increase. Maintenance says the adjustment matches the manual. Production wants to quarantine the new coil immediately. What action is justified?"}],
+    "evaluator_key": {"observations": ["reject increase concentrated on press 4", "all presses use supplier B", "press 4 alone had lubrication adjustment"], "plausible_hypotheses": ["press-4 lubrication/setup issue", "supplier interaction specific to press 4", "coil-wide defect weakened by normal presses 1–3"], "constraints": ["quarantining coil interrupts all presses"], "scoring_notes": ["Evidence argues against a simple supplier-wide cause; prioritize press-4 verification and reversible containment before broad coil quarantine."]},
+    "design_metadata": {"sequential": false, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-MF02",
+    "domain": "manufacturing",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "During a production test, a machine was scheduled for 480 minutes, ran for 432 minutes, and produced 900 good units plus 100 rejects. What is its availability if availability is defined as run time divided by scheduled time?"}],
+    "evaluator_key": {"observations": ["run time 432 minutes", "scheduled time 480 minutes"], "scoring_notes": ["Availability = 432/480 = 0.90 = 90%. Unit quality is irrelevant to this requested metric."]},
+    "design_metadata": {"sequential": false, "has_distractors": true, "requires_action": false, "adversarial_surface": true, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-MF03",
+    "domain": "manufacturing",
+    "author_route_label": "FULL_VALUE",
+    "turns": [
+      {"turn": 1, "agent_input": "A furnace line shows intermittent surface oxidation after a throughput increase. Gas-flow setpoints were raised and door-open time per batch also increased. Oxygen sensors near the inlet read normal, but no sensor exists at the discharge end. Management proposes permanently lowering throughput. What should engineering do before making that change?"},
+      {"turn": 2, "agent_input": "A temporary discharge-end sensor shows oxygen spikes only during extended door-open periods; batches with the higher gas-flow setpoint but short door-open times remain clean. What change is now best supported?", "expected_revision": "Extended door-open time becomes the supported mechanism; permanent throughput reduction is not justified if door timing can be controlled."}
+    ],
+    "evaluator_key": {"observations": ["oxidation followed throughput increase", "gas flow and door time both changed", "inlet oxygen normal", "later discharge sensor links spikes to extended door openings"], "constraints": ["throughput reduction is costly"], "scoring_notes": ["Second turn should target door-open control and avoid unnecessary permanent throughput reduction."]},
+    "design_metadata": {"sequential": true, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-MF04",
+    "domain": "manufacturing",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A torque specification is 42–46 N·m. Three sampled fasteners measure 43.1, 46.8, and 44.0 N·m. Which sample is out of specification?"}],
+    "evaluator_key": {"observations": ["allowed range 42–46 N·m", "samples 43.1, 46.8, 44.0"], "scoring_notes": ["Only 46.8 N·m is out of specification."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": false, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+
+  {
+    "case_id": "RV1-HO01",
+    "domain": "healthcare_operations",
+    "author_route_label": "FULL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A clinic's missed-appointment rate rises from 11% to 19% after two scheduling changes: reminder texts move from 48 hours to 12 hours before visits, and the booking system begins filling cancellations with same-day wait-list patients. Misses are especially high among appointments booked more than two weeks earlier; same-day fill-ins rarely miss. The clinic can alter reminder timing immediately but wants to avoid disrupting capacity. What should operations do?"}],
+    "evaluator_key": {"observations": ["miss rate rose", "reminder timing changed", "same-day fill-ins added", "long-lead appointments have high misses", "same-day fill-ins rarely miss"], "plausible_hypotheses": ["late reminders hurt long-lead recall", "case mix changed", "interaction"], "scoring_notes": ["Same-day fill-ins do not explain the high miss pattern; a reversible reminder-timing adjustment or split comparison is more justified than removing wait-list fills."]},
+    "design_metadata": {"sequential": false, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-HO02",
+    "domain": "healthcare_operations",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A ward has 36 staffed beds and 30 are occupied. What is the bed occupancy rate?"}],
+    "evaluator_key": {"observations": ["30 occupied beds", "36 staffed beds"], "scoring_notes": ["Occupancy = 30/36 = 83.3% (approximately)."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": false, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-HO03",
+    "domain": "healthcare_operations",
+    "author_route_label": "FULL_VALUE",
+    "turns": [
+      {"turn": 1, "agent_input": "A hospital sterile-processing unit sees package failures rise after a new wrapping material is introduced and a sterilizer's preventive-maintenance cycle is completed. Failures occur on loads from one sterilizer, but that sterilizer also handles most of the new wrap. The unit must keep enough capacity for urgent instruments. What should the operations lead do now?"},
+      {"turn": 2, "agent_input": "A short controlled load using the old wrap in the same sterilizer also shows failures, while the new wrap in another sterilizer passes. How should the response change?", "expected_revision": "The sterilizer/maintenance state becomes the leading cause and the new wrap is strongly weakened as the primary explanation."}
+    ],
+    "evaluator_key": {"observations": ["wrap and maintenance changed together", "failures concentrated on one sterilizer", "old wrap fails in same sterilizer", "new wrap passes elsewhere"], "constraints": ["urgent-instrument capacity must be maintained"], "scoring_notes": ["Use controlled evidence to isolate the sterilizer and plan safe capacity/containment rather than broad material rejection."]},
+    "design_metadata": {"sequential": true, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-HO04",
+    "domain": "healthcare_operations",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A hospital dashboard defines bed-turnover time as the minutes from one patient's discharge to the next patient's admission to that bed. A bed was vacated at 10:20 and the next patient was admitted at 11:05. What was the turnover time?"}],
+    "evaluator_key": {"observations": ["vacated 10:20", "next admission 11:05"], "scoring_notes": ["45 minutes."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": false, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+
+  {
+    "case_id": "RV1-FR01",
+    "domain": "finance_risk",
+    "author_route_label": "FULL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A treasury desk's hedge slippage doubles after it changes both its execution algorithm and its market-data timestamp source. The largest slippage appears around volatile opens; a replay using the new timestamps shifts some trades by several seconds, while the new algorithm also trades more aggressively in thin liquidity. Reverting either component is possible but may introduce other risk. What should the desk do before deciding which component to keep?"}],
+    "evaluator_key": {"observations": ["slippage doubled", "execution algorithm changed", "timestamp source changed", "timestamp replay shifts trades", "algorithm is more aggressive in thin liquidity"], "plausible_hypotheses": ["timestamp misalignment", "execution aggression", "both"], "scoring_notes": ["Separate timing and execution effects with replay/matched analysis before committing to a component rollback."]},
+    "design_metadata": {"sequential": false, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-FR02",
+    "domain": "finance_risk",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A portfolio is 60% in an asset that returned 4% and 40% in an asset that returned -1% over the period. Ignoring fees and rebalancing, what was the portfolio return?"}],
+    "evaluator_key": {"observations": ["weights 60% and 40%", "returns 4% and -1%"], "scoring_notes": ["0.6×4% + 0.4×(-1%) = 2.0%."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": false, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-FR03",
+    "domain": "finance_risk",
+    "author_route_label": "FULL_VALUE",
+    "turns": [
+      {"turn": 1, "agent_input": "A bank's fraud alerts jump 70% after a scoring-model update and a data-pipeline migration on the same night. Chargeback volume has not yet changed. Analysts notice the new pipeline converts some missing merchant-category fields to zero instead of null. The model update also intentionally lowered thresholds for a few categories. What should risk operations do before expanding manual-review staffing?"},
+      {"turn": 2, "agent_input": "Reprocessing the same transactions through the old null handling reduces the alert increase from 70% to 8%, while keeping the new model unchanged. How should the team update its conclusion?", "expected_revision": "Pipeline missing-value handling becomes the dominant explanation for the alert surge; model threshold changes may explain only the residual increase."}
+    ],
+    "evaluator_key": {"observations": ["alerts rose after model and pipeline changes", "chargebacks unchanged", "missing values changed to zero", "old null handling removes most of alert increase"], "scoring_notes": ["Do not equate alert volume with fraud incidence; second turn should prioritize pipeline correction over staffing expansion."]},
+    "design_metadata": {"sequential": true, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-FR04",
+    "domain": "finance_risk",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A risk report lists exposures of $2.4M, $1.1M, and $0.5M to three counterparties. What is the total exposure?"}],
+    "evaluator_key": {"observations": ["exposures 2.4M, 1.1M, 0.5M"], "scoring_notes": ["Total = $4.0M."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": false, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+
+  {
+    "case_id": "RV1-PS01",
+    "domain": "public_services",
+    "author_route_label": "FULL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A permit office's backlog rises 45% after it introduces both a new identity-verification step and a rule sending applications with missing attachments to a specialist queue. Median processing time rises mostly for applications entering that specialist queue, but the new verification vendor also reports intermittent delays. Leadership wants to disable identity verification immediately. What should the office do?"}],
+    "evaluator_key": {"observations": ["backlog rose", "two process changes occurred", "delay concentrated in specialist queue", "verification vendor has intermittent delays"], "plausible_hypotheses": ["specialist-queue bottleneck", "verification delay", "both"], "scoring_notes": ["Concentration in specialist queue weakens verification as the main cause; investigate queue flow and measure verification contribution before disabling a control."]},
+    "design_metadata": {"sequential": false, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-PS02",
+    "domain": "public_services",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A service-level test says 95% of requests must be answered within 10 business days. In a sample of 200 requests, 194 were answered within 10 business days. What percentage met the target, and did the sample meet the 95% threshold?"}],
+    "evaluator_key": {"observations": ["194 of 200 met target", "threshold 95%"], "scoring_notes": ["97% met target; yes, the sample exceeds 95%."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": false, "adversarial_surface": true, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-PS03",
+    "domain": "public_services",
+    "author_route_label": "FULL_VALUE",
+    "turns": [
+      {"turn": 1, "agent_input": "A bus corridor's on-time performance falls after a new signal-priority configuration and a temporary downtown construction detour begin on the same day. Delays occur on both downtown and outer segments, but GPS traces show larger variance near several newly configured intersections. The agency can change signal priority remotely or alter the detour at significant cost. What should it do first?"},
+      {"turn": 2, "agent_input": "A one-hour rollback of signal priority on two affected intersections restores normal travel-time variance there even though the construction detour remains. How should the agency update its action?", "expected_revision": "Signal-priority configuration becomes the supported near-term cause at those intersections; fix or roll back that configuration before costly detour redesign."}
+    ],
+    "evaluator_key": {"observations": ["two changes started together", "variance clusters near configured intersections", "localized rollback restores normal variance while detour remains"], "scoring_notes": ["Use reversible localized evidence and avoid a costly detour redesign unsupported by the second-turn evidence."]},
+    "design_metadata": {"sequential": true, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-PS04",
+    "domain": "public_services",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "Three service centers handled 820, 760, and 910 applications this month. Which center handled the most, and by how many more applications than the second-highest center?"}],
+    "evaluator_key": {"observations": ["counts 820, 760, 910"], "scoring_notes": ["The 910 center handled the most, 90 more than the 820 center."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": false, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+
+  {
+    "case_id": "RV1-CY01",
+    "domain": "cybersecurity_defense",
+    "author_route_label": "FULL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A company's employee login failures triple after a WAF ruleset update and an identity-provider certificate rotation. Failures occur mainly for one browser family and only from offices routed through a particular proxy cluster. The identity provider shows normal authentication success for direct mobile logins. Security proposes disabling the WAF globally. What should the incident team do?"}],
+    "evaluator_key": {"observations": ["login failures tripled", "WAF and certificate changed", "failures cluster by browser and proxy", "direct mobile auth normal"], "plausible_hypotheses": ["WAF/proxy interaction", "certificate issue", "browser-specific interaction"], "constraints": ["global WAF disable reduces protection"], "scoring_notes": ["Prefer scoped, reversible isolation of proxy/WAF behavior over global security-control removal."]},
+    "design_metadata": {"sequential": false, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-CY02",
+    "domain": "cybersecurity_defense",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "During a security test, 48 of 12,000 authentication attempts failed. What was the failure rate as a percentage?"}],
+    "evaluator_key": {"observations": ["48 failures out of 12,000 attempts"], "scoring_notes": ["0.4%."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": false, "adversarial_surface": true, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-CY03",
+    "domain": "cybersecurity_defense",
+    "author_route_label": "FULL_VALUE",
+    "turns": [
+      {"turn": 1, "agent_input": "A server begins making unusually large outbound transfers overnight. The same evening, the backup schedule was changed and a security patch was installed. Destination IPs belong to the company's cloud-storage provider, but transfer volume is three times normal. The team can isolate the server, which would interrupt a critical overnight batch. What should defenders do immediately?"},
+      {"turn": 2, "agent_input": "Backup logs show the new schedule launched three overlapping full backups, and packet metadata matches the documented backup endpoint. No other anomalous process or destination is observed. How should the response change?", "expected_revision": "The overlapping backup jobs become the supported explanation; emergency isolation can be de-escalated while the scheduling error is corrected and monitoring continues."}
+    ],
+    "evaluator_key": {"observations": ["large outbound transfers", "backup schedule and patch changed", "destinations are company cloud storage", "three overlapping full backups later confirmed"], "constraints": ["isolation interrupts a critical batch"], "scoring_notes": ["Initial caution is warranted without assuming compromise; second turn should de-escalate based on specific benign evidence while retaining monitoring."]},
+    "design_metadata": {"sequential": true, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-CY04",
+    "domain": "cybersecurity_defense",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "For HTTP responses, what is the basic difference between status code 401 and status code 403? Keep it to two sentences."}],
+    "evaluator_key": {"scoring_notes": ["401 generally means authentication is required/invalid; 403 means the server understood the request but refuses authorization. Concise established explanation is sufficient."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": false, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+
+  {
+    "case_id": "RV1-SC01",
+    "domain": "supply_chain",
+    "author_route_label": "FULL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A grocery distributor's chilled-product spoilage rises after it changes both a cross-dock carrier and the warehouse night-shift staffing pattern. Temperature logger excursions are concentrated on pallets arriving between 2–4 a.m.; those loads are handled by the new carrier and by the thinner night crew. Carrier GPS shows on-time arrival. The distributor can add temporary staff tonight or suspend the carrier tomorrow. What should it do?"}],
+    "evaluator_key": {"observations": ["spoilage rose", "carrier and staffing changed", "temperature excursions cluster 2–4 a.m.", "carrier arrivals are on time"], "plausible_hypotheses": ["warehouse handling delay", "carrier cold-chain issue", "interaction"], "constraints": ["staffing can be changed immediately", "carrier suspension has broader impact"], "scoring_notes": ["Use logger location/timing and a reversible staffing intervention to discriminate before broad carrier suspension."]},
+    "design_metadata": {"sequential": false, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-SC02",
+    "domain": "supply_chain",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A warehouse uses 120 units per day on average and replenishment lead time is 4 days. If safety stock is fixed at 80 units, what reorder point should it use under the simple formula demand during lead time plus safety stock?"}],
+    "evaluator_key": {"observations": ["120 units/day", "4-day lead time", "80 safety stock"], "scoring_notes": ["Reorder point = 120×4 + 80 = 560 units."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": false, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-SC03",
+    "domain": "supply_chain",
+    "author_route_label": "FULL_VALUE",
+    "turns": [
+      {"turn": 1, "agent_input": "A component distributor sees corrosion complaints increase after switching to supplier Q and moving inventory into a newly leased warehouse. Supplier Q certificates show normal composition, while humidity records from the new warehouse have gaps. Complaints are concentrated in lots stored more than three weeks. The company can stop buying from Q or move inventory back to the old site. What should it do first?"},
+      {"turn": 2, "agent_input": "Temporary humidity sensors show repeated overnight excursions above specification in the new warehouse, and newly received supplier-Q parts stored at the old site remain clean after the same period. What is now justified?", "expected_revision": "Warehouse humidity becomes the leading mechanism; supplier Q should be demoted as the primary cause and inventory protection/warehouse control prioritized."}
+    ],
+    "evaluator_key": {"observations": ["supplier and warehouse changed", "complaints correlate with storage duration", "humidity data initially missing", "later excursions documented", "Q parts at old site remain clean"], "scoring_notes": ["Second turn strongly favors warehouse environmental control over supplier rejection."]},
+    "design_metadata": {"sequential": true, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-SC04",
+    "domain": "supply_chain",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "Three shipping options cost $410, $365, and $440 and all meet the required delivery date. Which option is cheapest, and how much cheaper is it than the next-cheapest?"}],
+    "evaluator_key": {"observations": ["costs 410, 365, 440", "all meet delivery requirement"], "scoring_notes": ["$365 is cheapest and is $45 cheaper than $410."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+
+  {
+    "case_id": "RV1-PA01",
+    "domain": "product_analytics",
+    "author_route_label": "FULL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "An app's checkout conversion falls from 6.2% to 4.7% after a checkout redesign launches on the same day a large discount campaign brings unusually high mobile traffic. Desktop conversion is nearly unchanged; mobile conversion drops sharply, and the redesigned page has a new address widget used only on mobile. Marketing wants to stop the campaign. What should the product team conclude and do?"}],
+    "evaluator_key": {"observations": ["conversion fell", "redesign and campaign coincided", "desktop stable", "mobile fell", "new address widget is mobile-specific"], "plausible_hypotheses": ["mobile redesign friction", "campaign traffic quality", "interaction"], "scoring_notes": ["Device-specific pattern points toward the mobile flow; use reversible split/rollback evidence before stopping the campaign."]},
+    "design_metadata": {"sequential": false, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-PA02",
+    "domain": "product_analytics",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A campaign experiment produced 1,260 clicks from 84,000 impressions. What was the click-through rate?"}],
+    "evaluator_key": {"observations": ["1,260 clicks", "84,000 impressions"], "scoring_notes": ["CTR = 1.5%."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": false, "adversarial_surface": true, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-PA03",
+    "domain": "product_analytics",
+    "author_route_label": "FULL_VALUE",
+    "turns": [
+      {"turn": 1, "agent_input": "Thirty-day retention rises after a new onboarding flow launches, but the same week acquisition shifts from paid social toward referrals. Referral users historically retain better. The new flow is shown to all channels. Leadership wants to roll it out to another product immediately. What should analytics say?"},
+      {"turn": 2, "agent_input": "A channel-stratified comparison shows retention is unchanged within referrals and paid social, while the overall lift disappears after reweighting channels to the old mix. How should leadership update the rollout rationale?", "expected_revision": "The apparent retention gain is explained by acquisition mix rather than demonstrated onboarding improvement; rollout should not be justified by the original aggregate lift."}
+    ],
+    "evaluator_key": {"observations": ["retention rose with onboarding and channel mix changes", "referrals historically retain better", "within-channel retention unchanged", "reweighting removes lift"], "scoring_notes": ["Second turn should reject the aggregate causal attribution to onboarding."]},
+    "design_metadata": {"sequential": true, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-PA04",
+    "domain": "product_analytics",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "Weekly active users were 48,000, 51,000, 50,000, and 55,000 over four weeks. What is the arithmetic mean?"}],
+    "evaluator_key": {"observations": ["weekly values 48k, 51k, 50k, 55k"], "scoring_notes": ["Mean = 51,000."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": false, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+
+  {
+    "case_id": "RV1-BO01",
+    "domain": "business_operations",
+    "author_route_label": "FULL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A support organization sees voluntary attrition rise after a reorganization and a compensation-plan change occur in the same month. Attrition is concentrated in two teams that received new managers; compensation changes were company-wide. Exit interviews mention both pay uncertainty and manager workload. The COO proposes reversing the compensation plan globally. What should the organization do before that decision?"}],
+    "evaluator_key": {"observations": ["attrition rose after reorg and compensation change", "attrition concentrated in two new-manager teams", "compensation change company-wide", "exit interviews mention multiple factors"], "plausible_hypotheses": ["manager/workload effect", "compensation uncertainty", "interaction"], "constraints": ["global compensation reversal is broad and costly"], "scoring_notes": ["Concentration pattern weakens a compensation-only cause; investigate team-level mechanisms before global reversal."]},
+    "design_metadata": {"sequential": false, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-BO02",
+    "domain": "business_operations",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A team has 8 analysts, each available for 40 hours this week, and 256 hours of assigned work. What is the team's scheduled utilization as assigned hours divided by available hours?"}],
+    "evaluator_key": {"observations": ["8 analysts", "40 hours each", "256 assigned hours"], "scoring_notes": ["Available = 320 hours; utilization = 256/320 = 80%."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": false, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-BO03",
+    "domain": "business_operations",
+    "author_route_label": "FULL_VALUE",
+    "turns": [
+      {"turn": 1, "agent_input": "A call center's average handle time rises 18% after agents receive both a new knowledge-search tool and a policy requiring additional identity checks. Handle time rises most on calls where agents open the new search tool, but those calls are also more complex. Abandonment is beginning to rise. What should managers do before disabling either change?"},
+      {"turn": 2, "agent_input": "A matched sample of the same call categories shows handle time remains elevated only when the new search tool is used; calls completed with the old search interface but the new identity checks return near baseline. How should managers update the intervention?", "expected_revision": "The search tool becomes the leading contributor to extra handle time; identity checks are weakened as the main cause, so the tool should be fixed or selectively rolled back while checks remain."}
+    ],
+    "evaluator_key": {"observations": ["handle time rose after two changes", "tool use correlates with complexity", "matched sample isolates tool effect", "new checks with old interface near baseline"], "scoring_notes": ["Second-turn matched evidence should drive a selective tool intervention rather than removal of identity checks."]},
+    "design_metadata": {"sequential": true, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-BO04",
+    "domain": "business_operations",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "Three vendors have evaluation scores of 82, 91, and 87 out of 100, and price is explicitly excluded from this decision. Which vendor has the highest score?"}],
+    "evaluator_key": {"observations": ["scores 82, 91, 87", "price excluded"], "scoring_notes": ["The vendor scoring 91 is highest."]},
+    "design_metadata": {"sequential": false, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+
+  {
+    "case_id": "RV1-EN01",
+    "domain": "energy_operations",
+    "author_route_label": "FULL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A solar farm's inverter-trip rate increases after a firmware update and a utility voltage-regulation change take effect within the same day. Trips cluster on one feeder and during high irradiance. Other feeders running the same firmware remain normal. The operator can roll back firmware fleet-wide or temporarily adjust feeder voltage settings with the utility. What should it do first?"}],
+    "evaluator_key": {"observations": ["trip rate increased", "firmware and utility settings changed", "trips cluster on one feeder", "other feeders with same firmware normal", "high irradiance association"], "plausible_hypotheses": ["feeder voltage interaction", "firmware interaction", "both"], "scoring_notes": ["Feeder concentration weakens firmware-only explanation; prefer scoped reversible feeder/voltage evidence before fleet-wide rollback."]},
+    "design_metadata": {"sequential": false, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-EN02",
+    "domain": "energy_operations",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A 2 kW device runs for 3 hours during a commissioning test. How much energy does it use in kWh?"}],
+    "evaluator_key": {"observations": ["power 2 kW", "time 3 hours"], "scoring_notes": ["Energy = 6 kWh."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": false, "adversarial_surface": true, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-EN03",
+    "domain": "energy_operations",
+    "author_route_label": "FULL_VALUE",
+    "turns": [
+      {"turn": 1, "agent_input": "A district-cooling plant's electricity use rises 14% after chilled-water setpoints are changed and a condenser-maintenance program begins. Weather is also hotter than the prior week. Operators want to reverse the setpoints immediately. What evidence should guide the decision?"},
+      {"turn": 2, "agent_input": "Weather-normalized data show the energy increase only on chillers that completed condenser maintenance; chillers with the new setpoints but no maintenance remain near baseline. What should operators do now?", "expected_revision": "Condenser-maintenance state becomes the leading contributor; the setpoint change is weakened as the main cause and should not be broadly reversed on this evidence."}
+    ],
+    "evaluator_key": {"observations": ["energy rose after setpoint and maintenance changes", "weather hotter", "later weather-normalized increase localizes to maintained chillers"], "scoring_notes": ["Second turn should shift action toward maintained chiller inspection rather than blanket setpoint reversal."]},
+    "design_metadata": {"sequential": true, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-EN04",
+    "domain": "energy_operations",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A meter reads 18.6 MWh at the start of a shift and 21.1 MWh at the end. How much energy was consumed during the shift?"}],
+    "evaluator_key": {"observations": ["start 18.6 MWh", "end 21.1 MWh"], "scoring_notes": ["2.5 MWh."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": false, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+
+  {
+    "case_id": "RV1-QA01",
+    "domain": "quality_assurance",
+    "author_route_label": "FULL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A consumer-device factory sees field returns increase after a battery supplier change and a firmware power-management update. Returns are mostly from units assembled on one line, but that line built a disproportionate share of devices using the new battery lot. Lab checks show battery capacity within spec. The factory can hold shipments from one line tonight or reject the entire battery lot tomorrow. What should quality do?"}],
+    "evaluator_key": {"observations": ["returns rose", "battery supplier and firmware changed", "returns concentrated on one assembly line", "battery capacity within spec", "line and battery usage partly confounded"], "scoring_notes": ["Use line-specific containment and discriminating checks before rejecting an entire battery lot; preserve interaction hypotheses."]},
+    "design_metadata": {"sequential": false, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-QA02",
+    "domain": "quality_assurance",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A test specification accepts measurements from 4.90 to 5.10 inclusive. Are 4.90, 5.06, and 5.11 all acceptable?"}],
+    "evaluator_key": {"observations": ["acceptable interval 4.90–5.10 inclusive", "values 4.90, 5.06, 5.11"], "scoring_notes": ["4.90 and 5.06 are acceptable; 5.11 is not."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": false, "adversarial_surface": true, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-QA03",
+    "domain": "quality_assurance",
+    "author_route_label": "FULL_VALUE",
+    "turns": [
+      {"turn": 1, "agent_input": "A packaging seal audit starts failing after both a jaw-temperature adjustment and a film-thickness change. Failures are concentrated at high line speed. Operators propose lowering speed permanently. What should quality engineering do before accepting the throughput loss?"},
+      {"turn": 2, "agent_input": "A short matrix run shows the old jaw temperature fails at high speed with both film thicknesses, while the new jaw temperature passes at high speed with both films. How should the team update its decision?", "expected_revision": "Jaw temperature becomes the supported controllable mechanism; film thickness is weakened, and permanent speed reduction is unnecessary if temperature is corrected."}
+    ],
+    "evaluator_key": {"observations": ["temperature and film changed", "failures at high speed", "matrix run isolates jaw-temperature effect"], "constraints": ["permanent speed reduction sacrifices throughput"], "scoring_notes": ["Use the matrix evidence to correct temperature rather than accept avoidable throughput loss."]},
+    "design_metadata": {"sequential": true, "has_distractors": true, "requires_action": true, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  },
+  {
+    "case_id": "RV1-QA04",
+    "domain": "quality_assurance",
+    "author_route_label": "CONTROL_VALUE",
+    "turns": [{"turn": 1, "agent_input": "A batch has 7 defective units out of 1,400 inspected. What is the defect percentage?"}],
+    "evaluator_key": {"observations": ["7 defective out of 1,400"], "scoring_notes": ["0.5%."]},
+    "design_metadata": {"sequential": false, "has_distractors": false, "requires_action": false, "adversarial_surface": false, "freshness_attestation": "New routing-validation case; not reused or structurally cloned from prior suites."}
+  }
+]
