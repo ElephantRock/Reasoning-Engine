@@ -1,0 +1,162 @@
+name: Reasoning Held-Out Framework Validation v1 — Independent Rejudge
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  ZAI_API_KEY: unused-no-target-calls
+  ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4
+  ZAI_TARGET_MODEL: glm-5.1
+  ZAI_JUDGE_API_KEY: ${{ secrets.INDEPENDENT_JUDGE_API_KEY }}
+  ZAI_JUDGE_BASE_URL: ${{ vars.INDEPENDENT_JUDGE_BASE_URL }}
+  ZAI_JUDGE_MODEL: ${{ vars.INDEPENDENT_JUDGE_MODEL }}
+  FRAMEWORK_TARGET_FAMILY: glm
+  FRAMEWORK_TARGET_PROVIDER: zai
+  FRAMEWORK_JUDGE_FAMILY: ${{ vars.INDEPENDENT_JUDGE_FAMILY }}
+  FRAMEWORK_JUDGE_PROVIDER: ${{ vars.INDEPENDENT_JUDGE_PROVIDER }}
+  FRAMEWORK_INDEPENDENT_EVALUATOR_ATTESTATION: 'true'
+  FRAMEWORK_GENERATION_REPLICATES: '3'
+  FRAMEWORK_JUDGE_VOTES: '3'
+  FRAMEWORK_SHARD_COUNT: '6'
+  BENCHMARK_BOOTSTRAP_SAMPLES: '5000'
+  BENCHMARK_SUITE: combined
+  SOURCE_TARGET_RUN_ID: '34270142523'
+
+jobs:
+  validate-preflight:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-heldout-framework-v1-independent-rejudge]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: benchmark
+    env:
+      FRAMEWORK_SHARD_INDEX: '0'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Verify independent evaluator configuration exists
+        shell: bash
+        run: |
+          test -n "$ZAI_JUDGE_API_KEY" || { echo 'INDEPENDENT_JUDGE_API_KEY is missing.' >&2; exit 1; }
+          test -n "$ZAI_JUDGE_BASE_URL" || { echo 'INDEPENDENT_JUDGE_BASE_URL repo variable is missing.' >&2; exit 1; }
+          test -n "$ZAI_JUDGE_MODEL" || { echo 'INDEPENDENT_JUDGE_MODEL repo variable is missing.' >&2; exit 1; }
+          test -n "$FRAMEWORK_JUDGE_FAMILY" || { echo 'INDEPENDENT_JUDGE_FAMILY repo variable is missing.' >&2; exit 1; }
+          test -n "$FRAMEWORK_JUDGE_PROVIDER" || { echo 'INDEPENDENT_JUDGE_PROVIDER repo variable is missing.' >&2; exit 1; }
+      - name: Verify independent evaluator gate and connectivity
+        run: |
+          python - <<'PY'
+          import rejudge_framework_validation_v1_independent as r
+          r.independent_preflight()
+          usage = r.independent_connectivity_check()
+          print({
+              'preflight': 'ok',
+              'judge_model': r.base.v03.JUDGE_MODEL,
+              'judge_family': r.base.JUDGE_FAMILY,
+              'judge_provider': r.base.JUDGE_PROVIDER,
+              'judge_base': r.base.v03.JUDGE_BASE,
+              'usage': usage,
+          })
+          PY
+
+  shard:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-heldout-framework-v1-independent-rejudge]')
+    needs: validate-preflight
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5]
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    defaults:
+      run:
+        working-directory: benchmark
+    env:
+      FRAMEWORK_SHARD_INDEX: ${{ matrix.shard }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Restore exact frozen target-output shard
+        uses: actions/download-artifact@v4
+        with:
+          name: framework-v1-glm53flash-recovered-shard-${{ matrix.shard }}-34270142523
+          path: benchmark/source_framework_validation_v1
+          github-token: ${{ github.token }}
+          repository: ElephantRock/Reasoning-Engine
+          run-id: 34270142523
+      - name: Generate independent judge votes only
+        run: python rejudge_framework_validation_v1_independent.py
+      - name: Upload independent rejudge shard
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: framework-v1-independent-rejudge-shard-${{ matrix.shard }}-${{ github.run_id }}
+          path: |
+            benchmark/results_framework_validation_v1/framework_v1_runs_shard_${{ matrix.shard }}.jsonl
+            benchmark/results_framework_validation_v1/framework_v1_votes_shard_${{ matrix.shard }}.jsonl
+            benchmark/results_framework_validation_v1/framework_v1_meta_shard_${{ matrix.shard }}.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  aggregate:
+    if: always() && needs.validate-preflight.result == 'success' && needs.shard.result == 'success'
+    needs: [validate-preflight, shard]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: benchmark
+    env:
+      FRAMEWORK_SHARD_INDEX: '0'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Download all independent rejudge shards
+        uses: actions/download-artifact@v4
+        with:
+          pattern: framework-v1-independent-rejudge-shard-*-${{ github.run_id }}
+          path: benchmark/results_framework_validation_v1
+          merge-multiple: true
+      - name: Aggregate independent rejudge
+        run: python aggregate_framework_validation_v1_independent_rejudge.py
+      - name: Upload independent final report
+        uses: actions/upload-artifact@v4
+        with:
+          name: framework-v1-independent-rejudge-report-${{ github.run_id }}
+          path: |
+            benchmark/results_framework_validation_v1/framework_v1_independent_rejudge_report.json
+            benchmark/results_framework_validation_v1/framework_v1_report.json
+            benchmark/results_framework_validation_v1/framework_v1_meta_shard_*.json
+          if-no-files-found: error
+          retention-days: 30
