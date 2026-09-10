@@ -16,7 +16,7 @@ jobs:
     timeout-minutes: 15
     env:
       ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
-      ZAI_JUDGE_API_KEY: ${{ secrets.ZAI_JUDGE_API_KEY }}
+      ZAI_JUDGE_API_KEY: ${{ secrets.ZAI_API_KEY }}
       ROUTER_V1_API_KEY: ${{ secrets.ZAI_API_KEY }}
       ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4
       ZAI_JUDGE_BASE_URL: https://api.z.ai/api/coding/paas/v4
@@ -53,7 +53,7 @@ jobs:
         shard: [0, 1, 2, 3, 4, 5]
     env:
       ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
-      ZAI_JUDGE_API_KEY: ${{ secrets.ZAI_JUDGE_API_KEY }}
+      ZAI_JUDGE_API_KEY: ${{ secrets.ZAI_API_KEY }}
       ROUTER_V1_API_KEY: ${{ secrets.ZAI_API_KEY }}
       ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4
       ZAI_JUDGE_BASE_URL: https://api.z.ai/api/coding/paas/v4
