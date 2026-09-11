@@ -1,0 +1,66 @@
+name: Selective Routing v4 Development Check
+
+on:
+  pull_request:
+    paths:
+      - 'benchmark/routing_v4_exposed_outcomes.csv'
+      - 'benchmark/develop_selective_routing_v4.py'
+      - 'docs/SELECTIVE_ROUTING_V4_DEVELOPMENT_PROTOCOL.md'
+      - '.github/workflows/selective-routing-v4-development-check.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'benchmark/routing_v4_exposed_outcomes.csv'
+      - 'benchmark/develop_selective_routing_v4.py'
+      - 'docs/SELECTIVE_ROUTING_V4_DEVELOPMENT_PROTOCOL.md'
+      - '.github/workflows/selective-routing-v4-development-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate syntax and frozen outcome table
+        run: |
+          python -m py_compile benchmark/develop_selective_routing_v4.py
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          p = Path('benchmark/routing_v4_exposed_outcomes.csv')
+          assert hashlib.sha256(p.read_bytes()).hexdigest() == '8711a6aff96df9bda7f9c7c6f209ae33cd6370b811886a27f5d28ddbe791b295'
+          script = Path('benchmark/develop_selective_routing_v4.py').read_text()
+          for forbidden in ('author_route_label', 'evaluator_key', 'design_metadata'):
+              assert forbidden not in script, forbidden
+          PY
+      - name: Run exposed-data cross-validation
+        working-directory: benchmark
+        run: python develop_selective_routing_v4.py
+      - name: Validate development report structure
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r = json.loads(Path('benchmark/results_routing_v4_development.json').read_text())
+          assert r['n_cases'] == 144
+          assert r['suite_counts'] == {'v1': 48, 'v2': 48, 'v3': 48}
+          assert r['evidence_status'].startswith('development on exposed')
+          expected = {'ALWAYS_FULL','ALWAYS_CONTROL','DIRECT_BYPASS','KNN5','KNN9','KNN15','KNN5_DIRECT','KNN9_DIRECT','KNN15_DIRECT','NB','NB_DIRECT'}
+          assert set(r['candidates']) == expected
+          print(json.dumps({
+              'qualifying_candidates': r['qualifying_candidates'],
+              'selected_candidate': r['selected_candidate'],
+              'stop_rule_triggered': r['stop_rule_triggered'],
+          }, indent=2))
+          PY
+      - name: Upload development report
+        uses: actions/upload-artifact@v4
+        with:
+          name: selective-routing-v4-development-${{ github.run_id }}
+          path: benchmark/results_routing_v4_development.json
+          retention-days: 30
