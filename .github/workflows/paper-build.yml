@@ -32,8 +32,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            texlive-latex-base texlive-latex-recommended texlive-fonts-recommended \
-            texlive-fonts-extra texlive-extra-utils
+            texlive-latex-base texlive-latex-recommended texlive-latex-extra \
+            texlive-fonts-recommended
 
       - name: Render frozen manuscript figures
         run: python paper/make_figures.py
