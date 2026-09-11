@@ -1,0 +1,192 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+\title{Evaluating Structured Scientific/Engineering Reasoning Control:\\Quality Gains, Component Limits, and Routing Failures}
+\author{Anonymous for review}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Large language models can produce plausible answers without explicitly separating observations from causal explanations, hypotheses from evidence, or recommendations from tested mechanisms. We evaluate a frozen structured-reasoning control protocol that organizes non-trivial reasoning as \textbf{Observe $\rightarrow$ Diagnose $\rightarrow$ Derive $\rightarrow$ Hypothesize $\rightarrow$ Predict $\rightarrow$ Test $\rightarrow$ Revise $\rightarrow$ Engineer}. On a preregistered 36-case held-out suite, GLM-5.1 responses generated with the full protocol were preferred to uncontrolled responses with a pairwise score of \textbf{0.6898} under blinded GLM-5.3-Flash judging, with a 95\% case-clustered bootstrap interval of \textbf{0.6096--0.7685}. Three subsequent fresh 48-case suites again favored the same frozen FULL protocol over CONTROL, with scores of \textbf{0.6771}, \textbf{0.6875}, and \textbf{0.6539}. Effects were heterogeneous: gains were strongest on testing-, engineering-, and action-oriented cases, while no-action cases were near neutral. Attempts to causally attribute the framework effect to individual named stages were inconclusive because removing instructions often failed to remove the corresponding latent capability. Multiple selective-routing strategies likewise failed frozen quality/selectivity criteria, and a final exposed-data development stage triggered a preregistered stop rule. These results support a narrow conclusion: structured scientific/engineering reasoning control can improve judged decision-quality outputs on difficult tasks for GLM-5.1, while individual-stage causality and reliable input-only prediction of when deep reasoning can safely be skipped remain unresolved. Because target and evaluator share the GLM family and Z.AI provider, the evidence is cross-model same-family rather than independent-family/provider validation.
+\end{abstract}
+
+\section{Introduction}
+Modern large language models are capable of fluent explanation and increasingly strong problem solving, yet response fluency does not guarantee disciplined inference. A model may move from an observed phenomenon directly to a preferred explanation, treat correlation as mechanism, recommend an intervention without identifying discriminating evidence, or fail to revise a causal model when later evidence contradicts it. These failure modes are especially consequential in tasks that require testing, intervention design, operational decisions, reversibility, monitoring, or second-order reasoning.
+
+Prior work has shown that inference can improve through intermediate reasoning, decomposition, multiple sampled reasoning paths, explicit search, reflection, and reasoning-plus-action. Chain-of-Thought elicits intermediate rationales \citep{wei2022chain}; Least-to-Most decomposes hard tasks into easier subproblems \citep{zhou2023least}; Self-Consistency aggregates multiple reasoning paths \citep{wang2023selfconsistency}; Tree of Thoughts searches over candidate thought states \citep{yao2023tree}; ReAct interleaves reasoning and action \citep{yao2023react}; and Self-Refine and Reflexion use iterative feedback and revision \citep{madaan2023selfrefine,shinn2023reflexion}.
+
+The present work asks a different empirical question: \emph{does a fixed scientific/engineering reasoning-control policy improve the quality of model decisions and explanations, and can that benefit be decomposed or selectively invoked without sacrificing quality?}
+
+We study the following protocol:
+\begin{center}
+\textbf{Observe $\rightarrow$ Diagnose $\rightarrow$ Derive $\rightarrow$ Hypothesize $\rightarrow$ Predict $\rightarrow$ Test $\rightarrow$ Revise $\rightarrow$ Engineer.}
+\end{center}
+
+The stages impose an epistemic order on requested response behavior. The model should separate observations from interpretation, consider competing explanations, derive relevant first principles and constraints, formulate testable mechanisms, state predictions, seek discriminating evidence, revise when evidence changes, and only then engineer an action with explicit constraints, reversibility, monitoring, and failure modes. We do not interpret this textual protocol as evidence that hidden model cognition literally follows eight faithful internal stages; the intervention is a prompting policy evaluated at the output level.
+
+The paper contributes: (1) framework-level held-out evidence and three later fresh-suite replications; (2) evidence of heterogeneous benefit; (3) component-identification evidence showing that instruction removal is not capability removal; and (4) negative routing evidence showing that per-instance marginal value is harder to predict than average benefit.
+
+\section{Related Work}
+\paragraph{Structured and decomposed reasoning.}
+Chain-of-Thought, Least-to-Most, Self-Consistency, and Tree of Thoughts establish several forms of inference-time structure \citep{wei2022chain,zhou2023least,wang2023selfconsistency,yao2023tree}. Our protocol does not implement an inference tree, multi-path voting procedure, or generic subproblem decomposition. Instead, it specifies epistemic roles associated with scientific and engineering reasoning: observations, causal alternatives, first-principles constraints, falsifiable hypotheses, predictions, discriminating tests, revision, and intervention design.
+
+\paragraph{Reflection, revision, and acting.}
+ReAct interleaves reasoning with actions \citep{yao2023react}; Self-Refine and Reflexion operationalize iterative feedback and revision \citep{madaan2023selfrefine,shinn2023reflexion}. Revision is one component of our broader causal loop, while the Engineer stage additionally requests reversibility, monitoring, constraints, failure modes, and second-order effects.
+
+\paragraph{Hypothesis testing and scientific reasoning.}
+Hypothesis Testing Prompting incorporates assumptions, backward reasoning, and fact verification into deductive reasoning \citep{li2024hypothesis}. Recent work also surveys LLMs across scientific workflows \citep{zhang2025scientific}. Our focus is narrower: one frozen policy evaluated on heterogeneous decision/reasoning cases.
+
+\paragraph{Adaptive reasoning and routing.}
+Route to Reason jointly selects models and reasoning strategies under budget constraints \citep{pan2025route}; Think When Needed routes between Think and Non-Think modes from pre-generation signals \citep{guo2026think}. Our routing work differs primarily in outcome: several prospectively frozen policies failed combined quality-preservation and selectivity criteria.
+
+\paragraph{LLM-as-a-Judge.}
+LLM judges can correlate with human preferences while exhibiting position, verbosity, and other biases \citep{zheng2023judge,shi2025judges}. We mitigate some of these risks through blinded pairwise presentation, deterministic A/B randomization, repeated votes, agreement reporting, case-level aggregation, and case-clustered bootstrap intervals. Same-family/provider evaluation remains a central limitation.
+
+\section{Reasoning Protocol}
+The FULL policy is:
+\begin{enumerate}[leftmargin=*]
+\item \textbf{Observe}: distinguish observed facts from interpretations.
+\item \textbf{Diagnose}: enumerate plausible causal explanations without premature selection.
+\item \textbf{Derive}: identify first principles, invariants, constraints, and governing relationships.
+\item \textbf{Hypothesize}: translate candidate mechanisms into testable hypotheses.
+\item \textbf{Predict}: state expected observations conditional on each hypothesis.
+\item \textbf{Test}: seek discriminating or falsifying evidence.
+\item \textbf{Revise}: update the causal model when evidence contradicts prior beliefs.
+\item \textbf{Engineer}: choose an intervention under constraints, reversibility, monitoring, feedback, second-order effects, and failure modes.
+\end{enumerate}
+The governing principle is \emph{correct models before confident solutions}. The prompt does not require visible stage headings.
+
+CONTROL receives no reasoning-specific system prompt. COMPACT uses the shorter scaffold \emph{Problem $\rightarrow$ First Principle $\rightarrow$ Mechanism $\rightarrow$ Evidence $\rightarrow$ Solution}. A central methodological distinction is \textbf{reasoning capability $\neq$ reasoning instruction}: deleting an instruction does not necessarily remove the associated behavior.
+
+\section{Evaluation Methodology}
+The project prioritized framework quality, then component identification, fresh replication, routing, and only later cost. Quality was primary throughout.
+
+The validated target is GLM-5.1. The principal judge is GLM-5.3-Flash. Both are served by Z.AI and belong to the GLM family; the evidence is therefore cross-model same-family/provider.
+
+For quality comparisons, candidate responses were presented in randomized A/B order. Each generated pair received repeated judge votes. Pair outcomes assign 1 to a FULL win, 0.5 to a tie, and 0 to a CONTROL win from FULL's perspective. Votes are aggregated within generation pair; generation replicates are averaged within case; cases are the independent units for uncertainty estimation. Confidence intervals use case-clustered bootstrap resampling.
+
+The primary held-out run encountered a judge-format failure after all target outputs had been generated. Before inspecting partial outcome distributions, recovery was frozen to retain all target outputs, retain valid votes, request only missing votes, preserve A/B orientation, and regenerate zero target outputs.
+
+\section{Development Studies}
+On 12 development cases, FULL vs BASELINE scored 0.7778 (95\% interval 0.5833--0.9444), COMPACT vs BASELINE scored 0.8056 (0.6250--0.9583), and FULL vs COMPACT scored 0.5833 (0.4167--0.7500). These results motivated stronger validation rather than serving as confirmatory evidence.
+
+Leave-one-instruction-out ablation did not produce a stable replicated component pattern. Subsequent capability studies separated behavior manipulation from quality: Engineering showed the strongest development signal, whereas Diagnose and Revise were often already near ceiling under CONTROL. Later fidelity measurements reduced some evaluation artifacts but did not yield a stage module that survived frozen carry-forward criteria. Component causality therefore remains unresolved.
+
+\section{Preregistered Held-Out Framework Validation}
+The primary confirmatory experiment used 36 fresh held-out cases, with CONTROL, COMPACT, and FULL generated three times per case and three blinded randomized judge votes per generated pair. The preregistered FULL-vs-CONTROL success rule required a point estimate at least 0.60, a 95\% case-clustered CI lower bound above 0.50, and no sufficiently populated task stratum below a 0.45 harm floor.
+
+FULL vs CONTROL achieved \textbf{0.6898}, 95\% CI \textbf{0.6096--0.7685}. Generation-replicate majorities were 61 FULL wins, 27 ties, and 20 losses; case direction was 26 wins, 2 ties, and 8 losses. Mean judge-vote agreement was 0.8889 and the unanimous generation-replicate fraction was 0.6944. The preregistered primary endpoint passed.
+
+COMPACT vs CONTROL scored 0.5864 (0.5077--0.6667) and failed its secondary point-estimate threshold of 0.60. FULL vs COMPACT scored 0.5957 (0.5417--0.6543), satisfying the preregistered directional criterion favoring FULL.
+
+\begin{table}[t]
+\centering
+\caption{Primary held-out heterogeneity. Scores are FULL vs CONTROL.}
+\begin{tabular}{lr}
+\toprule
+Stratum & Score \\
+\midrule
+ENGINEER & 0.9012 \\
+TEST & 0.7901 \\
+BOTH & 0.6296 \\
+NONE & 0.4861 \\
+Action-required & 0.7375 \\
+No-action & 0.4921 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\IfFileExists{figures/heldout_heterogeneity.pdf}{
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.78\linewidth]{figures/heldout_heterogeneity.pdf}
+\caption{Primary held-out heterogeneity. Error bars are case-clustered 95\% intervals.}
+\end{figure}}{}
+
+\section{Fresh-Suite Replications}
+The same frozen FULL prompt was subsequently used on three fresh 48-case suites created for routing-validation studies. FULL vs CONTROL remained prospectively measured in each.
+
+\begin{table}[t]
+\centering
+\caption{Fresh-suite FULL vs CONTROL results. Later suites are sequential fresh replications inside one research program, not independent studies.}
+\begin{tabular}{lrrl}
+\toprule
+Suite & Cases & Score & 95\% CI \\
+\midrule
+Held-out framework v1 & 36 & 0.6898 & 0.6096--0.7685 \\
+Routing v1 suite & 48 & 0.6771 & 0.6250--0.7292 \\
+Routing v2 suite & 48 & 0.6875 & 0.6273--0.7477 \\
+Routing v3 suite & 48 & 0.6539 & 0.5891--0.7199 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Across the 180 fresh cases, the case-count-weighted descriptive score is approximately 0.6762. This number is descriptive only and is not assigned a pooled inferential interval.
+
+\IfFileExists{figures/fresh_suite_full_vs_control.pdf}{
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.78\linewidth]{figures/fresh_suite_full_vs_control.pdf}
+\caption{Fresh-suite FULL vs CONTROL point estimates and case-clustered 95\% intervals.}
+\end{figure}}{}
+
+\section{Selective Routing Experiments}
+The held-out heterogeneity motivated a routing question: can FULL be invoked only when likely to add decision-relevant value?
+
+Routing v1 selected FULL on 50\% of cases and beat CONTROL but failed its frozen preservation rule relative to ALWAYS-FULL. Routing v2 corrected the paired preservation estimand prospectively: ROUTED vs CONTROL scored 0.6840, the paired decrement was -0.0035 (95\% CI -0.0255 to 0.0127), and 98.15\% of observed FULL gain was retained; however FULL use was 70.83\%, above the 65\% cap. Routing v3 changed the semantic hypothesis and invoked FULL on only 10.42\% of cases; ROUTED vs CONTROL collapsed to 0.4988 with paired decrement -0.1551. The intended ``CAUSAL\_TRAP'' exclusion was falsified because FULL scored 0.8102 on that stratum despite the router choosing CONTROL on all 12 cases.
+
+A fourth development stage used the 144 exposed routing cases for text-only empirical prediction. No candidate passed all frozen leave-one-suite-out and leave-one-domain-out gates. The strongest candidate, NB\_DIRECT, achieved LOSO routed score 0.6393, paired decrement -0.0336, and FULL use 56.25\%; the development stop rule triggered, and no fresh v4 suite was authored.
+
+\IfFileExists{figures/routing_quality_selectivity.pdf}{
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.82\linewidth]{figures/routing_quality_selectivity.pdf}
+\caption{Routing quality/selectivity trajectory. v4 points are exposed-data development, not validation; points arise from different suites and should not be interpreted as one inferential frontier.}
+\end{figure}}{}
+
+\section{Discussion}
+The repeated FULL-vs-CONTROL advantage suggests that a structured scientific/engineering policy can improve judged GLM-5.1 outputs on difficult reasoning and decision tasks, especially when answers must move beyond explanation into test design, causal discrimination, or intervention engineering.
+
+A whole prompt can change output quality even when removing one line does not remove the corresponding behavior. This makes naive leave-one-instruction-out ablation a weak instrument for causal component identification. The appropriate conclusion is framework-level: the FULL prompt as a package is associated with better judged outputs; the evidence does not establish that all eight named stages are independently necessary.
+
+Routing is harder because average treatment benefit does not imply easy instance-level treatment-effect prediction. Routing requires estimating a counterfactual before either FULL or CONTROL response is observed. Surface complexity, causal language, and learned lexical similarity were insufficient proxies under the tested constraints.
+
+The conservative deployment interpretation is therefore \textbf{DIRECT for genuinely trivial/deterministic tasks; FULL for non-trivial reasoning}. This is not a validated autonomous router.
+
+\section{Limitations}
+\paragraph{Same-family/provider judge.} GLM-5.1 is evaluated by GLM-5.3-Flash; shared family/provider may induce correlated preferences or blind spots.
+
+\paragraph{Single validated target model.} The framework effect is established only for GLM-5.1.
+
+\paragraph{Program-authored benchmarks.} Prospective freezing reduces direct overfitting but does not substitute for external benchmark transfer.
+
+\paragraph{Model-based evaluation.} Repeated blinded model judgments are not a human-grounded gold standard.
+
+\paragraph{Prompt-length and style confounding.} FULL is longer and more prescriptive than CONTROL. It may induce organization, coverage, or verbosity that influences a model judge independently of the intended epistemic mechanism. The rubric discourages rewarding style, but cannot fully remove this possibility.
+
+\paragraph{Sequential research adaptation.} Later suites and hypotheses were designed after earlier results; each experiment should be interpreted according to its own prospective question.
+
+\paragraph{No hidden-reasoning faithfulness claim.} The experiments evaluate observable outputs under prompting policies and do not establish that latent internal cognition faithfully instantiates the eight named stages.
+
+\paragraph{No validated cost optimum.} Selective routing did not survive frozen criteria, so cost-optimal reasoning is not established.
+
+\section{Conclusion}
+A frozen scientific/engineering reasoning-control protocol improved GLM-5.1 response quality over an uncontrolled baseline on a preregistered held-out suite and retained a consistent advantage on three later fresh suites. The strongest gains occurred in tasks involving testing, engineering, and consequential action. Individual-stage causal value remains difficult to identify, and the marginal value of deep reasoning remains difficult to predict from the input alone. The next decisive evidence should come from independent-family or human evaluation, cross-target replication, and external benchmark transfer rather than further tuning of exposed routing suites.
+
+\section*{Reproducibility}
+Exact prompts, suite hashes, workflow runs, artifact digests, recovery details, and claim boundaries are documented in \texttt{paper/REPRODUCIBILITY\_APPENDIX\_V1.md} and the experiment-specific files under \texttt{docs/}. Figure inputs are frozen in \texttt{paper/TABLES\_AND\_FIGURES\_V1.md} and can be rendered with \texttt{paper/make\_figures.py}.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}
