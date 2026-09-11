@@ -58,7 +58,17 @@ Using turn-1 text only:
 4. evaluate `k ∈ {5, 9, 15}`;
 5. optionally combine the prediction with the frozen DIRECT_BYPASS rule, which can force obvious deterministic tasks to CONTROL.
 
-No author labels or hidden metadata enter the predictor.
+### Candidate family E — Bernoulli Naive Bayes positive-gain prediction
+
+Using turn-1 tokens only:
+
+1. define the training label as `1[g_i > 0]`;
+2. use Bernoulli token presence with Laplace smoothing `alpha = 1`;
+3. restrict the vocabulary to tokens appearing in at least two training cases;
+4. predict the log posterior odds that FULL has positive marginal gain;
+5. optionally combine the prediction with the frozen DIRECT_BYPASS rule.
+
+No author labels or hidden metadata enter either empirical predictor.
 
 ## Threshold calibration
 
@@ -135,7 +145,8 @@ Tie-breakers, in order:
 
 1. smaller absolute paired decrement;
 2. lower FULL invocation rate;
-3. smaller `k`.
+3. for k-nearest-neighbor candidates, smaller `k`;
+4. fixed candidate-name lexical order.
 
 If no candidate passes all gates, **do not author a fresh v4 validation suite**. The routing-development stop rule triggers and the recommended architecture remains ALWAYS-FULL, optionally with only a trivial deterministic bypass if that bypass itself is robust.
 
