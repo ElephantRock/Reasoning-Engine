@@ -105,7 +105,7 @@ jobs:
           assert 'shard: [0, 1, 2, 3, 4, 5]' in workflow
           assert workflow.count('python preflight_selective_routing_v3.py') == 1
           assert 'ROUTING_V3_SHARD_INDEX:' in workflow
-          assert 'routing_validation_v3/manifest.json' in prereg
+          assert 'A new untouched manifest-closed suite will be authored only after this preregistration commit.' in prereg
           assert 'CI95_low(mean(D_i)) > -0.05' in prereg
           assert 'FULL invocation rate <= `0.65`' in prereg
           assert 'confidence is diagnostic only' in prereg
