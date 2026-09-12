@@ -17,11 +17,13 @@ Status: working checklist for a public technical report / preprint and stronger 
 - [x] Verify bibliography against current publication metadata where available.
 - [x] Provide exact prompts, suite/run provenance, artifact digests, and recovery record in reproducibility appendix.
 - [x] Provide paper table/figure data package.
-- [ ] Convert Markdown manuscript to chosen submission format (LaTeX or venue template).
-- [ ] Generate publication-quality figures from the frozen data package.
-- [ ] Run final reference/citation build check after format conversion.
+- [x] Convert Markdown manuscript to chosen submission format (LaTeX or venue template).
+- [x] Generate publication-quality figures from the frozen data package.
+- [x] Run final reference/citation build check after format conversion.
 - [ ] Add author names, affiliations, acknowledgments, funding/conflict statements as applicable.
 - [ ] Add repository/archive link and license statement appropriate for public release.
+
+Verified build state: the merged `Paper Build` workflow renders the frozen figures, compiles LaTeX and BibTeX, requires a non-empty PDF, and fails on overfull boxes or unresolved citations/references. The post-merge `main` build passed on 2026-09-12.
 
 ## B. Stronger conference/journal requirements
 
