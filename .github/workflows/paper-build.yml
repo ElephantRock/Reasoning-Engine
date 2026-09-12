@@ -1,0 +1,66 @@
+name: Paper Build
+
+on:
+  pull_request:
+    paths:
+      - 'paper/**'
+      - '.github/workflows/paper-build.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'paper/**'
+      - '.github/workflows/paper-build.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install figure dependencies
+        run: python -m pip install matplotlib
+
+      - name: Install LaTeX toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            texlive-latex-base texlive-latex-recommended texlive-latex-extra \
+            texlive-fonts-recommended lmodern
+
+      - name: Render frozen manuscript figures
+        run: python paper/make_figures.py
+
+      - name: Compile manuscript
+        working-directory: paper
+        run: |
+          pdflatex -interaction=nonstopmode -halt-on-error main.tex
+          bibtex main
+          pdflatex -interaction=nonstopmode -halt-on-error main.tex
+          pdflatex -interaction=nonstopmode -halt-on-error main.tex
+          test -s main.pdf
+
+      - name: Check manuscript build warnings
+        working-directory: paper
+        run: |
+          ! grep -F 'Overfull \hbox' main.log
+          ! grep -F 'There were undefined citations' main.log
+          ! grep -F 'There were undefined references' main.log
+
+      - name: Upload preprint build
+        uses: actions/upload-artifact@v4
+        with:
+          name: reasoning-engine-preprint-${{ github.run_id }}
+          path: |
+            paper/main.pdf
+            paper/main.log
+            paper/figures/*.pdf
+            paper/figures/*.png
+          retention-days: 30

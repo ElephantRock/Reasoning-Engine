@@ -2,7 +2,7 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{booktabs}
 \usepackage{graphicx}
-\usepackage{hyperref}
+\usepackage[hidelinks]{hyperref}
 \usepackage{natbib}
 \usepackage{enumitem}
 \usepackage{microtype}
@@ -161,7 +161,7 @@ A whole prompt can change output quality even when removing one line does not re
 
 Routing is harder because average treatment benefit does not imply easy instance-level treatment-effect prediction. Routing requires estimating a counterfactual before either FULL or CONTROL response is observed. Surface complexity, causal language, and learned lexical similarity were insufficient proxies under the tested constraints.
 
-The conservative deployment interpretation is therefore \textbf{DIRECT for genuinely trivial/deterministic tasks; FULL for non-trivial reasoning}. This is not a validated autonomous router.
+The conservative deployment interpretation is therefore \textbf{DIRECT for genuinely trivial or deterministic tasks; FULL for non-trivial reasoning}. This is not a validated autonomous router.
 
 \section{Limitations}
 \paragraph{Same-family/provider judge.} GLM-5.1 is evaluated by GLM-5.3-Flash; shared family/provider may induce correlated preferences or blind spots.
