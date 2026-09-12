@@ -67,6 +67,8 @@ The same-family/provider limitation applies. This is acceptable for operator-fid
 - no target output may be regenerated after any behavior scores are inspected;
 - record target token use and latency descriptively.
 
+If execution is interrupted after any behavior or quality scores have been produced, do **not** simply rerun the workflow. Freeze a recovery procedure first that retains every completed target output and valid judge vote and requests only missing judgments. This mirrors the project's earlier held-out recovery discipline and prevents outcome-aware target regeneration.
+
 ## Behavior rubric
 
 Each response is scored independently and without revealing the condition label on six dimensions from 0 to 4.
@@ -131,6 +133,8 @@ For each target output:
 
 The judge must be instructed not to reward headings, explicit framework names, or verbosity.
 
+The behavior judge also emits an `accuracy_pathology` flag. It may be set only for a material factual, logical, constraint, or decision error in the response; ordinary incompleteness or failure to exhibit the target behavior is not itself an accuracy pathology.
+
 ## Fidelity estimands
 
 For operator `r` with its matching probe case `c_r` and matching behavior dimension `d_r`:
@@ -139,14 +143,15 @@ For operator `r` with its matching probe case `c_r` and matching behavior dimens
 
 `separation(r) = score(r, c_r, d_r) - median(score(other_specialists, c_r, d_r))`
 
-FULL is excluded from the separation median because it is intentionally a broad generalist and may legitimately express several behaviors.
+FULL is excluded from the separation median because it is intentionally a broad generalist and may legitimately express several behaviors. Its matching-dimension score is still reported, including `operator_score - FULL_score`, as a descriptive separability diagnostic rather than an eligibility gate.
 
 Also report:
 
 - FULL vs CONTROL on every dimension/case;
 - response length and target token use by condition;
 - all six behavior scores for every condition/case;
-- the rank of the intended specialist on its matching dimension.
+- the rank of the intended specialist on its matching dimension;
+- intended specialist minus FULL on the matching dimension.
 
 ## Eligibility gates
 
@@ -157,7 +162,8 @@ A specialist is **Stage-1 eligible** only if both conditions hold on its matchin
 
 Additional pathology gate:
 
-- no response may contain a material task-accuracy failure attributable to the specialist instruction;
+- no material accuracy pathology may be attributed to the specialist by the absolute behavior judge;
+- no material factual, logical, constraint, or decision-quality pathology may be attributed to the specialist by either matching-case pairwise quality sanity comparison;
 - no specialist may rely on visible operator names/headings as a substitute for the target behavior.
 
 These gates are deliberately behavioral. They do not establish a quality advantage.
@@ -180,7 +186,9 @@ For each matching case only, run blinded pairwise quality comparison:
 
 Use one randomized A/B vote per pair as a pathology screen only.
 
-A quality loss does not by itself prove the operator concept invalid, but any severe factual, logical, or decision-quality failure blocks that operator from Stage 1 until a new version is tested.
+The quality judge must return both its preference and an explicit `material_pathology` flag. A material pathology is limited to a severe factual, logical, constraint, or decision-quality error that should block that specialist from Stage 1. The judge must attribute any flagged pathology to A or B; the runner resolves that blinded side back to the producing condition and applies the gate mechanically.
+
+A simple quality loss does not by itself prove the operator concept invalid and does not automatically block eligibility. Only an explicitly attributed material pathology blocks the operator under this screen.
 
 ## Interpretation boundary
 

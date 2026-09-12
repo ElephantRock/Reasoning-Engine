@@ -55,13 +55,15 @@ Dimensions:
 - decision_theoretic: 0 ignores uncertainty/consequences; 1 mostly modal-outcome reasoning; 2 alternatives plus some downside/reversibility; 3 asymmetric consequences, information value, reversibility and key assumptions; 4 integrates uncertainty, downside, option value and stopping/information criteria.
 - systems_feedback: 0 static local reasoning where dynamics matter; 1 generic second-order mention; 2 one material feedback/delay/bottleneck; 3 interacting loops/delays alter intervention or monitoring; 4 robust dynamic reasoning including adaptation, bottleneck migration and time horizon without inventing complexity.
 
-Use 4 sparingly. Return JSON only:
+Use 4 sparingly. accuracy_pathology should be true only for a material factual, logical, constraint, or decision error in the candidate response, not merely for a missing target behavior or ordinary incompleteness. Return JSON only:
 {"scores":{"deductive_constraint":0,"abductive_diagnostic":0,"causal_experimental":0,"search_planning":0,"decision_theoretic":0,"systems_feedback":0},"accuracy_pathology":false,"pathology_note":"","notes":"brief concrete justification"}'''
 
 QUALITY_JUDGE = r'''You are a blinded pairwise evaluator of answer quality. You are not told which condition produced either response. Judge correctness, use of supplied facts, fit to the actual problem, calibrated uncertainty, and decision usefulness. Do not reward headings, named reasoning frameworks, jargon, verbosity, or token count. If both are substantively equivalent, return TIE.
 
+Also flag material_pathology only when one response contains a severe factual, logical, constraint, or decision-quality failure that should block that response's reasoning policy from further study. Ordinary inferiority, stylistic weakness, or a small omission is not a material pathology. If material_pathology is true, pathology_condition must be A or B and pathology_note must identify the concrete blocking error. Otherwise pathology_condition must be NONE.
+
 Return JSON only:
-{"winner":"A|B|TIE","confidence":0.0,"notes":"brief concrete reason"}'''
+{"winner":"A|B|TIE","confidence":0.0,"material_pathology":false,"pathology_condition":"A|B|NONE","pathology_note":"","notes":"brief concrete reason"}'''
 
 
 def git_blob(path: Path) -> str:
@@ -149,7 +151,21 @@ def quality_vote(case: dict[str, Any], left: dict[str, Any], right: dict[str, An
     winner = parsed.get("winner")
     if winner not in {"A", "B", "TIE"}:
         raise RuntimeError(f"invalid pairwise quality result: {parsed}")
+
+    material_pathology = bool(parsed.get("material_pathology", False))
+    pathology_side = parsed.get("pathology_condition", "NONE")
+    if pathology_side not in {"A", "B", "NONE"}:
+        raise RuntimeError(f"invalid pathology_condition: {parsed}")
+    if material_pathology and pathology_side not in {"A", "B"}:
+        raise RuntimeError(f"material pathology requires A or B attribution: {parsed}")
+    if not material_pathology and pathology_side != "NONE":
+        raise RuntimeError(f"non-pathology must use NONE attribution: {parsed}")
+
     resolved = "TIE" if winner == "TIE" else (first if winner == "A" else second)["condition"]
+    pathology_condition = None
+    if material_pathology:
+        pathology_condition = (first if pathology_side == "A" else second)["condition"]
+
     return {
         "case_id": case["case_id"],
         "pair_id": pair_id,
@@ -157,6 +173,9 @@ def quality_vote(case: dict[str, Any], left: dict[str, Any], right: dict[str, An
         "B_condition": second["condition"],
         "winner": resolved,
         "confidence": parsed.get("confidence"),
+        "material_pathology": material_pathology,
+        "pathology_condition": pathology_condition,
+        "pathology_note": parsed.get("pathology_note", ""),
         "notes": parsed.get("notes", ""),
         "usage": result["usage"],
     }
@@ -179,10 +198,20 @@ def aggregate(runs: list[dict[str, Any]], votes: list[dict[str, Any]], quality: 
         dim = POLICY_DIMENSION[operator]
         own = averaged[(case["case_id"], operator)][dim]
         control = averaged[(case["case_id"], "CONTROL")][dim]
+        full = averaged[(case["case_id"], "FULL")][dim]
         other = [averaged[(case["case_id"], name)][dim] for name in SPECIALISTS if name != operator]
         lift = own - control
         separation = own - median(other)
-        pathology = pathologies[(case["case_id"], operator)]
+        behavior_pathology = pathologies[(case["case_id"], operator)]
+        quality_pathology_votes = [
+            item
+            for item in quality
+            if item["case_id"] == case["case_id"]
+            and item.get("material_pathology")
+            and item.get("pathology_condition") == operator
+        ]
+        quality_pathology = bool(quality_pathology_votes)
+        pathology = behavior_pathology or quality_pathology
         eligible = lift >= 0.50 and separation >= 0.25 and not pathology
         operator_rows.append({
             "operator": operator,
@@ -190,10 +219,14 @@ def aggregate(runs: list[dict[str, Any]], votes: list[dict[str, Any]], quality: 
             "dimension": dim,
             "operator_score": own,
             "control_score": control,
+            "full_score": full,
+            "operator_minus_full": own - full,
             "other_specialist_median": median(other),
             "lift_control": lift,
             "separation": separation,
-            "accuracy_pathology": pathology,
+            "behavior_accuracy_pathology": behavior_pathology,
+            "quality_material_pathology": quality_pathology,
+            "quality_pathology_notes": [item.get("pathology_note", "") for item in quality_pathology_votes],
             "stage1_eligible": eligible,
         })
 
