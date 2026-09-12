@@ -1,0 +1,88 @@
+name: Operator Fidelity v0.1 Recovery Static Check
+
+on:
+  pull_request:
+    paths:
+      - 'benchmark/recover_operator_fidelity_v01.py'
+      - 'docs/OPERATOR_FIDELITY_V0_1_RECOVERY.md'
+      - '.github/workflows/operator-fidelity-v01-recovery-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: benchmark
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Validate syntax and frozen recovery constants
+        env:
+          OPENAI_API_KEY: unused-provider-shim
+          ZAI_API_KEY: unused-zai-shim
+          ZAI_TARGET_MODEL: glm-5.1
+          ZAI_JUDGE_MODEL: glm-5.3-flash
+          BENCHMARK_SUITE: combined
+        run: |
+          python -m py_compile recover_operator_fidelity_v01.py
+          python - <<'PY'
+          import recover_operator_fidelity_v01 as r
+          assert r.SOURCE_RUN_ID == 34710001873
+          assert r.SOURCE_ARTIFACT_ID == 10302974552
+          assert r.SOURCE_RUNS_SHA256 == '730341ae792afc3693d3f233c29e7cf14d914beba7c75d17fefda644fd08b5fb'
+          assert r.ORIGINAL_TARGET_CAP == 4096
+          assert r.RECOVERY_TARGET_CAP == 16384
+          assert r.RECOVERY_JUDGE_CAP == 8192
+          assert r.MAX_FORMAT_ATTEMPTS == 3
+          assert len(r.EXPECTED_REGENERATION_KEYS) == 20
+          assert len(r.expected_keys()) == 48
+          assert r.needs_regeneration({'text':'', 'usage':{'output_tokens':1}})
+          assert r.needs_regeneration({'text':'x', 'usage':{'output_tokens':4096}})
+          assert not r.needs_regeneration({'text':'x', 'usage':{'output_tokens':4095}})
+          print('recovery selection and frozen constants validated')
+          PY
+
+      - name: Validate judge schemas and unchanged scientific gates
+        env:
+          OPENAI_API_KEY: unused-provider-shim
+          ZAI_API_KEY: unused-zai-shim
+          ZAI_TARGET_MODEL: glm-5.1
+          ZAI_JUDGE_MODEL: glm-5.3-flash
+          BENCHMARK_SUITE: combined
+        run: |
+          python - <<'PY'
+          import recover_operator_fidelity_v01 as rr
+          import run_operator_fidelity_v01 as r
+          assert rr.base is r
+          assert r.JUDGE_VOTES == 2
+          assert len(r.CASES) == 6
+          assert len(r.CONDITIONS) == 8
+          assert 'material_pathology' in r.QUALITY_JUDGE
+          assert 'accuracy_pathology' in r.BEHAVIOR_JUDGE
+          good = rr.validate_behavior({'scores': {d: 2 for d in r.DIMENSIONS}, 'accuracy_pathology': False})
+          assert set(good['scores']) == set(r.DIMENSIONS)
+          q = rr.validate_quality({'winner':'TIE','material_pathology':False,'pathology_condition':'NONE'})
+          assert q['winner_side'] == 'TIE'
+          print('judge validation and original Stage-0 gates preserved')
+          PY
+
+      - name: Verify recovery document matches execution contract
+        run: |
+          grep -q 'preserved records: `28`' ../docs/OPERATOR_FIDELITY_V0_1_RECOVERY.md
+          grep -q 'technical regeneration: `20`' ../docs/OPERATOR_FIDELITY_V0_1_RECOVERY.md
+          grep -q 'increased to `16384`' ../docs/OPERATOR_FIDELITY_V0_1_RECOVERY.md
+          grep -q 'increases the judge completion-token ceiling to `8192`' ../docs/OPERATOR_FIDELITY_V0_1_RECOVERY.md
