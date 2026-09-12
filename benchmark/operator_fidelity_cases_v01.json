@@ -1,0 +1,44 @@
+[
+  {
+    "case_id": "ARC-V01-DC01",
+    "intended_policy": "DEDUCTIVE_CONSTRAINT",
+    "title": "Release Sequence Feasibility",
+    "evaluator_key": {"target_behavior": "Derive feasibility from stated hard constraints without inventing resources or exceptions."},
+    "agent_input": "A release has three steps. Migration M must finish before backend B, and B must finish before client rollout C. Verification V can start only after M and uses the same engineer as B, so V and B cannot overlap. Policy requires V to finish before C. M takes 20 minutes, B 25, V 20, and there is one qualified engineer for B and V. Can C begin within 65 minutes? If not, identify the binding constraint and the smallest rule or resource change that would make it feasible."
+  },
+  {
+    "case_id": "ARC-V01-AD01",
+    "intended_policy": "ABDUCTIVE_DIAGNOSTIC",
+    "title": "Packaging Defect Spike",
+    "evaluator_key": {"target_behavior": "Maintain competing explanations and choose evidence that separates them before committing to a cause."},
+    "agent_input": "Packaging defects rose this week after a new film lot arrived. Most defects occur on one line and one shift; other lines using the same film remain near baseline. A staffing rotation also changed on that shift, while coarse machine telemetry is normal. What are the leading explanations and the most informative next check?"
+  },
+  {
+    "case_id": "ARC-V01-CE01",
+    "intended_policy": "CAUSAL_EXPERIMENTAL",
+    "title": "Onboarding Completion Increase",
+    "evaluator_key": {"target_behavior": "Separate causal effect from time/cohort confounding and propose a discriminating comparison or intervention."},
+    "agent_input": "We simplified onboarding on August 1. Completion rose from 61% in July to 72% in August. August also had a new acquisition campaign, more returning users, and fewer mobile users. We can still expose a fraction of new users to the old flow for two weeks. What can we conclude now, and what test would best estimate the redesign's causal effect?"
+  },
+  {
+    "case_id": "ARC-V01-SP01",
+    "intended_policy": "SEARCH_PLANNING",
+    "title": "Service Migration Plan",
+    "evaluator_key": {"target_behavior": "Construct a feasible ordered plan from dependencies and rollback constraints rather than an unordered checklist."},
+    "agent_input": "We must migrate a service from A to B with no planned downtime. Both read one database. B needs a new nullable column; A ignores unknown columns. Above 10% traffic, B's cache must be warmed or latency exceeds the SLA. Traffic can shift in 5% increments. Making the new column non-null would break A. Give a safe sequence with verification and rollback points."
+  },
+  {
+    "case_id": "ARC-V01-DT01",
+    "intended_policy": "DECISION_THEORETIC",
+    "title": "Seasonal Inventory Commitment",
+    "evaluator_key": {"target_behavior": "Compare actions under uncertainty using asymmetric consequences, reversibility, and information value."},
+    "agent_input": "We must place a first order for a seasonal product. Demand is forecast around 10,000 units but could plausibly range from 7,000 to 14,000. A stockout loses about $55 contribution per missed sale; leftover units can be liquidated with an estimated $18 loss each. A second order can be placed three weeks later after early sales are observed, but it costs $6 more per unit and is capped at 3,000 units. How should the first commitment be reasoned about?"
+  },
+  {
+    "case_id": "ARC-V01-SF01",
+    "intended_policy": "SYSTEMS_FEEDBACK",
+    "title": "Support Staffing Intervention",
+    "evaluator_key": {"target_behavior": "Account for feedback, delayed demand response, and bottleneck migration rather than assuming a static intervention effect."},
+    "agent_input": "A support center is adding 20% more first-line staff to reduce waits. Long waits currently cause many callers to abandon, and many abandoned callers try again later. Resolved calls often create follow-up work for a smaller specialist team whose utilization is already high. Management expects extra first-line staffing to reduce total weekly workload because queues will be shorter. What system effects should we expect and how should we evaluate the intervention?"
+  }
+]
