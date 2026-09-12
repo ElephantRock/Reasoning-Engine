@@ -1,0 +1,74 @@
+name: Operator Fidelity v0.1 Authorized Run
+
+on:
+  push:
+    branches:
+      - run/operator-fidelity-v0.1-paid
+    paths:
+      - '.github/workflows/operator-fidelity-v01-authorized-run.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    defaults:
+      run:
+        working-directory: benchmark
+    env:
+      OPENAI_API_KEY: unused-provider-shim
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      ZAI_TARGET_MODEL: glm-5.1
+      ZAI_JUDGE_MODEL: glm-5.3-flash
+      ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      ZAI_JUDGE_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      ZAI_TEMPERATURE: '0'
+      ZAI_JUDGE_TEMPERATURE: '0'
+      ZAI_MAX_TOKENS: '4096'
+      ZAI_JUDGE_MAX_TOKENS: '2048'
+      BENCHMARK_SUITE: combined
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Validate frozen configuration
+        run: |
+          python -m py_compile reasoning_policies_v01.py run_operator_fidelity_v01.py
+          python -m json.tool operator_fidelity_cases_v01.json > /dev/null
+          python - <<'PY'
+          import run_operator_fidelity_v01 as r
+          r.validate_frozen_files()
+          print('frozen operator-fidelity configuration validated')
+          PY
+
+      - name: Run operator fidelity preflight
+        run: python run_operator_fidelity_v01.py
+
+      - name: Show summary
+        if: always()
+        run: |
+          if [ -f results_operator_fidelity_v01/summary.json ]; then
+            cat results_operator_fidelity_v01/summary.json
+          fi
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: operator-fidelity-v01-results-authorized
+          path: benchmark/results_operator_fidelity_v01/
+          if-no-files-found: warn
+          retention-days: 30
