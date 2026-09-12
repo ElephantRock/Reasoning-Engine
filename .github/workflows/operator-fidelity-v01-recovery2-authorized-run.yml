@@ -1,0 +1,106 @@
+name: Operator Fidelity v0.1 Recovery 2 Authorized Run
+
+on:
+  push:
+    branches:
+      - 'run/operator-fidelity-v0.1-recovery2'
+    paths:
+      - '.github/workflows/operator-fidelity-v01-recovery2-authorized-run.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    defaults:
+      run:
+        working-directory: benchmark
+    env:
+      OPENAI_API_KEY: unused-provider-shim
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      ZAI_TARGET_MODEL: glm-5.1
+      ZAI_JUDGE_MODEL: glm-5.3-flash
+      ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      ZAI_JUDGE_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      ZAI_TEMPERATURE: '0'
+      ZAI_JUDGE_TEMPERATURE: '0'
+      ZAI_MAX_TOKENS: '32768'
+      ZAI_JUDGE_MAX_TOKENS: '16384'
+      BENCHMARK_SUITE: combined
+      OPERATOR_FIDELITY_ORIGINAL_RUNS: recovery_source_original/runs.jsonl
+      OPERATOR_FIDELITY_R1_COMBINED: recovery_source_r1/combined_runs.jsonl
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Download original frozen source artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: operator-fidelity-v01-results-authorized
+          path: benchmark/recovery_source_original
+          github-token: ${{ github.token }}
+          repository: ElephantRock/Reasoning-Engine
+          run-id: '34710001873'
+
+      - name: Download Recovery-1 frozen partial artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: operator-fidelity-v01-recovery-results
+          path: benchmark/recovery_source_r1
+          github-token: ${{ github.token }}
+          repository: ElephantRock/Reasoning-Engine
+          run-id: '34720490036'
+
+      - name: Validate frozen Recovery-2 sources and runtime
+        run: |
+          python - <<'PY'
+          import os
+          import recover_operator_fidelity_v01_r2 as r
+          assert os.environ['ZAI_TARGET_MODEL'] == 'glm-5.1'
+          assert os.environ['ZAI_JUDGE_MODEL'] == 'glm-5.3-flash'
+          assert os.environ['ZAI_BASE_URL'] == 'https://api.z.ai/api/coding/paas/v4'
+          assert os.environ['ZAI_JUDGE_BASE_URL'] == 'https://api.z.ai/api/coding/paas/v4'
+          assert os.environ['ZAI_TEMPERATURE'] == '0'
+          assert os.environ['ZAI_JUDGE_TEMPERATURE'] == '0'
+          assert int(os.environ['ZAI_MAX_TOKENS']) == r.R2_TARGET_CAP == 32768
+          assert int(os.environ['ZAI_JUDGE_MAX_TOKENS']) == r.R2_JUDGE_CAP == 16384
+          original = r.r1.read_jsonl(r.ORIGINAL_SOURCE)
+          partial = r.r1.read_jsonl(r.R1_COMBINED)
+          r.validate_sources(original, partial)
+          assert len(r.R1_RECOVERED) == 10
+          assert len(r.PENDING) == 10
+          print('frozen Recovery-2 sources and runtime validated')
+          PY
+
+      - name: Run operator fidelity Recovery 2
+        run: python recover_operator_fidelity_v01_r2.py
+
+      - name: Show summary
+        if: always()
+        run: |
+          if [ -f results_operator_fidelity_v01_recovery2/summary.json ]; then
+            cat results_operator_fidelity_v01_recovery2/summary.json
+          fi
+
+      - name: Upload Recovery-2 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: operator-fidelity-v01-recovery2-results
+          path: benchmark/results_operator_fidelity_v01_recovery2/
+          if-no-files-found: warn
+          retention-days: 30
