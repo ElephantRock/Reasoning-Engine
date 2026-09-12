@@ -1,0 +1,57 @@
+name: Operator Fidelity v0.1 Recovery 2 Static Check
+
+on:
+  pull_request:
+    paths:
+      - 'benchmark/recover_operator_fidelity_v01_r2.py'
+      - 'docs/OPERATOR_FIDELITY_V0_1_RECOVERY_2.md'
+      - '.github/workflows/operator-fidelity-v01-recovery2-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: benchmark
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Validate syntax and frozen constants
+        env:
+          OPENAI_API_KEY: unused-provider-shim
+          ZAI_API_KEY: unused-zai-shim
+          ZAI_TARGET_MODEL: glm-5.1
+          ZAI_JUDGE_MODEL: glm-5.3-flash
+          BENCHMARK_SUITE: combined
+        run: |
+          python -m py_compile recover_operator_fidelity_v01_r2.py
+          python - <<'PY'
+          import recover_operator_fidelity_v01_r2 as r
+          assert r.ORIGINAL_SHA256 == '730341ae792afc3693d3f233c29e7cf14d914beba7c75d17fefda644fd08b5fb'
+          assert r.R1_COMBINED_SHA256 == '30d47ec2410da62114277b46a59cbb7840b6a57dc94fbe6726ffe03eb501d07a'
+          assert r.R1_RUN_ID == 34720490036
+          assert r.R1_ARTIFACT_ID == 10304964963
+          assert r.R2_TARGET_CAP == 32768
+          assert r.R2_JUDGE_CAP == 16384
+          assert len(r.R1_RECOVERED) == 10
+          assert len(r.PENDING) == 10
+          assert r.R1_RECOVERED.isdisjoint(r.PENDING)
+          assert r.R1_RECOVERED | r.PENDING == r.r1.EXPECTED_REGENERATION_KEYS
+          print('Recovery-2 frozen constants validated')
+          PY
+      - name: Verify recovery document
+        run: |
+          grep -q 'Ten capped outputs were successfully recovered' ../docs/OPERATOR_FIDELITY_V0_1_RECOVERY_2.md
+          grep -q 'completion-token ceiling is increased from 16384 to `32768`' ../docs/OPERATOR_FIDELITY_V0_1_RECOVERY_2.md
+          grep -q 'judge completion-token ceiling is increased to `16384`' ../docs/OPERATOR_FIDELITY_V0_1_RECOVERY_2.md
