@@ -1,0 +1,126 @@
+name: Operator Fidelity v0.2
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: operator-fidelity-v02-paid
+  cancel-in-progress: false
+
+env:
+  OPENAI_API_KEY: unused-provider-shim
+  ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+  ZAI_TARGET_MODEL: glm-5.1
+  ZAI_JUDGE_MODEL: glm-5.3-flash
+  ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4
+  ZAI_JUDGE_BASE_URL: https://api.z.ai/api/coding/paas/v4
+  ZAI_TEMPERATURE: 0
+  ZAI_JUDGE_TEMPERATURE: 0
+  ZAI_MAX_TOKENS: 32768
+  ZAI_JUDGE_MAX_TOKENS: 16384
+  BENCHMARK_SUITE: combined
+
+jobs:
+  target:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    defaults:
+      run:
+        working-directory: benchmark
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Validate frozen v0.2 configuration
+        run: |
+          python - <<'PY'
+          import os
+          import run_operator_fidelity_v02 as r
+          assert os.environ['ZAI_TARGET_MODEL'] == 'glm-5.1'
+          assert os.environ['ZAI_JUDGE_MODEL'] == 'glm-5.3-flash'
+          assert int(os.environ['ZAI_MAX_TOKENS']) == r.TARGET_CAP == 32768
+          assert int(os.environ['ZAI_JUDGE_MAX_TOKENS']) == r.JUDGE_CAP == 16384
+          r.validate_frozen_files()
+          print('operator fidelity v0.2 frozen configuration validated')
+          PY
+
+      - name: Generate frozen target outputs
+        run: python run_operator_fidelity_v02_target.py
+
+      - name: Show target metadata
+        if: always()
+        run: |
+          if [ -f results_operator_fidelity_v02_target/target_meta.json ]; then
+            cat results_operator_fidelity_v02_target/target_meta.json
+          fi
+
+      - name: Upload frozen target outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: operator-fidelity-v02-targets
+          path: benchmark/results_operator_fidelity_v02_target/
+          if-no-files-found: warn
+          retention-days: 30
+
+  judge:
+    needs: target
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    defaults:
+      run:
+        working-directory: benchmark
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: benchmark/requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Download frozen target outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: operator-fidelity-v02-targets
+          path: benchmark/v02_target_source
+
+      - name: Judge frozen target outputs
+        run: |
+          python run_operator_fidelity_v02_judge.py \
+            --source-runs v02_target_source/runs.jsonl \
+            --source-meta v02_target_source/target_meta.json
+
+      - name: Show summary
+        if: always()
+        run: |
+          if [ -f results_operator_fidelity_v02/summary.json ]; then
+            cat results_operator_fidelity_v02/summary.json
+          fi
+
+      - name: Upload v0.2 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: operator-fidelity-v02-results
+          path: benchmark/results_operator_fidelity_v02/
+          if-no-files-found: warn
+          retention-days: 30
