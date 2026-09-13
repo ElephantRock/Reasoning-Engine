@@ -13,6 +13,7 @@ from protocol_runtime_v02 import (
     EnvironmentError,
     InvalidTransition,
     ProtocolRuntime,
+    ProtocolSpec,
     matched_scaffold_for,
     protocol_specs,
 )
@@ -38,6 +39,41 @@ class ProtocolSpecTests(unittest.TestCase):
             self.assertEqual(scaffold.max_transitions, spec.max_transitions)
             self.assertEqual(scaffold.action_budget, spec.action_budget)
             self.assertNotEqual(scaffold.name, spec.name)
+
+    def test_dangling_transition_target_is_rejected(self) -> None:
+        broken = ProtocolSpec(
+            name="BROKEN",
+            start_state="A",
+            terminal_states=frozenset({"C"}),
+            transitions={"A": frozenset({"B"}), "C": frozenset()},
+            max_transitions=2,
+            action_budget=0,
+        )
+        with self.assertRaises(ValueError):
+            broken.validate()
+
+    def test_planning_scaffold_matches_six_to_eight_transition_range(self) -> None:
+        scaffold = matched_scaffold_for(protocol_specs()["SEARCH_PLANNING"])
+        short = ProtocolRuntime(scaffold, FeasibilityEnvironment())
+        for state in ("PROCESS_1", "PROCESS_2", "PROCESS_3", "PROCESS_4", "CHECK", "DECIDE"):
+            short.transition(state, {"state": state})
+        self.assertTrue(short.terminated)
+        self.assertEqual(short.transitions_used, 6)
+
+        long = ProtocolRuntime(scaffold, FeasibilityEnvironment())
+        for state in (
+            "PROCESS_1",
+            "PROCESS_2",
+            "PROCESS_3",
+            "PROCESS_4",
+            "CHECK",
+            "REFINE",
+            "CHECK",
+            "DECIDE",
+        ):
+            long.transition(state, {"state": state})
+        self.assertTrue(long.terminated)
+        self.assertEqual(long.transitions_used, 8)
 
 
 class RuntimeSafetyTests(unittest.TestCase):
