@@ -1,0 +1,33 @@
+name: Process-Constrained Phase B Preflight
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: benchmark
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile hardened Phase B modules
+        run: |
+          python -m py_compile protocol_runtime_v03.py protocol_environments_v03.py process_phase_b_suite_v01.py test_process_phase_b_preflight_v01.py
+      - name: Validate frozen zero-cost suite
+        run: python process_phase_b_suite_v01.py
+      - name: Run anti-triviality and protocol-contract tests
+        run: python -m unittest -v test_process_phase_b_preflight_v01.py
+      - name: Assert zero-cost boundary
+        run: |
+          ! grep -R -nE 'zai_adapter|chat_completion|ZAI_API_KEY|openai|requests\.|httpx\.|urllib\.request' \
+            protocol_runtime_v03.py protocol_environments_v03.py process_phase_b_suite_v01.py test_process_phase_b_preflight_v01.py
