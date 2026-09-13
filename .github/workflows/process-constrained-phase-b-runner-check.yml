@@ -24,7 +24,8 @@ jobs:
         run: |
           python -m py_compile \
             protocol_runtime_v03.py protocol_environments_v03.py process_phase_b_suite_v01.py \
-            run_process_phase_b_v01.py run_process_phase_b_v01_exec.py test_process_phase_b_runner_v01.py
+            run_process_phase_b_v01.py run_process_phase_b_v01_exec.py run_process_phase_b_v01_reviewed.py \
+            test_process_phase_b_runner_v01.py test_process_phase_b_blinding_v01.py
       - name: Validate zero-cost environment preflight
         run: |
           python process_phase_b_suite_v01.py
@@ -33,7 +34,8 @@ jobs:
         env:
           ZAI_API_KEY: ''
           ZAI_TARGET_MODEL: glm-5.1
-        run: python -m unittest -v test_process_phase_b_runner_v01.py
+        run: |
+          python -m unittest -v test_process_phase_b_runner_v01.py test_process_phase_b_blinding_v01.py
       - name: Assert no paid workflow is introduced by runner PR
         run: |
           test ! -f ../.github/workflows/process-constrained-phase-b-v01-paid.yml
