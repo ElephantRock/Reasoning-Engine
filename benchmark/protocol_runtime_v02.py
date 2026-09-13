@@ -83,6 +83,7 @@ class ProtocolRuntime:
     transitions_used: int = field(default=0, init=False)
     actions_used: int = field(default=0, init=False)
     trace: list[TraceRecord] = field(default_factory=list, init=False)
+    failed_actions: list[dict[str, Any]] = field(default_factory=list, init=False)
 
     def __post_init__(self) -> None:
         self.spec.validate()
@@ -125,14 +126,26 @@ class ProtocolRuntime:
                 raise EnvironmentError(
                     f"environment action {environment_action!r} unavailable; available={sorted(available)}"
                 )
-            # Environment mutation happens only after all protocol-side validation passes.
-            observation = self.environment.step(environment_action, action_payload)
+            # Count the attempt before execution so invalid tool/environment calls
+            # cannot be used to obtain unbounded retries for free.
+            self.actions_used += 1
+            try:
+                observation = self.environment.step(environment_action, action_payload)
+            except Exception as exc:
+                self.failed_actions.append(
+                    {
+                        "from_state": self.state,
+                        "requested_to_state": to_state,
+                        "environment_action": environment_action,
+                        "action_payload": dict(action_payload or {}),
+                        "error": f"{type(exc).__name__}: {exc}",
+                    }
+                )
+                raise
 
         previous = self.state
         self.state = to_state
         self.transitions_used += 1
-        if environment_action is not None:
-            self.actions_used += 1
         record = TraceRecord(
             index=len(self.trace) + 1,
             from_state=previous,
@@ -154,6 +167,7 @@ class ProtocolRuntime:
             "terminal_state": self.state,
             "transitions_used": self.transitions_used,
             "actions_used": self.actions_used,
+            "failed_actions": list(self.failed_actions),
             "trace": [
                 {
                     "index": item.index,
