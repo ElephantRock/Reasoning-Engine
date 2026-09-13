@@ -1,0 +1,44 @@
+name: Process-Constrained ARC v0.2 Static Check
+
+on:
+  pull_request:
+    paths:
+      - 'benchmark/protocol_runtime_v02.py'
+      - 'benchmark/protocol_environments_v02.py'
+      - 'benchmark/test_protocol_runtime_v02.py'
+      - 'docs/ADAPTIVE_REASONING_CONTROLLER_V0_2_PLAN.md'
+      - '.github/workflows/process-constrained-v02-check.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'benchmark/protocol_runtime_v02.py'
+      - 'benchmark/protocol_environments_v02.py'
+      - 'benchmark/test_protocol_runtime_v02.py'
+      - 'docs/ADAPTIVE_REASONING_CONTROLLER_V0_2_PLAN.md'
+      - '.github/workflows/process-constrained-v02-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile Phase-A modules
+        working-directory: benchmark
+        run: python -m py_compile protocol_runtime_v02.py protocol_environments_v02.py test_protocol_runtime_v02.py
+      - name: Run deterministic Phase-A tests
+        working-directory: benchmark
+        run: python -m unittest -v test_protocol_runtime_v02.py
+      - name: Assert zero-cost implementation boundary
+        run: |
+          ! grep -nE 'ZAI_API_KEY|target_call\(|judge_call\(|chat_completion\(' \
+            benchmark/protocol_runtime_v02.py \
+            benchmark/protocol_environments_v02.py \
+            benchmark/test_protocol_runtime_v02.py
+          echo 'No model/API call path present in Phase-A implementation.'
