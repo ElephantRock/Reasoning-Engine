@@ -155,13 +155,23 @@ Invalid transitions are rejected mechanically. Repeated invalid transitions term
 
 The runtime, not the model, controls transition order, termination eligibility, evidence release, and branch/rollback legality.
 
+### Comparison fairness constraint
+
+When protocols are compared on the same task, their **underlying environment affordances must be held constant** wherever scientifically possible. The protocol may constrain the order or admissibility of reasoning transitions, but it must not receive privileged evidence, hidden state, extra actions, or a larger action budget merely because of its label.
+
+A common environment action universe should therefore be defined independently of protocol. Protocols may differ in when an action becomes legal, but any resulting information advantage must be a consequence of the predeclared process constraint rather than extra data supplied only to one condition.
+
+If two protocols necessarily require different evidence or tool affordances, that comparison must be labeled a **bundled architecture comparison**, not a clean causal estimate of reasoning-process structure.
+
+Step limits, tool-call budgets, evidence-query costs, and termination budgets should be matched or explicitly costed. Otherwise a longer forced process could appear better simply because it receives more computation or information.
+
 ## 6. Why observable action traces are required
 
 The prompt-only studies saturated because a capable model could display most requested behaviors under almost every condition. A process-constrained environment must therefore make operator differences observable in the **sequence of legal actions and state changes**, not only in final prose.
 
 For example, a diagnostic environment can hide evidence behind selectable checks. The abductive protocol must choose a discriminating check from competing hypotheses before it may commit to a diagnosis. A planning environment can expose state changes and irreversible actions; a planning protocol must preserve rollback or satisfy prerequisites before the runtime permits an irreversible transition.
 
-This makes process compliance mechanically measurable.
+This makes process compliance mechanically measurable. However, mechanically different traces are **not themselves evidence of reasoning benefit**; the runtime has partly guaranteed that distinction by construction. The scientific question is whether those constrained traces alter objective error, information use, robustness, or outcome quality in a task-dependent way.
 
 ## 7. Objective evaluation priority
 
@@ -180,7 +190,23 @@ Primary metrics should include quantities such as:
 
 A model judge may still be used for secondary answer-quality diagnostics, but it should not be the only arbiter of whether an operator executed its protocol or succeeded.
 
-## 8. Development sequence
+## 8. Required controls
+
+In addition to `CONTROL` and frozen `FULL`, process-constrained experiments should include a **matched generic scaffold** when feasible.
+
+`MATCHED_SCAFFOLD` should receive approximately the same number of structured turns, state-storage capacity, environment-action budget, and verification opportunities as the specialist protocol, but without the specialist's task-specific transition logic.
+
+This control separates:
+
+`benefit of enforced structure / extra computation`
+
+from
+
+`benefit of this particular reasoning protocol`.
+
+Without such a control, a specialist improvement cannot be cleanly attributed to operator structure rather than additional deliberation, repeated checking, or increased information access.
+
+## 9. Development sequence
 
 ### Phase A — deterministic environment prototypes
 
@@ -195,23 +221,30 @@ Start with four maximally separable protocol families:
 
 Hold `CAUSAL_EXPERIMENTAL` and `SYSTEMS_FEEDBACK` out of the first prototype until their environments expose genuinely discriminating interventions/dynamics rather than merely different prose schemas.
 
-No model comparison claim is made in Phase A. The goal is to verify that the runtime can enforce distinct legal traces and score them objectively.
+No model comparison claim is made in Phase A. The goal is to verify that the runtime can enforce legal transitions, expose the same underlying environment affordances across comparison conditions, score outcomes objectively, and support a matched generic scaffold.
 
-### Phase B — process-identification development study
+### Phase B — process-effect development study
 
-Use fresh development tasks. Run each task under every implemented protocol plus `FULL` and `CONTROL` where feasible.
+Use fresh development tasks. Run each task under every implemented protocol plus `MATCHED_SCAFFOLD`, frozen `FULL`, and `CONTROL` where feasible.
+
+Process compliance is a prerequisite check, not the primary evidence of value.
 
 Primary question:
 
-`Does the enforced protocol create mechanically distinguishable traces and different error/action profiles?`
+`Under matched information and computation budgets, does the enforced protocol change objective error/action profiles or outcome quality relative to the generic scaffold and fixed policies?`
 
-This phase does not require an LLM judge to decide operator identity: identity is defined by the runtime contract and verified from the trace.
+Secondary diagnostics include trace diversity, protocol violations, action efficiency, and recovery behavior.
 
-Stop if the protocols collapse to functionally equivalent action traces or if environment design itself determines the answer so strongly that reasoning policy cannot matter.
+Stop if:
+
+- protocols collapse to functionally equivalent outcome/action profiles;
+- specialist effects disappear against the matched scaffold;
+- environment design determines the answer so strongly that reasoning policy cannot matter;
+- protocol-specific information/tool access cannot be separated from protocol structure.
 
 ### Phase C — policy × task interaction study
 
-Only after Phase B shows distinct execution profiles, author a fresh interaction suite.
+Only after Phase B shows nontrivial process effects beyond the matched scaffold should a fresh interaction suite be authored.
 
 Primary estimand:
 
@@ -220,6 +253,7 @@ Primary estimand:
 Compare:
 
 - `CONTROL`;
+- `MATCHED_SCAFFOLD`;
 - frozen `FULL`;
 - each process-constrained protocol;
 - an oracle-by-predeclared-task-label diagnostic.
@@ -240,7 +274,7 @@ The controller may select:
 
 Fresh validation must compare the controller directly against frozen `FULL` on quality and cost. Stage-D data cannot be used to change the selector.
 
-## 9. Composition is a separate hypothesis
+## 10. Composition is a separate hypothesis
 
 Do not assume that selecting one operator is sufficient.
 
@@ -252,9 +286,9 @@ or
 
 `DEDUCTIVE_CONSTRAINT -> SEARCH_PLANNING -> SYSTEMS_FEEDBACK`.
 
-Composition should not be introduced during the first process-identification study because it would confound operator identity with orchestration complexity.
+Composition should not be introduced during the first process-effect study because it would confound operator identity with orchestration complexity.
 
-## 10. Controls against false progress
+## 11. Controls against false progress
 
 The next program must preserve the following boundaries:
 
@@ -262,25 +296,29 @@ The next program must preserve the following boundaries:
 2. no claim that trace states reveal hidden chain-of-thought or neural mechanisms;
 3. no operator is declared useful merely because the runtime forces its schema;
 4. process compliance and outcome quality are separate endpoints;
-5. task-family labels must not trivially encode the selected protocol in controller validation;
-6. objective metrics are preferred where the environment supports them;
-7. target/model-family generalization remains unresolved until another family becomes available;
-8. no paid Phase-B/C/D run occurs until its cases, scoring, stop rules, and artifacts are frozen.
+5. a matched generic scaffold is required where feasible to control for extra deliberation/structure;
+6. information access, environment action sets, and computation budgets must be matched or explicitly costed across causal comparisons;
+7. task-family labels must not trivially encode the selected protocol in controller validation;
+8. objective metrics are preferred where the environment supports them;
+9. target/model-family generalization remains unresolved until another family becomes available;
+10. no paid Phase-B/C/D run occurs until its cases, scoring, stop rules, and artifacts are frozen.
 
-## 11. Immediate engineering milestone
+## 12. Immediate engineering milestone
 
 The next authorized work is **zero-cost engineering and review only**:
 
 1. implement a generic protocol-state runtime with transition validation and trace logging;
-2. implement deterministic toy environments for the four Phase-A protocols;
-3. implement objective scorers and static tests;
-4. demonstrate locally that legal/illegal traces, rollback, evidence release, and termination rules work as specified;
-5. review the environment for answer leakage and protocol-induced triviality;
-6. only then write a separate frozen Phase-B experiment specification.
+2. define a common environment-action interface independent of protocol;
+3. implement deterministic toy environments for the four Phase-A protocols;
+4. implement `MATCHED_SCAFFOLD` with comparable step/action budgets;
+5. implement objective scorers and static tests;
+6. demonstrate locally that legal/illegal traces, rollback, evidence release, termination rules, and budget accounting work as specified;
+7. review environments for answer leakage, information asymmetry, and protocol-induced triviality;
+8. only then write a separate frozen Phase-B experiment specification.
 
 No API/model call is authorized by this plan.
 
-## 12. Current decision
+## 13. Current decision
 
 The prompt-only Adaptive Reasoning Controller v0.1 research path is closed by the v0.2 saturation stop rule.
 
