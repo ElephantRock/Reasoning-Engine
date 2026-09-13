@@ -227,7 +227,6 @@ class ProtocolRuntime:
             if not rule.allowed_action_tags:
                 raise InvalidTransition(f"{self.spec.name}:{to_state}: environment action not allowed in this state")
 
-            # Every attempted environment action consumes budget, including failures.
             self.actions_used += 1
             try:
                 observation = self.environment.step(environment_action, action_payload)
@@ -382,11 +381,34 @@ def protocol_specs() -> dict[str, ProtocolSpec]:
 
 
 def matched_scaffold_for(spec: ProtocolSpec) -> ProtocolSpec:
-    """Generic structure matched on maximum transitions and action budget.
+    """Generic structure matched on transition range and action budget."""
 
-    The scaffold omits specialist semantic validation and action-tag timing. Its
-    environment action universe is still the exact same environment object.
-    """
+    if spec.name == "SEARCH_PLANNING":
+        states = ("FRAME", "PROCESS_1", "PROCESS_2", "PROCESS_3", "PROCESS_4", "PROCESS_5", "PROCESS_6", "DECIDE")
+        transitions = {
+            "FRAME": frozenset({"PROCESS_1"}),
+            "PROCESS_1": frozenset({"PROCESS_2"}),
+            "PROCESS_2": frozenset({"PROCESS_3"}),
+            "PROCESS_3": frozenset({"PROCESS_4"}),
+            "PROCESS_4": frozenset({"PROCESS_5"}),
+            "PROCESS_5": frozenset({"PROCESS_6", "DECIDE"}),
+            "PROCESS_6": frozenset({"DECIDE"}),
+            "DECIDE": frozenset(),
+        }
+        rules = {
+            state: TransitionRule(frozenset({"analysis"}), frozenset({"ANY"}))
+            for state in states
+            if state != "FRAME"
+        }
+        return ProtocolSpec(
+            name=f"MATCHED_SCAFFOLD__{spec.name}",
+            start_state="FRAME",
+            terminal_states=frozenset({"DECIDE"}),
+            transitions=transitions,
+            rules=rules,
+            max_transitions=7,
+            action_budget=spec.action_budget,
+        )
 
     states = tuple(["FRAME"] + [f"PROCESS_{i}" for i in range(1, spec.max_transitions)] + ["DECIDE"])
     transitions: dict[str, frozenset[str]] = {}
