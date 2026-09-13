@@ -219,7 +219,7 @@ class ProtocolRuntime:
             if environment_action not in self.environment.available_actions():
                 raise EnvironmentError(f"unknown/unavailable environment action {environment_action!r}")
             tags = self.environment.action_tags(environment_action)
-            if rule.allowed_action_tags and not (tags & rule.allowed_action_tags):
+            if rule.allowed_action_tags and "ANY" not in rule.allowed_action_tags and not (tags & rule.allowed_action_tags):
                 raise InvalidTransition(
                     f"{self.spec.name}:{to_state}: action {environment_action!r} tags={sorted(tags)} "
                     f"do not satisfy allowed tags={sorted(rule.allowed_action_tags)}"
@@ -395,9 +395,6 @@ def matched_scaffold_for(spec: ProtocolSpec) -> ProtocolSpec:
         transitions[state] = frozenset({states[i + 1]}) if i + 1 < len(states) else frozenset()
         if i > 0:
             rules[state] = TransitionRule(frozenset({"analysis"}), frozenset({"ANY"}))
-    # Generic action timing is intentionally unconstrained. The experiment runner
-    # interprets ANY as permitting any environment action while preserving the
-    # same action budget. This spec is used for budget/turn matching in preflight.
     return ProtocolSpec(
         name=f"MATCHED_SCAFFOLD__{spec.name}",
         start_state=states[0],
