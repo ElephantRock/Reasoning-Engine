@@ -1,0 +1,29 @@
+[
+  {"case_id":"PCB-DC01","family":"DEDUCTIVE_CONSTRAINT","params":{"isolation":20,"calibration":25,"verification":15,"restart":10,"deadline":65,"shared_technician":true}},
+  {"case_id":"PCB-DC02","family":"DEDUCTIVE_CONSTRAINT","params":{"isolation":10,"calibration":20,"verification":30,"restart":10,"deadline":50,"shared_technician":false}},
+  {"case_id":"PCB-DC03","family":"DEDUCTIVE_CONSTRAINT","params":{"isolation":15,"calibration":10,"verification":10,"restart":5,"deadline":35,"shared_technician":true}},
+  {"case_id":"PCB-DC04","family":"DEDUCTIVE_CONSTRAINT","params":{"isolation":12,"calibration":18,"verification":24,"restart":6,"deadline":42,"shared_technician":false}},
+  {"case_id":"PCB-DC05","family":"DEDUCTIVE_CONSTRAINT","params":{"isolation":8,"calibration":12,"verification":17,"restart":5,"deadline":40,"shared_technician":true}},
+  {"case_id":"PCB-DC06","family":"DEDUCTIVE_CONSTRAINT","params":{"isolation":20,"calibration":15,"verification":25,"restart":10,"deadline":55,"shared_technician":false}},
+
+  {"case_id":"PCB-AD01","family":"ABDUCTIVE_DIAGNOSTIC","params":{"hidden_cause":"route_change"}},
+  {"case_id":"PCB-AD02","family":"ABDUCTIVE_DIAGNOSTIC","params":{"hidden_cause":"library_regression"}},
+  {"case_id":"PCB-AD03","family":"ABDUCTIVE_DIAGNOSTIC","params":{"hidden_cause":"pool_exhaustion"}},
+  {"case_id":"PCB-AD04","family":"ABDUCTIVE_DIAGNOSTIC","params":{"hidden_cause":"upstream_policy"}},
+  {"case_id":"PCB-AD05","family":"ABDUCTIVE_DIAGNOSTIC","params":{"hidden_cause":"route_change"}},
+  {"case_id":"PCB-AD06","family":"ABDUCTIVE_DIAGNOSTIC","params":{"hidden_cause":"pool_exhaustion"}},
+
+  {"case_id":"PCB-SP01","family":"SEARCH_PLANNING","params":{"new_shard_healthy":true}},
+  {"case_id":"PCB-SP02","family":"SEARCH_PLANNING","params":{"new_shard_healthy":false}},
+  {"case_id":"PCB-SP03","family":"SEARCH_PLANNING","params":{"new_shard_healthy":true}},
+  {"case_id":"PCB-SP04","family":"SEARCH_PLANNING","params":{"new_shard_healthy":false}},
+  {"case_id":"PCB-SP05","family":"SEARCH_PLANNING","params":{"new_shard_healthy":true}},
+  {"case_id":"PCB-SP06","family":"SEARCH_PLANNING","params":{"new_shard_healthy":false}},
+
+  {"case_id":"PCB-DT01","family":"DECISION_THEORETIC","params":{"prior_good":0.50,"sensitivity":0.80,"false_positive_rate":0.20,"pilot_cost":10,"buy_good_utility":100,"buy_bad_utility":-100,"hidden_good":true,"deterministic_signal":"good"}},
+  {"case_id":"PCB-DT02","family":"DECISION_THEORETIC","params":{"prior_good":0.50,"sensitivity":0.80,"false_positive_rate":0.20,"pilot_cost":10,"buy_good_utility":100,"buy_bad_utility":-100,"hidden_good":false,"deterministic_signal":"bad"}},
+  {"case_id":"PCB-DT03","family":"DECISION_THEORETIC","params":{"prior_good":0.80,"sensitivity":0.80,"false_positive_rate":0.20,"pilot_cost":15,"buy_good_utility":100,"buy_bad_utility":-100,"hidden_good":true,"deterministic_signal":"good"}},
+  {"case_id":"PCB-DT04","family":"DECISION_THEORETIC","params":{"prior_good":0.60,"sensitivity":0.70,"false_positive_rate":0.30,"pilot_cost":20,"buy_good_utility":120,"buy_bad_utility":-80,"hidden_good":true,"deterministic_signal":"bad"}},
+  {"case_id":"PCB-DT05","family":"DECISION_THEORETIC","params":{"prior_good":0.20,"sensitivity":0.80,"false_positive_rate":0.20,"pilot_cost":15,"buy_good_utility":100,"buy_bad_utility":-100,"hidden_good":false,"deterministic_signal":"bad"}},
+  {"case_id":"PCB-DT06","family":"DECISION_THEORETIC","params":{"prior_good":0.50,"sensitivity":0.70,"false_positive_rate":0.30,"pilot_cost":30,"buy_good_utility":100,"buy_bad_utility":-100,"hidden_good":false,"deterministic_signal":"good"}}
+]
