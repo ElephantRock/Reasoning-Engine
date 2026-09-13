@@ -1,0 +1,41 @@
+name: Process-Constrained Phase B Runner Check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: benchmark
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile Phase B runner
+        run: |
+          python -m py_compile \
+            protocol_runtime_v03.py protocol_environments_v03.py process_phase_b_suite_v01.py \
+            run_process_phase_b_v01.py run_process_phase_b_v01_exec.py run_process_phase_b_v01_reviewed.py \
+            test_process_phase_b_runner_v01.py test_process_phase_b_blinding_v01.py
+      - name: Validate zero-cost environment preflight
+        run: |
+          python process_phase_b_suite_v01.py
+          python -m unittest -v test_process_phase_b_preflight_v01.py test_matched_scaffold_actions_v01.py
+      - name: Run zero-cost runner tests with no provider key
+        env:
+          ZAI_API_KEY: ''
+          ZAI_TARGET_MODEL: glm-5.1
+        run: |
+          python -m unittest -v test_process_phase_b_runner_v01.py test_process_phase_b_blinding_v01.py
+      - name: Assert no paid workflow is introduced by runner PR
+        run: |
+          test ! -f ../.github/workflows/process-constrained-phase-b-v01-paid.yml
