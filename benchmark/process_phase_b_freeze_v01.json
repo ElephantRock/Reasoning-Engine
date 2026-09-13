@@ -17,7 +17,9 @@
     "benchmark/run_process_phase_b_v01.py": "c626fd9e69b8c97585bdc655f071fa42add0fac0",
     "benchmark/run_process_phase_b_v01_exec.py": "9c10598d4681bf542ad6c72fcfc66058c04c6a54",
     "benchmark/run_process_phase_b_v01_reviewed.py": "e8822b50b545ef344cf9c1682218a490c03d2ede",
-    "benchmark/reasoning_policies_v02.py": "504ca9ac63ba10fc7833c36230787aafdf02920e"
+    "benchmark/reasoning_policies_v02.py": "504ca9ac63ba10fc7833c36230787aafdf02920e",
+    "benchmark/validate_process_phase_b_freeze_v01.py": "76d283a389e34250831099f494566a45cc9d7ec8",
+    ".github/workflows/process-constrained-phase-b-v01-paid.yml": "e6b8dfd6cdeb770fef974ff418700810dcbc55d8"
   },
   "primary_contrast": "SPECIALIST_minus_MATCHED_SCAFFOLD",
   "family_gate": {
