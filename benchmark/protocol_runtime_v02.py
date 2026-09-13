@@ -209,7 +209,7 @@ def protocol_specs() -> dict[str, ProtocolSpec]:
         "DEDUCTIVE_CONSTRAINT": _linear(
             "DEDUCTIVE_CONSTRAINT",
             ("PREMISES", "CONSTRAINTS", "DERIVATION", "BOUNDARY_CHECK", "CONCLUSION"),
-            action_budget=2,
+            action_budget=3,
         ),
         "ABDUCTIVE_DIAGNOSTIC": _linear(
             "ABDUCTIVE_DIAGNOSTIC",
@@ -231,7 +231,7 @@ def protocol_specs() -> dict[str, ProtocolSpec]:
                 "FINISH": frozenset(),
             },
             max_transitions=8,
-            action_budget=4,
+            action_budget=6,
         ),
         "DECISION_THEORETIC": _linear(
             "DECISION_THEORETIC",
