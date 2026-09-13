@@ -1,0 +1,74 @@
+[
+  {
+    "case_id": "ARC-V02-DC01",
+    "intended_policy": "DEDUCTIVE_CONSTRAINT",
+    "title": "Maintenance Completion Promise",
+    "agent_input": "A maintenance window starts at 11:20 and the line must be back in service by 13:00. Isolation takes 35 minutes. After isolation, calibration takes 30 minutes and verification takes 25 minutes; both require the same technician and cannot overlap. Restart then takes 15 minutes and can begin only after both calibration and verification are complete. No step can be shortened under the current procedure. The supervisor wants to promise a 13:00 restart. What should you tell them?"
+  },
+  {
+    "case_id": "ARC-V02-DC02",
+    "intended_policy": "DEDUCTIVE_CONSTRAINT",
+    "title": "Exception Policy Release",
+    "agent_input": "A warehouse may release a temperature-sensitive shipment only when the temperature log is complete and the sensor calibration is current. If calibration is expired, the written exception says release is allowed only when an independent recheck passes and the QA director signs the exception. This shipment has a complete log, expired calibration, and a passing recheck. The director is unavailable; the QA manager says the director normally delegates routine approvals, but the exception text does not mention delegates. The truck is waiting. Should the warehouse release it now?"
+  },
+  {
+    "case_id": "ARC-V02-AD01",
+    "intended_policy": "ABDUCTIVE_DIAGNOSTIC",
+    "title": "Single-Zone Timeout Spike",
+    "agent_input": "API timeouts rose sharply this morning. A client-library update was deployed last night, but the spike is concentrated in one availability zone. CPU and memory are normal. The affected requests mostly wait on outbound connections, and the network provider changed a route in that region overnight. Other zones running the same library remain near baseline. What should the on-call team do next?"
+  },
+  {
+    "case_id": "ARC-V02-AD02",
+    "intended_policy": "ABDUCTIVE_DIAGNOSTIC",
+    "title": "Night-Shift Assay Failures",
+    "agent_input": "A lab's assay failure rate doubled after a new reagent lot arrived. Almost all failures are on the night shift and mostly at one workstation. Other workstations using the same reagent are near normal. Incubator logs look normal, while the pipette at the affected workstation is overdue for calibration. The lab manager is considering discarding the new reagent lot. What should the manager do first?"
+  },
+  {
+    "case_id": "ARC-V02-CE01",
+    "intended_policy": "CAUSAL_EXPERIMENTAL",
+    "title": "Regional Pricing Page Rollout",
+    "agent_input": "A redesigned pricing page was released in the West region and conversion rose from 8% to 10%. During the same period the West also ran a large promotion and its traffic shifted toward desktop users. The East kept the old page and conversion stayed roughly flat. The team can still show the old or new page randomly to a small share of West traffic for the next ten days. Should the product team roll the new page out nationally this week?"
+  },
+  {
+    "case_id": "ARC-V02-CE02",
+    "intended_policy": "CAUSAL_EXPERIMENTAL",
+    "title": "Safety Training Attribution",
+    "agent_input": "A manufacturer introduced a safety-training program in January. Reportable incidents fell about 25% by March. Over the same period production volume fell, contractor use dropped, and two plants delayed the training until February. Plant-level incident and staffing records are available. Leadership wants to credit the program and make it mandatory everywhere immediately. What should the analysis recommend?"
+  },
+  {
+    "case_id": "ARC-V02-SP01",
+    "intended_policy": "SEARCH_PLANNING",
+    "title": "Certificate Rotation",
+    "agent_input": "An API gateway certificate expires in seven days. Most clients trust the new certificate chain, but an older mobile version trusts only the old chain. The gateway can present both chains for up to three days. A mobile update takes about two days to clear review, traffic can be shifted in 10% increments, and the old certificate can be restored until it expires. What should the team do starting today?"
+  },
+  {
+    "case_id": "ARC-V02-SP02",
+    "intended_policy": "SEARCH_PLANNING",
+    "title": "Shard Migration",
+    "agent_input": "A database table must move to a new shard with no planned downtime. The application can dual-write to old and new shards. Historical rows need a backfill, checksums can compare the copies, and reads can be shifted gradually. Once the old shard is compacted, rollback to it is no longer practical. The team wants to finish this week. What should they do?"
+  },
+  {
+    "case_id": "ARC-V02-DT01",
+    "intended_policy": "DECISION_THEORETIC",
+    "title": "Cloud Capacity Commitment",
+    "agent_input": "A service expects next-quarter peak demand somewhere between 60,000 and 100,000 requests per hour, with 70,000 currently considered the central estimate. Reserved capacity costs $10 per unit of peak capacity and unused reserved capacity is not refunded. On-demand capacity costs $16. After the first month, the company can add up to 20,000 units of reserved capacity for the remaining two months at $13 per unit. The infrastructure lead proposes reserving 90,000 now. What should the company do?"
+  },
+  {
+    "case_id": "ARC-V02-DT02",
+    "intended_policy": "DECISION_THEORETIC",
+    "title": "Automation License Commitment",
+    "agent_input": "An operations team is considering an automation product. An annual license costs $120,000 and is non-refundable. If the product performs as the vendor claims, it should save about $18,000 per month, but the team is uncertain about exception-handling errors that could erase much of the savings. A four-week pilot costs $15,000 and would delay the full savings by one month; the delay is estimated to cost about $8,000. The pilot would provide good evidence about the local error rate. The vendor's annual-price offer expires this week. Should the team buy the annual license now?"
+  },
+  {
+    "case_id": "ARC-V02-SF01",
+    "intended_policy": "SYSTEMS_FEEDBACK",
+    "title": "Emergency Department Fast Track",
+    "agent_input": "A hospital plans to add triage nurses so low-acuity patients are assessed faster. Long waits currently cause some patients to leave and later return, while the imaging department already runs near 95% utilization. Faster assessment is expected to send more patients to imaging sooner, and local patients tend to choose this hospital more often when published wait times fall. Management expects average door-to-disposition time to drop as soon as the nurses are added. Is that expectation sound?"
+  },
+  {
+    "case_id": "ARC-V02-SF02",
+    "intended_policy": "SYSTEMS_FEEDBACK",
+    "title": "Marketplace Seller Subsidy",
+    "agent_input": "A marketplace is considering an eight-week subsidy for new sellers. More listings generally attract more buyers, but seller-support and content-moderation teams are already close to capacity. Recent low-quality seller cohorts produced more disputes, and dispute-heavy buyers are less likely to return the next month. The growth team expects the subsidy to create a lasting increase in transactions even after it ends. Should the marketplace launch it broadly?"
+  }
+]
