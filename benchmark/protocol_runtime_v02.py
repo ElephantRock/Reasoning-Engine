@@ -48,16 +48,18 @@ class ProtocolSpec:
     action_budget: int
 
     def validate(self) -> None:
-        if self.start_state not in self.transitions:
+        keys = set(self.transitions)
+        if self.start_state not in keys:
             raise ValueError(f"{self.name}: start state missing from transition map")
         if self.max_transitions < 1:
             raise ValueError(f"{self.name}: max_transitions must be positive")
         if self.action_budget < 0:
             raise ValueError(f"{self.name}: action_budget cannot be negative")
-        states = set(self.transitions)
-        for targets in self.transitions.values():
-            states.update(targets)
-        unknown_terminals = set(self.terminal_states) - states
+        targets = set().union(*self.transitions.values()) if self.transitions else set()
+        dangling = targets - keys
+        if dangling:
+            raise ValueError(f"{self.name}: transition targets missing from map {sorted(dangling)}")
+        unknown_terminals = set(self.terminal_states) - keys
         if unknown_terminals:
             raise ValueError(f"{self.name}: unknown terminal states {sorted(unknown_terminals)}")
         for terminal in self.terminal_states:
@@ -250,18 +252,43 @@ def protocol_specs() -> dict[str, ProtocolSpec]:
 
 
 def matched_scaffold_for(spec: ProtocolSpec) -> ProtocolSpec:
-    """Generic structured control with matched transition/action budgets.
+    """Generic structured control matched on process and environment budgets.
 
-    It intentionally omits task-specific epistemic semantics while preserving
-    the amount of externally enforced structure available to the specialist.
+    Linear protocols receive a linear scaffold with the same required number of
+    transitions. SEARCH_PLANNING can terminate in six transitions or consume up
+    to eight through recovery; its scaffold mirrors that 6--8 range with a
+    generic CHECK/REFINE loop rather than forcing eight steps on every run.
     """
 
-    states = tuple(["FRAME"] + [f"PROCESS_{i}" for i in range(1, spec.max_transitions)] + ["DECIDE"])
-    scaffold = _linear(
-        f"MATCHED_SCAFFOLD__{spec.name}",
-        states,
-        action_budget=spec.action_budget,
-    )
+    if spec.name == "SEARCH_PLANNING":
+        scaffold = ProtocolSpec(
+            name=f"MATCHED_SCAFFOLD__{spec.name}",
+            start_state="FRAME",
+            terminal_states=frozenset({"DECIDE"}),
+            transitions={
+                "FRAME": frozenset({"PROCESS_1"}),
+                "PROCESS_1": frozenset({"PROCESS_2"}),
+                "PROCESS_2": frozenset({"PROCESS_3"}),
+                "PROCESS_3": frozenset({"PROCESS_4"}),
+                "PROCESS_4": frozenset({"CHECK"}),
+                "CHECK": frozenset({"REFINE", "DECIDE"}),
+                "REFINE": frozenset({"CHECK", "DECIDE"}),
+                "DECIDE": frozenset(),
+            },
+            max_transitions=spec.max_transitions,
+            action_budget=spec.action_budget,
+        )
+    else:
+        states = tuple(["FRAME"] + [f"PROCESS_{i}" for i in range(1, spec.max_transitions)] + ["DECIDE"])
+        scaffold = _linear(
+            f"MATCHED_SCAFFOLD__{spec.name}",
+            states,
+            action_budget=spec.action_budget,
+        )
+
+    scaffold.validate()
     if scaffold.max_transitions != spec.max_transitions:
         raise AssertionError("matched scaffold transition budget mismatch")
+    if scaffold.action_budget != spec.action_budget:
+        raise AssertionError("matched scaffold action budget mismatch")
     return scaffold
