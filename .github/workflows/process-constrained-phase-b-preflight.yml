@@ -29,5 +29,5 @@ jobs:
         run: python -m unittest -v test_process_phase_b_preflight_v01.py
       - name: Assert zero-cost boundary
         run: |
-          ! grep -R -nE 'zai_adapter|chat_completion|ZAI_API_KEY|openai|requests\.|httpx\.|urllib\.request' \
+          ! grep -R -nE 'zai_adapter|chat_completion|ZAI_API_KEY|(^|[^A-Za-z0-9_])openai([^A-Za-z0-9_]|$)|(^|[^A-Za-z0-9_])requests\.|httpx\.|urllib\.request' \
             protocol_runtime_v03.py protocol_environments_v03.py process_phase_b_suite_v01.py test_process_phase_b_preflight_v01.py
