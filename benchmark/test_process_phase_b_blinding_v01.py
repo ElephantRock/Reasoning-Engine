@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import json
 import unittest
+from collections import Counter
 
 import run_process_phase_b_v01_reviewed as runner
-from process_phase_b_suite_v01 import CASES
+from process_phase_b_suite_v01 import CASES, FAMILIES
 
 
 class CaptureModel:
@@ -64,6 +65,28 @@ class TargetViewTests(unittest.TestCase):
         self.assertEqual(result["status"], "success")
         for request in model.requests:
             self.assert_blinded(request)
+
+
+class ExecutionOrderTests(unittest.TestCase):
+    def test_case_order_round_robins_families(self):
+        order = runner.balanced_case_order()
+        self.assertEqual(len(order), 24)
+        for block_start in range(0, 24, 4):
+            self.assertEqual(
+                [case["family"] for case in order[block_start:block_start + 4]],
+                list(FAMILIES),
+            )
+
+    def test_each_condition_occupies_each_position_six_times(self):
+        position_counts = Counter()
+        for case_position in range(24):
+            order = runner.balanced_condition_order(case_position)
+            self.assertEqual(set(order), {"SPECIALIST", "MATCHED_SCAFFOLD", "FULL", "CONTROL"})
+            for position, condition in enumerate(order, start=1):
+                position_counts[(condition, position)] += 1
+        for condition in ("SPECIALIST", "MATCHED_SCAFFOLD", "FULL", "CONTROL"):
+            for position in range(1, 5):
+                self.assertEqual(position_counts[(condition, position)], 6)
 
 
 if __name__ == "__main__":
