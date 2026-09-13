@@ -1,6 +1,6 @@
 # Process-Constrained ARC Phase B v0.1 — Process-Effect Development Study
 
-Status: **design freeze candidate; no paid run is authorized until the implementation/static-review PR passes and frozen blob identities are recorded below**.
+Status: **design freeze candidate; no paid run is authorized until the implementation/static-review PR passes and frozen blob identities are recorded in a separate executable-authorization update**.
 
 This study follows the Phase-A environment review and does not reopen prompt-only operator fidelity. Its purpose is to test whether externally enforced reasoning protocols change **objective task outcomes** beyond a generic matched process scaffold.
 
@@ -52,9 +52,9 @@ For a given case, all four conditions receive:
 - identical environment action budget;
 - no direct access to hidden environment parameters or gold scores.
 
-`SPECIALIST` and `MATCHED_SCAFFOLD` use the same maximum model-turn budget. `FULL` and `CONTROL` receive that same maximum model-turn budget for the case family and may terminate early.
+`SPECIALIST` and `MATCHED_SCAFFOLD` use the same maximum model-turn budget and, for planning, the matched scaffold supports the same 6–7 transition range as the specialist's no-recovery/recovery paths. `FULL` and `CONTROL` receive the same maximum model-turn budget for the case family and may terminate early only by reaching a valid environment terminal commitment.
 
-Every model call, invalid request, environment action, token count, and latency is recorded. Failed environment actions consume budget.
+Every model call, invalid request, environment action, token count, and latency is recorded. Failed environment actions consume budget. Once an environment reaches a terminal commitment, no further environment action is legal; a constrained condition may use a remaining non-action protocol turn only when its protocol contract requires one (for example the decision-theoretic reversal-condition state).
 
 No condition receives an extra evidence query because of its label.
 
@@ -62,31 +62,38 @@ No condition receives an extra evidence query because of its label.
 
 Target model: `glm-5.1`.
 
-Target configuration:
+Frozen target configuration for the runner implementation:
 
 - temperature `0`;
-- one generation per `(case, condition)`;
+- one execution per `(case, condition)`;
 - structured JSON action/state responses;
 - concise public protocol-state content only; do not request hidden chain-of-thought;
-- per-call completion ceiling should be small enough to prevent uncontrolled deliberation and must be frozen in the runner PR before execution.
+- per-call completion-token ceiling `16384` for technical robustness under the provider's reasoning-token behavior;
+- actual token usage and latency are recorded for every call.
 
-At each turn the agent receives the task, observations revealed so far, action catalog, remaining environment-action budget, and condition-specific control state.
+At each substantive turn the agent receives the task, observations revealed so far, the complete common action catalog, remaining environment-action budget, and condition-specific control state.
 
-For `SPECIALIST`, the runtime supplies only legal next protocol states and enforces payload/action-tag contracts.
+For `SPECIALIST`, the runtime supplies only legal next protocol states and enforces payload/action-tag/history contracts.
 
-For `MATCHED_SCAFFOLD`, the runtime enforces the matched generic turn structure and budget but no specialist semantic contract.
+For `MATCHED_SCAFFOLD`, the runtime enforces the matched generic transition range and budget but no specialist semantic contract. It may request any action in the common environment action universe at any generic state, subject to the same environment/action budget and environment prerequisites.
 
-For `FULL` and `CONTROL`, the harness exposes the same action API and budget without specialist state constraints.
+For `FULL` and `CONTROL`, the harness exposes the same action API and action budget without specialist state constraints. A turn may request one environment action or use `null` to deliberate without acting. The condition must commit through an environment terminal action before its maximum substantive-turn budget expires.
 
-A formatting-only JSON/schema failure may receive at most one repair attempt. The repair attempt counts toward model-call/token cost but does not silently alter environment state. A second invalid response terminates that case-condition as an execution failure.
+A formatting/JSON-schema failure may receive **at most one formatting-only repair call**. The repair call counts toward model-call/token cost, no environment state from the invalid response is executed, and the repair instruction asks the model to preserve its intended request. A second formatting/schema failure terminates that case-condition as an `execution_failure`.
+
+A syntactically valid request that violates a protocol transition, public payload contract, action-timing rule, environment prerequisite, or action budget receives **no semantic retry**. It terminates that case-condition as an `execution_failure`. This rule is frozen to avoid giving invalid strategies free corrective interaction.
+
+A target call with `finish_reason = length`, a transport/provider failure, or another technical interruption is **not** scored as a scientific zero. The run stops before interpretation, preserves all completed runs and every completed target-call record, and requires a separately frozen technical recovery procedure before execution continues. Completed valid case-conditions must not be silently regenerated.
 
 ## 6. Primary objective endpoint
 
 Every environment returns `normalized_score` in `[0,1]`, computed only from environment state/ground truth.
 
+For a case-condition that terminates with a valid execution, `effective_normalized_score = normalized_score`. A protocol/semantic/format execution failure receives `effective_normalized_score = 0`. A technical interruption is unscored and stops the experiment before aggregation.
+
 For each family `f`:
 
-`process_effect_f = mean(normalized_score_SPECIALIST - normalized_score_MATCHED_SCAFFOLD)`
+`process_effect_f = mean(effective_normalized_score_SPECIALIST - effective_normalized_score_MATCHED_SCAFFOLD)`
 
 across its six frozen cases.
 
@@ -102,21 +109,24 @@ Record and report, by family and condition:
 - failed/illegal action count;
 - family-specific constraint violations or unsupported commitments;
 - information-query count and unnecessary-query count where defined;
-- realized utility/regret for decision tasks;
+- realized utility for decision tasks;
+- descriptive hindsight regret for decision tasks, defined as realized utility lost relative to an oracle that knows the realized product state and therefore does not need the pilot;
 - token usage and latency;
 - score relative to frozen FULL and CONTROL.
 
-Do not combine incomparable family-specific raw metrics into one pooled pseudo-scale; only `normalized_score` is common by construction.
+Do not combine incomparable family-specific raw metrics into one pooled pseudo-scale; only `effective_normalized_score` is common by construction.
 
 ## 8. Frozen family eligibility gate
 
 A family is Phase-C eligible only if all conditions hold:
 
-1. mean specialist-minus-matched-scaffold `normalized_score` lift is at least `+0.10`;
+1. mean specialist-minus-matched-scaffold `effective_normalized_score` lift is at least `+0.10`;
 2. the specialist strictly beats the matched scaffold on at least 4 of the 6 cases;
 3. the specialist completes a valid terminal execution on at least 5 of 6 cases;
 4. the specialist does not have more catastrophic/irreversible constraint failures than the matched scaffold;
 5. any apparent lift is not produced solely by greater environment-action access or a larger action budget (which would invalidate the comparison rather than count as success).
+
+For this development study, the catastrophic/irreversible gate is mechanically defined only where the environment has a hard safety/constraint interpretation: an infeasible committed restart in `DEDUCTIVE_CONSTRAINT`, or any environment-recorded prerequisite/irreversibility violation in `SEARCH_PLANNING`. Ordinary wrong diagnoses or suboptimal decision-theoretic choices are outcome errors, not reclassified as catastrophic failures.
 
 `FULL` is not an eligibility gate in Phase B: a specialist may establish a process effect while still being worse than FULL overall. That distinction is important because Phase B asks whether the protocol structure has causal value beyond generic structure, not yet whether it should replace the generalist.
 
@@ -141,7 +151,7 @@ Stop before paid execution if static review finds any of the following:
 - objective score code reads the experimental condition label;
 - the runner imports or reuses the exposed Operator Fidelity judgment data to choose behavior.
 
-Stop the run before interpretation if implementation drift changes any frozen case, environment, protocol, score, condition, or gate after target generation begins.
+Stop the run before interpretation if implementation drift changes any frozen case, environment, protocol, score, condition, gate, target model, temperature, or completion ceiling after target generation begins.
 
 ## 11. Judge policy
 
@@ -156,11 +166,15 @@ Before any paid run, record exact Git blob identities for:
 - `benchmark/process_phase_b_cases_v01.json`;
 - `benchmark/protocol_environments_v03.py`;
 - `benchmark/protocol_runtime_v03.py`;
-- the Phase-B runner and interactive prompts;
-- the frozen FULL prompt source.
+- `benchmark/process_phase_b_suite_v01.py`;
+- `benchmark/run_process_phase_b_v01.py` (shared constants/prompts/aggregation core);
+- `benchmark/run_process_phase_b_v01_exec.py` (reviewed executable path);
+- `benchmark/reasoning_policies_v02.py` (frozen FULL source).
 
-Artifact outputs must include every target call, public state transition, environment observation, invalid request, usage record, final environment score, and a SHA-256 manifest.
+The executable authorization must validate those identities before the first target call.
+
+Artifact outputs must include every completed target call (including formatting failures and technical-ceiling calls), public state transition, environment observation, invalid request, usage record, final environment score, and a SHA-256 manifest. A technically interrupted case-condition must also be written to the partial artifact before the workflow exits.
 
 ## 13. Current authorization boundary
 
-This document authorizes only implementation, static testing, and review of the Phase-B runner. **No paid/model execution is authorized until a follow-up review confirms the anti-triviality gates, records all frozen blob identities, and explicitly marks the experiment executable.**
+This document authorizes only implementation, static testing, and review of the Phase-B runner. **No paid/model execution is authorized until a follow-up review confirms the anti-triviality gates, records all frozen blob identities, validates the reviewed executable path, and explicitly marks the experiment executable.**
