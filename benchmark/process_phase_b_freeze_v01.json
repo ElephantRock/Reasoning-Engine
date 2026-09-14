@@ -2,8 +2,11 @@
   "measurement_version": "process-constrained-phase-b-v0.1",
   "freeze_base_commit": "24e810e5b98d2e7125c49cfeb5e34f85ab6f59de",
   "target_model": "glm-5.1",
+  "provider_base_url": "https://api.z.ai/api/coding/paas/v4",
   "temperature": 0,
   "completion_token_ceiling": 16384,
+  "python_version": "3.12.14",
+  "openai_package_version": "3.13.0",
   "conditions": ["SPECIALIST", "MATCHED_SCAFFOLD", "FULL", "CONTROL"],
   "execution_order": {
     "case_order": "round_robin_four_families",
@@ -18,8 +21,10 @@
     "benchmark/run_process_phase_b_v01_exec.py": "9c10598d4681bf542ad6c72fcfc66058c04c6a54",
     "benchmark/run_process_phase_b_v01_reviewed.py": "e8822b50b545ef344cf9c1682218a490c03d2ede",
     "benchmark/reasoning_policies_v02.py": "504ca9ac63ba10fc7833c36230787aafdf02920e",
-    "benchmark/validate_process_phase_b_freeze_v01.py": "76d283a389e34250831099f494566a45cc9d7ec8",
-    ".github/workflows/process-constrained-phase-b-v01-paid.yml": "e6b8dfd6cdeb770fef974ff418700810dcbc55d8"
+    "benchmark/zai_adapter.py": "23ddda51d542980c4b421d8d4384ebb4d7d2c78b",
+    "benchmark/requirements_process_phase_b_v01.txt": "cb79ae0e73363bfed430016b245bcb8a8396ccce",
+    "benchmark/validate_process_phase_b_freeze_v01.py": "a1ff36bae89f518a368cc1ec13169e03eb37d4ee",
+    ".github/workflows/process-constrained-phase-b-v01-paid.yml": "0907b233e78743679be8780f352a7f7c8e6e1ba5"
   },
   "primary_contrast": "SPECIALIST_minus_MATCHED_SCAFFOLD",
   "family_gate": {
