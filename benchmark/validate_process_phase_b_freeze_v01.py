@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import importlib.metadata
 import json
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -27,6 +29,12 @@ def main() -> None:
     expected_conditions = ["SPECIALIST", "MATCHED_SCAFFOLD", "FULL", "CONTROL"]
     if data["conditions"] != expected_conditions:
         raise RuntimeError("condition set/order drift")
+    if data["provider_base_url"] != "https://api.z.ai/api/coding/paas/v4":
+        raise RuntimeError("provider base URL drift")
+    if data["python_version"] != "3.12.14":
+        raise RuntimeError("frozen Python version drift")
+    if data["openai_package_version"] != "3.13.0":
+        raise RuntimeError("frozen OpenAI package version drift")
 
     failures = []
     for rel, expected in data["files"].items():
@@ -40,14 +48,23 @@ def main() -> None:
     if failures:
         raise RuntimeError("frozen artifact validation failed:\n" + "\n".join(failures))
 
-    # When running the paid workflow, environment values must match the freeze.
+    # When running the paid workflow, runtime values and installed provider shim
+    # must match the frozen execution environment before the first target call.
     if os.getenv("PHASE_B_ENFORCE_RUNTIME_ENV") == "1":
         if os.getenv("ZAI_TARGET_MODEL") != data["target_model"]:
             raise RuntimeError("runtime target model does not match freeze")
+        if os.getenv("ZAI_BASE_URL") != data["provider_base_url"]:
+            raise RuntimeError("runtime provider base URL does not match freeze")
         if int(os.getenv("ZAI_MAX_TOKENS", "0")) != data["completion_token_ceiling"]:
             raise RuntimeError("runtime completion ceiling does not match freeze")
         if float(os.getenv("ZAI_TEMPERATURE", "-1")) != float(data["temperature"]):
             raise RuntimeError("runtime temperature does not match freeze")
+        runtime_python = ".".join(map(str, sys.version_info[:3]))
+        if runtime_python != data["python_version"]:
+            raise RuntimeError(f"runtime Python {runtime_python} does not match freeze")
+        installed_openai = importlib.metadata.version("openai")
+        if installed_openai != data["openai_package_version"]:
+            raise RuntimeError(f"runtime openai {installed_openai} does not match freeze")
 
     print("Process-Constrained Phase B v0.1 frozen artifacts validated")
 
