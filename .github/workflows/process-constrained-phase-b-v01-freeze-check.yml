@@ -22,20 +22,33 @@ jobs:
           python-version: '3.12'
       - name: Validate frozen Git blobs
         run: python validate_process_phase_b_freeze_v01.py
-      - name: Validate paid workflow safety boundary
+      - name: Validate paid workflow safety and reproducibility boundary
         run: |
           python - <<'PY'
           from pathlib import Path
           text = Path('../.github/workflows/process-constrained-phase-b-v01-paid.yml').read_text()
-          assert 'workflow_dispatch:' in text
+          required = [
+              'workflow_dispatch:',
+              'ZAI_TARGET_MODEL: glm-5.1',
+              'ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4',
+              'ZAI_TEMPERATURE: 0',
+              'ZAI_MAX_TOKENS: 16384',
+              "python-version: '3.12.14'",
+              'requirements_process_phase_b_v01.txt',
+              'actions/checkout@11d5960a326750d5838078e36cf38b85af677262',
+              'actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065',
+              'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02',
+              'run_process_phase_b_v01_reviewed.py',
+              'validate_process_phase_b_freeze_v01.py',
+          ]
+          for item in required:
+              assert item in text, item
           assert 'pull_request:' not in text
           assert 'push:' not in text
-          assert 'ZAI_TARGET_MODEL: glm-5.1' in text
-          assert 'ZAI_TEMPERATURE: 0' in text
-          assert 'ZAI_MAX_TOKENS: 16384' in text
-          assert 'run_process_phase_b_v01_reviewed.py' in text
-          assert 'validate_process_phase_b_freeze_v01.py' in text
-          print('paid workflow safety configuration validated')
+          lock = Path('requirements_process_phase_b_v01.txt').read_text()
+          assert 'openai==3.13.0' in lock
+          assert 'openai>=' not in lock
+          print('paid workflow safety/reproducibility configuration validated')
           PY
       - name: Run complete zero-cost validation suite
         env:
