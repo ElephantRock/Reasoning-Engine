@@ -1,0 +1,51 @@
+{
+  "measurement_version": "process-constrained-phase-b-v0.2",
+  "study_classification": "corrected_development_study",
+  "scientific_base_commit": "642a7160e75fae1a03faf5139f83c87cabf9d0e0",
+  "target_model": "glm-5.1",
+  "provider_base_url": "https://api.z.ai/api/coding/paas/v4",
+  "temperature": 0,
+  "completion_token_ceiling": 16384,
+  "python_version": "3.12.14",
+  "openai_package_version": "3.13.0",
+  "conditions": ["SPECIALIST", "MATCHED_SCAFFOLD", "FULL", "CONTROL"],
+  "execution_order": {
+    "case_order": "round_robin_four_families",
+    "condition_order": "family_balanced_cyclic_rotation_v1",
+    "within_family_position_count_range": [1, 2],
+    "global_position_count_per_condition": 6
+  },
+  "files": {
+    "benchmark/process_phase_b_cases_v02.json": "d0611d6159936c3e60b0fa34a57c44c80859a364",
+    "benchmark/protocol_environments_v04.py": "95cfd5123bb21094496db4968db30a30a2536b01",
+    "benchmark/protocol_runtime_v03.py": "eea31e93f5b099c8991b0e1f4c6d54393870dad8",
+    "benchmark/protocol_runtime_v04.py": "f7137c6e9173a6019331242d3dd801fe9ed4ef6e",
+    "benchmark/process_phase_b_suite_v02.py": "25c86fb2cce075415a9173b4b93910b0c0020d80",
+    "benchmark/process_phase_b_interface_v02.py": "d1c18fc1cd2e1b3c64ecd2d2998bd71754d03d75",
+    "benchmark/run_process_phase_b_v02.py": "206cff2e53926601ace632039971f3c339ed2895",
+    "benchmark/run_process_phase_b_v02_reviewed.py": "bb39e6c633dc4ccdace71c4687aec81e2da67cf0",
+    "benchmark/test_process_phase_b_v02_corrections.py": "25854cc886f2d404c70b97b866e5bb1d2fb43ffa",
+    "benchmark/test_process_phase_b_runner_v02.py": "6514e2453f0f5af62c9f66f7177cd06d2a456d5e",
+    "benchmark/test_process_phase_b_v02_final_review.py": "da115fc0dc29ad9cd621340c2f5e872bc2a5ccb3",
+    "benchmark/reasoning_policies_v02.py": "504ca9ac63ba10fc7833c36230787aafdf02920e",
+    "benchmark/zai_adapter.py": "23ddda51d542980c4b421d8d4384ebb4d7d2c78b",
+    "benchmark/requirements_process_phase_b_v02.txt": "5eaa29c49c0ad721c7a85e10535d91854f58c8ad",
+    "benchmark/validate_process_phase_b_freeze_v02.py": "9e7bc12916b8bff61cc39eff613a00042c98f5b9",
+    "docs/PROCESS_CONSTRAINED_PHASE_B_V0_2_DESIGN.md": "98393441b888dca1035c1355c991560398c551a3"
+  },
+  "primary_contrast": "SPECIALIST_minus_MATCHED_SCAFFOLD",
+  "family_gate": {
+    "minimum_mean_lift": 0.10,
+    "minimum_strict_case_wins": 4,
+    "minimum_valid_specialist_executions": 5,
+    "catastrophic_failures_must_not_exceed_matched": true,
+    "comparison_access_must_be_valid": true
+  },
+  "program_rule": {
+    "2_to_4_eligible": "DESIGN_PHASE_C_ELIGIBLE_SUBSET",
+    "1_eligible": "ONE_SPECIALIST_NO_SELECTOR",
+    "0_eligible": "STOP_PROCESS_CONSTRAINED_SELECTOR_PATH"
+  },
+  "authorization_state": "NOT_AUTHORIZED_BY_MANIFEST",
+  "orchestrator_boundary": "This manifest freezes the corrected development study but does not authorize provider spend. A separately reviewed manual workflow may execute only from main, must check out one exact frozen source commit containing this manifest and validator, must require the v0.2 executable authorization flag, and must enforce one accepted main dispatch. That accepted dispatch is consumed even by a technical interruption; any continuation requires a separately frozen recovery."
+}
