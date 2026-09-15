@@ -20,8 +20,12 @@ def main() -> None:
     data = json.loads(MANIFEST.read_text(encoding="utf-8"))
     if data["measurement_version"] != "process-constrained-phase-b-v0.2":
         raise RuntimeError("measurement version drift")
+    if data["study_classification"] != "corrected_development_study":
+        raise RuntimeError("study classification drift")
     if data["scientific_base_commit"] != "642a7160e75fae1a03faf5139f83c87cabf9d0e0":
         raise RuntimeError("scientific base commit drift")
+    if data["authorization_state"] != "NOT_AUTHORIZED_BY_MANIFEST":
+        raise RuntimeError("manifest must not itself authorize provider execution")
     if data["target_model"] != "glm-5.1":
         raise RuntimeError("target model drift")
     if int(data["completion_token_ceiling"]) != 16384:
@@ -37,6 +41,8 @@ def main() -> None:
         raise RuntimeError("frozen Python version drift")
     if data["openai_package_version"] != "3.13.0":
         raise RuntimeError("frozen OpenAI package version drift")
+    if data["primary_contrast"] != "SPECIALIST_minus_MATCHED_SCAFFOLD":
+        raise RuntimeError("primary contrast drift")
 
     order = data["execution_order"]
     if order["case_order"] != "round_robin_four_families":
@@ -58,6 +64,14 @@ def main() -> None:
     }
     if gate != expected_gate:
         raise RuntimeError("family eligibility gate drift")
+
+    expected_program_rule = {
+        "2_to_4_eligible": "DESIGN_PHASE_C_ELIGIBLE_SUBSET",
+        "1_eligible": "ONE_SPECIALIST_NO_SELECTOR",
+        "0_eligible": "STOP_PROCESS_CONSTRAINED_SELECTOR_PATH",
+    }
+    if data["program_rule"] != expected_program_rule:
+        raise RuntimeError("program decision rule drift")
 
     failures = []
     for rel, expected in data["files"].items():
