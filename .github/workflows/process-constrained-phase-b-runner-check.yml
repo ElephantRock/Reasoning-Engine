@@ -43,18 +43,22 @@ jobs:
             test -f validate_process_phase_b_freeze_v01.py
             python - <<'PY'
           from pathlib import Path
-          frozen = '607113d8be11dfeebf3230a264aa846b1ed10817'
+          frozen = 'febffa5c9bd277136a78bfaa02aa365ee04a11b1'
           text = Path('../.github/workflows/process-constrained-phase-b-v01-paid.yml').read_text()
           assert 'workflow_dispatch:' in text
           assert 'pull_request:' not in text
           assert 'push:' not in text
+          assert 'actions: read' in text
           assert "if: github.ref == 'refs/heads/main'" in text
           assert f'PHASE_B_FROZEN_SOURCE_SHA: {frozen}' in text
           assert f'ref: {frozen}' in text
           assert 'persist-credentials: false' in text
+          assert 'CURRENT_RUN_ATTEMPT: ${{ github.run_attempt }}' in text
+          assert 'run_attempt != 1' in text
+          assert 'run_id != min(ids)' in text
           assert 'validate_process_phase_b_freeze_v01.py' in text
           assert 'run_process_phase_b_v01_reviewed.py' in text
-          print('paid workflow is manual, main-only, exact-source, and freeze-gated')
+          print('paid workflow is manual, main-only, one-shot, exact-source, and freeze-gated')
           PY
           else
             echo 'no paid Phase B workflow present'
