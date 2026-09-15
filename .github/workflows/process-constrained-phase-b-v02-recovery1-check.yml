@@ -59,4 +59,4 @@ jobs:
       - name: Enforce zero-cost recovery check
         run: |
           test -z "${ZAI_API_KEY:-}"
-          ! grep -q "PHASE_B_V02_RECOVERY1_AUTHORIZED: 1" ../.github/workflows/process-constrained-phase-b-v02-recovery1-check.yml
+          ! grep -Eq '^[[:space:]]*PHASE_B_V02_RECOVERY1_AUTHORIZED:[[:space:]]*["'"']?1(["'"']?[[:space:]]*)$' ../.github/workflows/process-constrained-phase-b-v02-recovery1-check.yml
