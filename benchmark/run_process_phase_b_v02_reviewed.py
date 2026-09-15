@@ -2,9 +2,10 @@
 """Reviewed executable wrapper for Process-Constrained ARC Phase B v0.2.
 
 This wrapper adds preregistered family-interleaved execution order, within-family
-condition-position balancing, lossless partial-call logging, and a hard execution
-authorization gate. The repository intentionally contains no paid v0.2 workflow
-at this stage; a later separately reviewed freeze/authorization change must set
+condition-position balancing, lossless partial-call logging, a target-visible
+scaffold-neutralization boundary, and a hard execution authorization gate. The
+repository intentionally contains no paid v0.2 workflow at this stage; a later
+separately reviewed freeze/authorization change must set
 `PHASE_B_V02_EXECUTION_AUTHORIZED=1` only after all executable identities are
 frozen and the one-shot workflow boundary is in place.
 """
@@ -86,6 +87,44 @@ def validate_execution_order() -> None:
                 )
 
 
+def target_visible_system(system: str | None) -> str | None:
+    """Remove comparator wording that is unnecessary for task execution.
+
+    The scientific condition remains MATCHED_SCAFFOLD in internal metadata, but
+    the model-facing system text does not need to be told that the scaffold is
+    "matched" to another condition.
+    """
+
+    if system is None:
+        return None
+    return system.replace(
+        "generic matched structured scaffold",
+        "generic structured scaffold",
+    )
+
+
+def executable_model_call(system: str | None, request: dict[str, Any]) -> dict[str, Any]:
+    """Executable provider boundary with technical/scientific failure separation.
+
+    Provider/adapter exceptions happen before a valid target response is
+    available for scientific interpretation. They therefore propagate as
+    TechnicalIncomplete rather than being accidentally caught as task execution
+    failures by family-level semantic handlers. Completed earlier calls are
+    preserved by the core runner's TechnicalIncomplete re-wrapping path.
+    """
+
+    public_system = target_visible_system(system)
+    try:
+        return core.zai_model_call(public_system, request)
+    except core.RequestFailure:
+        raise
+    except Exception as exc:
+        raise core.TechnicalIncomplete(
+            f"provider/model call raised {type(exc).__name__}: {exc}",
+            [],
+        ) from exc
+
+
 def technical_partial_run(case: dict[str, Any], condition: str, exc: Exception) -> dict[str, Any]:
     calls = exc.calls if isinstance(exc, core.RequestFailure) else []
     return {
@@ -142,7 +181,7 @@ def main() -> None:
         for execution_position, condition in enumerate(order, start=1):
             print("run", case["case_id"], condition, flush=True)
             try:
-                run = core.run_case_condition(case, condition, core.zai_model_call)
+                run = core.run_case_condition(case, condition, executable_model_call)
             except Exception as exc:
                 partial_run = technical_partial_run(case, condition, exc)
                 partial_run["case_execution_position"] = case_position + 1
