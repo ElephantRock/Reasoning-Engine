@@ -1,0 +1,83 @@
+name: Process-Constrained Phase B v0.2 Freeze Check
+
+on:
+  pull_request:
+    paths:
+      - 'benchmark/process_phase_b_freeze_v02.json'
+      - 'benchmark/requirements_process_phase_b_v02.txt'
+      - 'benchmark/validate_process_phase_b_freeze_v02.py'
+      - '.github/workflows/process-constrained-phase-b-v02-freeze-check.yml'
+      - 'benchmark/process_phase_b_cases_v02.json'
+      - 'benchmark/protocol_environments_v04.py'
+      - 'benchmark/protocol_runtime_v03.py'
+      - 'benchmark/protocol_runtime_v04.py'
+      - 'benchmark/process_phase_b_suite_v02.py'
+      - 'benchmark/process_phase_b_interface_v02.py'
+      - 'benchmark/run_process_phase_b_v02.py'
+      - 'benchmark/run_process_phase_b_v02_reviewed.py'
+      - 'benchmark/reasoning_policies_v02.py'
+      - 'benchmark/zai_adapter.py'
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: benchmark
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12.14'
+      - name: Validate frozen Git blobs and scientific rules
+        run: python validate_process_phase_b_freeze_v02.py
+      - name: Validate freeze policy
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest = json.loads(Path('process_phase_b_freeze_v02.json').read_text())
+          assert manifest['scientific_base_commit'] == '642a7160e75fae1a03faf5139f83c87cabf9d0e0'
+          assert manifest['study_classification'] == 'corrected_development_study'
+          assert manifest['authorization_state'] == 'NOT_AUTHORIZED_BY_MANIFEST'
+          assert manifest['primary_contrast'] == 'SPECIALIST_minus_MATCHED_SCAFFOLD'
+          assert manifest['execution_order']['condition_order'] == 'family_balanced_cyclic_rotation_v1'
+          assert manifest['execution_order']['within_family_position_count_range'] == [1, 2]
+          assert manifest['execution_order']['global_position_count_per_condition'] == 6
+          assert manifest['family_gate']['comparison_access_must_be_valid'] is True
+          assert 'does not authorize provider spend' in manifest['orchestrator_boundary']
+
+          lock = Path('requirements_process_phase_b_v02.txt').read_text()
+          assert 'openai==3.13.0' in lock
+          assert 'openai>=' not in lock
+
+          paid = Path('../.github/workflows/process-constrained-phase-b-v02-paid.yml')
+          assert not paid.exists(), 'freeze PR must not install the paid workflow'
+          print('v0.2 scientific freeze is complete and provider execution remains unauthorized')
+          PY
+      - name: Run complete zero-cost v0.2 validation suite
+        env:
+          ZAI_API_KEY: ''
+          ZAI_TARGET_MODEL: glm-5.1
+        run: |
+          python process_phase_b_suite_v02.py
+          python -m unittest -v \
+            test_process_phase_b_v02_corrections.py \
+            test_process_phase_b_runner_v02.py \
+            test_process_phase_b_v02_final_review.py
+      - name: Verify provider key is absent
+        env:
+          ZAI_API_KEY: ''
+        run: |
+          test -z "$ZAI_API_KEY"
+          echo 'freeze validation is zero-cost; authorization requires a later PR'
