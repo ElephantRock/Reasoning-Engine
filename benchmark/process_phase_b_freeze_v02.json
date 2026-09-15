@@ -47,5 +47,5 @@
     "0_eligible": "STOP_PROCESS_CONSTRAINED_SELECTOR_PATH"
   },
   "authorization_state": "NOT_AUTHORIZED_BY_MANIFEST",
-  "orchestrator_boundary": "This manifest freezes the corrected development study but does not authorize provider spend. A separately reviewed manual workflow may execute only from main, must check out one exact frozen source commit containing this manifest and validator, must require the v0.2 executable authorization flag, and must enforce one accepted main dispatch. That accepted dispatch is consumed even by a technical interruption; any continuation requires a separately frozen recovery."
+  "orchestrator_boundary": "This manifest freezes the corrected development study but does not authorize provider spend. A separately reviewed manual workflow may execute only from main, must check out one exact frozen source commit containing this manifest and validator, must require the exact confirmation phrase and the v0.2 executable authorization flag, and must enforce one main workflow dispatch. The first main dispatch consumes the one-shot attempt even if the confirmation phrase is wrong, the run is cancelled, or a technical interruption occurs; any continuation requires a separately frozen recovery."
 }
