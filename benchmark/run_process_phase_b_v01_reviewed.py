@@ -21,14 +21,15 @@ OUT = Path(__file__).resolve().parent / "results_process_phase_b_v01"
 CONDITION_ORDER_SCHEME = "family_balanced_cyclic_rotation_v1"
 
 # Six cases cannot place four conditions exactly equally into four positions
-# within a single family. These preregistered cyclic-shift counts make every
-# condition occupy every within-family execution position either once or twice,
-# while the four families jointly yield exact 6-per-position global balance.
+# within a single family. The schedules below make every condition occupy every
+# within-family execution position either once or twice. They are staggered over
+# family replicates, and across the four families each round uses all four cyclic
+# shifts exactly once. Globally every condition occupies every position six times.
 FAMILY_SHIFT_SCHEDULES: dict[str, tuple[int, ...]] = {
-    "DEDUCTIVE_CONSTRAINT": (0, 0, 1, 1, 2, 3),
-    "ABDUCTIVE_DIAGNOSTIC": (0, 1, 1, 2, 2, 3),
-    "SEARCH_PLANNING": (0, 1, 2, 2, 3, 3),
-    "DECISION_THEORETIC": (0, 0, 1, 2, 3, 3),
+    "DEDUCTIVE_CONSTRAINT": (0, 1, 2, 3, 0, 1),
+    "ABDUCTIVE_DIAGNOSTIC": (1, 2, 3, 0, 1, 2),
+    "SEARCH_PLANNING": (2, 3, 0, 1, 2, 3),
+    "DECISION_THEORETIC": (3, 0, 1, 2, 3, 0),
 }
 
 
