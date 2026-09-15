@@ -89,7 +89,7 @@ jobs:
           git worktree add --detach /tmp/phase-b-frozen "$frozen"
           (cd /tmp/phase-b-frozen/benchmark && python validate_process_phase_b_freeze_v01.py)
           (cd /tmp/phase-b-frozen/benchmark && python -m unittest -v test_process_phase_b_blinding_v01.py)
-          git worktree remove /tmp/phase-b-frozen
+          git worktree remove --force /tmp/phase-b-frozen
       - name: Run complete zero-cost validation suite
         env:
           ZAI_API_KEY: ''
