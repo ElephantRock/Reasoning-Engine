@@ -23,7 +23,7 @@ env:
   ZAI_MAX_TOKENS: 16384
   PHASE_B_ENFORCE_RUNTIME_ENV: 1
   PHASE_B_V02_EXECUTION_AUTHORIZED: 1
-  PHASE_B_V02_FROZEN_SOURCE_SHA: 21bf33d7d7f5d36aa224e938bc3fca9f3cc7e5be
+  PHASE_B_V02_FROZEN_SOURCE_SHA: c46d8bfc3a5eecf6c47b2a1366e6c557f4cc9c8a
 
 jobs:
   run:
@@ -37,14 +37,14 @@ jobs:
       - name: Checkout exact frozen source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
-          ref: 21bf33d7d7f5d36aa224e938bc3fca9f3cc7e5be
+          ref: c46d8bfc3a5eecf6c47b2a1366e6c557f4cc9c8a
           persist-credentials: false
           fetch-depth: 0
       - name: Verify exact frozen source revision
         run: |
           test "$(git rev-parse HEAD)" = "$PHASE_B_V02_FROZEN_SOURCE_SHA"
           echo "frozen source $PHASE_B_V02_FROZEN_SOURCE_SHA verified"
-      - name: Enforce one-shot accepted authorization
+      - name: Enforce one-shot first-dispatch authorization
         env:
           GH_TOKEN: ${{ github.token }}
           CURRENT_RUN_ID: ${{ github.run_id }}
@@ -85,26 +85,21 @@ jobs:
               ids = [int(item["id"]) for item in data.get("workflow_runs", [])]
               if run_id in ids:
                   break
+              if int(data.get("total_count", 0)) > 0:
+                  raise SystemExit("A prior Phase B v0.2 main dispatch already exists")
               time.sleep(2)
           else:
               raise SystemExit("Current workflow run was not visible to the one-shot authorization check")
 
-          runs = data.get("workflow_runs", [])
-          if int(data.get("total_count", 0)) > 100:
-              raise SystemExit("More than 100 main dispatches exist; one-shot status cannot be established safely")
-
-          # Dispatches with the wrong confirmation phrase produce a skipped sole
-          # job and do not consume authorization. Any non-skipped prior dispatch,
-          # including failure/cancellation/technical interruption, does consume it.
-          accepted_ids = sorted(
-              int(item["id"])
-              for item in runs
-              if int(item["id"]) == run_id or item.get("conclusion") != "skipped"
-          )
-          if not accepted_ids or run_id != accepted_ids[0]:
-              prior = accepted_ids[0] if accepted_ids else "unknown"
-              raise SystemExit(f"Phase B v0.2 authorization already consumed by accepted dispatch {prior}")
-          print(f"one-shot authorization accepted for first accepted main dispatch {run_id}")
+          total = int(data.get("total_count", 0))
+          ids = [int(item["id"]) for item in data.get("workflow_runs", [])]
+          if total > 100:
+              raise SystemExit("More than 100 main dispatches exist; current run cannot establish first-dispatch status")
+          if run_id != min(ids):
+              raise SystemExit(
+                  f"Phase B v0.2 authorization attempt already consumed by earlier main dispatch {min(ids)}"
+              )
+          print(f"one-shot first-dispatch authorization accepted for main dispatch {run_id}")
           PY
       - name: Set up frozen Python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
