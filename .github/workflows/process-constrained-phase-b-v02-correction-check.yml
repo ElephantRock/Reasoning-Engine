@@ -32,15 +32,17 @@ jobs:
         run: python process_phase_b_suite_v02.py
       - name: Run correction and interface-completeness tests
         run: python -m unittest -v test_process_phase_b_v02_corrections.py
-      - name: Enforce zero-cost authorization boundary
+      - name: Enforce correction-layer claim boundary
         run: |
-          test ! -f ../.github/workflows/process-constrained-phase-b-v02-paid.yml
           python - <<'PY'
+          import json
           from pathlib import Path
           design = Path('../docs/PROCESS_CONSTRAINED_PHASE_B_V0_2_DESIGN.md').read_text()
           assert 'No paid/model execution is authorized' in design
           assert 'environment_action_must_be_null' in design
           assert 'service_restored_minute' in design
           assert '24 × 4 = 96' in design
-          print('Phase B v0.2 remains zero-cost correction/design only')
+          manifest = json.loads(Path('process_phase_b_freeze_v02.json').read_text())
+          assert manifest['authorization_state'] == 'NOT_AUTHORIZED_BY_MANIFEST'
+          print('Phase B v0.2 correction/design layer remains frozen and non-authorizing')
           PY
