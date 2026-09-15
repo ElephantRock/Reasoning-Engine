@@ -18,6 +18,19 @@ from typing import Any
 import run_process_phase_b_v01 as core
 
 OUT = Path(__file__).resolve().parent / "results_process_phase_b_v01"
+CONDITION_ORDER_SCHEME = "family_balanced_cyclic_rotation_v1"
+
+# Six cases cannot place four conditions exactly equally into four positions
+# within a single family. The schedules below make every condition occupy every
+# within-family execution position either once or twice. They are staggered over
+# family replicates, and across the four families each round uses all four cyclic
+# shifts exactly once. Globally every condition occupies every position six times.
+FAMILY_SHIFT_SCHEDULES: dict[str, tuple[int, ...]] = {
+    "DEDUCTIVE_CONSTRAINT": (0, 1, 2, 3, 0, 1),
+    "ABDUCTIVE_DIAGNOSTIC": (1, 2, 3, 0, 1, 2),
+    "SEARCH_PLANNING": (2, 3, 0, 1, 2, 3),
+    "DECISION_THEORETIC": (3, 0, 1, 2, 3, 0),
+}
 
 
 def _public_base_request(case: dict[str, Any], env: Any, condition: str, remaining_actions: int) -> dict[str, Any]:
@@ -56,10 +69,15 @@ def balanced_case_order() -> list[dict[str, Any]]:
     return [buckets[family][rep] for rep in range(6) for family in core.FAMILIES]
 
 
-def balanced_condition_order(position: int) -> tuple[str, ...]:
-    """Four-position cyclic Latin rotation, balanced across 24 cases."""
+def balanced_condition_order(family: str, family_rep_index: int) -> tuple[str, ...]:
+    """Return the preregistered condition rotation for one family replicate."""
+    if family not in FAMILY_SHIFT_SCHEDULES:
+        raise ValueError(f"unknown family for execution balancing: {family!r}")
+    schedule = FAMILY_SHIFT_SCHEDULES[family]
+    if family_rep_index not in range(len(schedule)):
+        raise ValueError(f"family replicate index out of range: {family_rep_index}")
     conditions = list(core.CONDITIONS)
-    shift = position % len(conditions)
+    shift = schedule[family_rep_index]
     return tuple(conditions[shift:] + conditions[:shift])
 
 
@@ -74,8 +92,12 @@ def main() -> None:
     runs: list[dict[str, Any]] = []
     runs_path = OUT / "runs.jsonl"
     execution_cases = balanced_case_order()
+    family_seen = {family: 0 for family in core.FAMILIES}
     for case_position, case in enumerate(execution_cases):
-        order = balanced_condition_order(case_position)
+        family = case["family"]
+        family_rep_index = family_seen[family]
+        family_seen[family] += 1
+        order = balanced_condition_order(family, family_rep_index)
         for execution_position, condition in enumerate(order, start=1):
             print("run", case["case_id"], condition, flush=True)
             try:
@@ -83,6 +105,7 @@ def main() -> None:
             except Exception as exc:
                 runs.append(technical_partial_run(case, condition, exc))
                 runs[-1]["case_execution_position"] = case_position + 1
+                runs[-1]["family_rep_index"] = family_rep_index + 1
                 runs[-1]["condition_execution_position"] = execution_position
                 runs[-1]["condition_order"] = list(order)
                 core.write_jsonl(runs_path, runs)
@@ -93,13 +116,14 @@ def main() -> None:
                     "interrupted_at": {"case_id": case["case_id"], "condition": condition},
                     "error": f"{type(exc).__name__}: {exc}",
                     "case_order_scheme": "round_robin_four_families",
-                    "condition_order_scheme": "four_position_cyclic_latin_rotation",
+                    "condition_order_scheme": CONDITION_ORDER_SCHEME,
                     "runs_sha256": core.sha256_bytes(runs_path.read_bytes()),
                 }
                 (OUT / "partial_meta.json").write_text(json.dumps(partial, indent=2), encoding="utf-8")
                 raise
             run["decision_regret_secondary"] = core.decision_regret_secondary(case, run)
             run["case_execution_position"] = case_position + 1
+            run["family_rep_index"] = family_rep_index + 1
             run["condition_execution_position"] = execution_position
             run["condition_order"] = list(order)
             runs.append(run)
@@ -107,14 +131,14 @@ def main() -> None:
 
     summary = core.aggregate(runs)
     summary["case_order_scheme"] = "round_robin_four_families"
-    summary["condition_order_scheme"] = "four_position_cyclic_latin_rotation"
+    summary["condition_order_scheme"] = CONDITION_ORDER_SCHEME
     summary_path = OUT / "summary.json"
     summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
     manifest = {
         "measurement_version": "process-constrained-phase-b-v0.1",
         "records": len(runs),
         "case_order_scheme": "round_robin_four_families",
-        "condition_order_scheme": "four_position_cyclic_latin_rotation",
+        "condition_order_scheme": CONDITION_ORDER_SCHEME,
         "runs_sha256": core.sha256_bytes(runs_path.read_bytes()),
         "summary_sha256": core.sha256_bytes(summary_path.read_bytes()),
         "complete": True,

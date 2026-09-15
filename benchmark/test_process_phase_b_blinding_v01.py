@@ -68,6 +68,8 @@ class TargetViewTests(unittest.TestCase):
 
 
 class ExecutionOrderTests(unittest.TestCase):
+    CONDITIONS = ("SPECIALIST", "MATCHED_SCAFFOLD", "FULL", "CONTROL")
+
     def test_case_order_round_robins_families(self):
         order = runner.balanced_case_order()
         self.assertEqual(len(order), 24)
@@ -77,16 +79,41 @@ class ExecutionOrderTests(unittest.TestCase):
                 list(FAMILIES),
             )
 
-    def test_each_condition_occupies_each_position_six_times(self):
-        position_counts = Counter()
-        for case_position in range(24):
-            order = runner.balanced_condition_order(case_position)
-            self.assertEqual(set(order), {"SPECIALIST", "MATCHED_SCAFFOLD", "FULL", "CONTROL"})
-            for position, condition in enumerate(order, start=1):
-                position_counts[(condition, position)] += 1
-        for condition in ("SPECIALIST", "MATCHED_SCAFFOLD", "FULL", "CONTROL"):
+    def test_condition_order_is_balanced_within_each_family_and_globally(self):
+        global_counts = Counter()
+        per_family_counts = {family: Counter() for family in FAMILIES}
+        distinct_orders = {family: set() for family in FAMILIES}
+
+        for family in FAMILIES:
+            for family_rep_index in range(6):
+                order = runner.balanced_condition_order(family, family_rep_index)
+                self.assertEqual(set(order), set(self.CONDITIONS))
+                distinct_orders[family].add(order)
+                for position, condition in enumerate(order, start=1):
+                    global_counts[(condition, position)] += 1
+                    per_family_counts[family][(condition, position)] += 1
+
+        for family in FAMILIES:
+            self.assertGreater(len(distinct_orders[family]), 1)
+            for condition in self.CONDITIONS:
+                for position in range(1, 5):
+                    self.assertIn(per_family_counts[family][(condition, position)], {1, 2})
+
+        for condition in self.CONDITIONS:
             for position in range(1, 5):
-                self.assertEqual(position_counts[(condition, position)], 6)
+                self.assertEqual(global_counts[(condition, position)], 6)
+
+    def test_execution_case_schedule_uses_each_family_rotation_once_per_rep(self):
+        family_seen = Counter()
+        observed_orders = {family: [] for family in FAMILIES}
+        for case in runner.balanced_case_order():
+            family = case["family"]
+            rep = family_seen[family]
+            family_seen[family] += 1
+            observed_orders[family].append(runner.balanced_condition_order(family, rep))
+        self.assertEqual(dict(family_seen), {family: 6 for family in FAMILIES})
+        for family in FAMILIES:
+            self.assertEqual(len(observed_orders[family]), 6)
 
 
 if __name__ == "__main__":
