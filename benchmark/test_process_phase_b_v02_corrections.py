@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 
 from process_phase_b_interface_v02 import ACTION_CATALOG, build_specialist_request
+from process_phase_b_suite_v01 import CASES as V01_CASES, make_environment as make_environment_v01
 from process_phase_b_suite_v02 import CASES, FAMILIES, make_environment, validate_suite
 from protocol_environments_v03 import DIAGNOSTIC_PATTERNS
 from protocol_runtime_v04 import ProtocolRuntime, protocol_specs, public_action_contract
@@ -28,6 +29,12 @@ class FreshSuiteTests(unittest.TestCase):
         for case in CASES:
             cell = (case["family"], json.dumps(case["params"], sort_keys=True))
             self.assertNotIn(cell, old_cells)
+
+    def test_public_task_texts_are_not_exact_v01_reuses(self):
+        old_tasks = {make_environment_v01(case).task_text() for case in V01_CASES}
+        new_tasks = {make_environment(case).task_text() for case in CASES}
+        self.assertEqual(len(new_tasks), 24)
+        self.assertTrue(new_tasks.isdisjoint(old_tasks))
 
     def test_decision_suite_contains_all_three_initial_policies(self):
         observed = {
@@ -101,6 +108,11 @@ class SpecialistActionContractTests(unittest.TestCase):
     def _representative(self, family: str):
         return next(case for case in CASES if case["family"] == family)
 
+    def test_action_catalog_exactly_matches_environment_action_universe(self):
+        for family in FAMILIES:
+            env = make_environment(self._representative(family))
+            self.assertEqual(set(ACTION_CATALOG[family]), set(env.available_actions()))
+
     def test_public_contract_exactly_mirrors_runtime_action_tags_for_every_state(self):
         for family, spec in protocol_specs().items():
             env = make_environment(self._representative(family))
@@ -121,6 +133,7 @@ class SpecialistActionContractTests(unittest.TestCase):
                     if "ANY" in tags or set(env.action_tags(action)) & tags
                 ]
                 self.assertEqual(contract["allowed_action_names"], expected)
+                self.assertTrue(set(contract["allowed_action_names"]) <= set(ACTION_CATALOG[family]))
                 self.assertEqual(contract["allowed_action_tags"], sorted(tags))
                 self.assertFalse(contract["environment_action_must_be_null"])
                 self.assertEqual(
