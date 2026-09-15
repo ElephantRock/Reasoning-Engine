@@ -23,7 +23,7 @@ env:
   ZAI_MAX_TOKENS: 16384
   PHASE_B_ENFORCE_RUNTIME_ENV: 1
   PHASE_B_V02_EXECUTION_AUTHORIZED: 1
-  PHASE_B_V02_FROZEN_SOURCE_SHA: 1ab4be89479c2f3e3a51417441f818deb5b9bc60
+  PHASE_B_V02_FROZEN_SOURCE_SHA: 21bf33d7d7f5d36aa224e938bc3fca9f3cc7e5be
 
 jobs:
   run:
@@ -37,7 +37,7 @@ jobs:
       - name: Checkout exact frozen source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
-          ref: 1ab4be89479c2f3e3a51417441f818deb5b9bc60
+          ref: 21bf33d7d7f5d36aa224e938bc3fca9f3cc7e5be
           persist-credentials: false
           fetch-depth: 0
       - name: Verify exact frozen source revision
