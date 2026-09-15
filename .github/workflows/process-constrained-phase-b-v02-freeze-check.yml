@@ -41,33 +41,6 @@ jobs:
           python-version: '3.12.14'
       - name: Validate frozen Git blobs
         run: python validate_process_phase_b_freeze_v02.py
-      - name: Validate manual paid-workflow safety boundary
-        run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
-
-          frozen_source = '1ab4be89479c2f3e3a51417441f818deb5b9bc60'
-          workflow_path = Path('../.github/workflows/process-constrained-phase-b-v02-paid.yml')
-          text = workflow_path.read_text()
-          required = [
-              'workflow_dispatch:',
-              'authorization_phrase:',
-              'AUTHORIZE_PHASE_B_V02_PAID_RUN',
-              'actions: read',
-              "if: github.ref == 'refs/heads/main' && inputs.authorization_phrase == 'AUTHORIZE_PHASE_B_V02_PAID_RUN'",
-              f'PHASE_B_V02_FROZEN_SOURCE_SHA: {frozen_source}',
-              f'ref: {frozen_source}',
-              'persist-credentials: false',
-              'git rev-parse HEAD',
-              'CURRENT_RUN_ID:',
-              'github.run_id',
-              'CURRENT_RUN_ATTEMPT:',
-              'github.run_attempt',
-              'run_attempt != 1',
-              'conclusion') != "skipped"' if False else 'conclusion') != "skipped"',
-          ]
-          PY
       - name: Validate paid workflow structure and frozen policy
         run: |
           python - <<'PY'
