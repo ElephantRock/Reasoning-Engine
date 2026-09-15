@@ -17,6 +17,8 @@ jobs:
         working-directory: benchmark
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -63,9 +65,14 @@ jobs:
           assert 'exact frozen source commit' in manifest['orchestrator_boundary']
           print('paid workflow main-only/exact-source safety boundary validated')
           PY
-      - name: Verify frozen source commit exists
+      - name: Validate exact frozen source snapshot
         run: |
-          git cat-file -e 607113d8be11dfeebf3230a264aa846b1ed10817^{commit}
+          frozen=607113d8be11dfeebf3230a264aa846b1ed10817
+          git cat-file -e "${frozen}^{commit}"
+          rm -rf /tmp/phase-b-frozen
+          git worktree add --detach /tmp/phase-b-frozen "$frozen"
+          (cd /tmp/phase-b-frozen/benchmark && python validate_process_phase_b_freeze_v01.py)
+          git worktree remove /tmp/phase-b-frozen
       - name: Run complete zero-cost validation suite
         env:
           ZAI_API_KEY: ''
