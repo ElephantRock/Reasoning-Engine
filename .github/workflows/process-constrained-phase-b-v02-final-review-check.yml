@@ -1,0 +1,48 @@
+name: Process-Constrained Phase B v0.2 Final Review Check
+
+on:
+  pull_request:
+    paths:
+      - 'benchmark/run_process_phase_b_v02.py'
+      - 'benchmark/run_process_phase_b_v02_reviewed.py'
+      - 'benchmark/test_process_phase_b_v02_final_review.py'
+      - '.github/workflows/process-constrained-phase-b-v02-final-review-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile final-review sources
+        working-directory: benchmark
+        run: |
+          python -m py_compile \
+            run_process_phase_b_v02.py \
+            run_process_phase_b_v02_reviewed.py \
+            test_process_phase_b_v02_final_review.py
+      - name: Run final experimental-control regression tests
+        working-directory: benchmark
+        env:
+          ZAI_TARGET_MODEL: glm-5.1
+        run: python -m unittest -v test_process_phase_b_v02_final_review.py
+      - name: Enforce no paid workflow in runner PR
+        working-directory: benchmark
+        run: |
+          test ! -f ../.github/workflows/process-constrained-phase-b-v02-paid.yml
+          python - <<'PY'
+          from pathlib import Path
+          reviewed = Path('run_process_phase_b_v02_reviewed.py').read_text()
+          assert 'PHASE_B_V02_EXECUTION_AUTHORIZED' in reviewed
+          assert 'executable_model_call' in reviewed
+          assert 'provider/model call raised' in reviewed
+          assert 'generic matched structured scaffold' in reviewed
+          assert 'generic structured scaffold' in reviewed
+          print('final v0.2 executable review boundary validated without provider calls')
+          PY
