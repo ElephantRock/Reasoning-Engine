@@ -1,0 +1,46 @@
+name: Process-Constrained Phase B v0.2 Correction Check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: benchmark
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile corrected Phase B sources
+        run: |
+          python -m py_compile \
+            protocol_environments_v04.py \
+            protocol_runtime_v04.py \
+            process_phase_b_suite_v02.py \
+            process_phase_b_interface_v02.py \
+            test_process_phase_b_v02_corrections.py
+      - name: Validate fresh v0.2 suite
+        run: python process_phase_b_suite_v02.py
+      - name: Run correction and interface-completeness tests
+        run: python -m unittest -v test_process_phase_b_v02_corrections.py
+      - name: Enforce zero-cost authorization boundary
+        run: |
+          test ! -f ../.github/workflows/process-constrained-phase-b-v02-paid.yml
+          python - <<'PY'
+          from pathlib import Path
+          design = Path('../docs/PROCESS_CONSTRAINED_PHASE_B_V0_2_DESIGN.md').read_text()
+          assert 'No paid/model execution is authorized' in design
+          assert 'environment_action_must_be_null' in design
+          assert 'service_restored_minute' in design
+          assert '24 × 4 = 96' in design
+          print('Phase B v0.2 remains zero-cost correction/design only')
+          PY
