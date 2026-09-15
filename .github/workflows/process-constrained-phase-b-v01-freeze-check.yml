@@ -25,10 +25,18 @@ jobs:
       - name: Validate paid workflow safety and reproducibility boundary
         run: |
           python - <<'PY'
+          import json
           from pathlib import Path
+
+          frozen_source = '607113d8be11dfeebf3230a264aa846b1ed10817'
           text = Path('../.github/workflows/process-constrained-phase-b-v01-paid.yml').read_text()
           required = [
               'workflow_dispatch:',
+              "if: github.ref == 'refs/heads/main'",
+              f'PHASE_B_FROZEN_SOURCE_SHA: {frozen_source}',
+              f'ref: {frozen_source}',
+              'persist-credentials: false',
+              'git rev-parse HEAD',
               'ZAI_TARGET_MODEL: glm-5.1',
               'ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4',
               'ZAI_TEMPERATURE: 0',
@@ -45,11 +53,19 @@ jobs:
               assert item in text, item
           assert 'pull_request:' not in text
           assert 'push:' not in text
+
           lock = Path('requirements_process_phase_b_v01.txt').read_text()
           assert 'openai==3.13.0' in lock
           assert 'openai>=' not in lock
-          print('paid workflow safety/reproducibility configuration validated')
+
+          manifest = json.loads(Path('process_phase_b_freeze_v01.json').read_text())
+          assert '.github/workflows/process-constrained-phase-b-v01-paid.yml' not in manifest['files']
+          assert 'exact frozen source commit' in manifest['orchestrator_boundary']
+          print('paid workflow main-only/exact-source safety boundary validated')
           PY
+      - name: Verify frozen source commit exists
+        run: |
+          git cat-file -e 607113d8be11dfeebf3230a264aa846b1ed10817^{commit}
       - name: Run complete zero-cost validation suite
         env:
           ZAI_API_KEY: ''
