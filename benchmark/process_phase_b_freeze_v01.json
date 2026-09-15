@@ -23,9 +23,9 @@
     "benchmark/reasoning_policies_v02.py": "504ca9ac63ba10fc7833c36230787aafdf02920e",
     "benchmark/zai_adapter.py": "23ddda51d542980c4b421d8d4384ebb4d7d2c78b",
     "benchmark/requirements_process_phase_b_v01.txt": "cb79ae0e73363bfed430016b245bcb8a8396ccce",
-    "benchmark/validate_process_phase_b_freeze_v01.py": "a1ff36bae89f518a368cc1ec13169e03eb37d4ee",
-    ".github/workflows/process-constrained-phase-b-v01-paid.yml": "0907b233e78743679be8780f352a7f7c8e6e1ba5"
+    "benchmark/validate_process_phase_b_freeze_v01.py": "a1ff36bae89f518a368cc1ec13169e03eb37d4ee"
   },
+  "orchestrator_boundary": "The manual paid workflow is reviewed separately and must run only from main while checking out one exact frozen source commit before validation and execution.",
   "primary_contrast": "SPECIALIST_minus_MATCHED_SCAFFOLD",
   "family_gate": {
     "minimum_mean_lift": 0.10,
