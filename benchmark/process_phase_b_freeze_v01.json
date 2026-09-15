@@ -10,7 +10,9 @@
   "conditions": ["SPECIALIST", "MATCHED_SCAFFOLD", "FULL", "CONTROL"],
   "execution_order": {
     "case_order": "round_robin_four_families",
-    "condition_order": "four_position_cyclic_latin_rotation"
+    "condition_order": "family_balanced_cyclic_rotation_v1",
+    "within_family_position_count_range": [1, 2],
+    "global_position_count_per_condition": 6
   },
   "files": {
     "benchmark/process_phase_b_cases_v01.json": "5b99273979143851c4418d09ff42c535aa5b3204",
@@ -19,13 +21,14 @@
     "benchmark/process_phase_b_suite_v01.py": "ab75325a2f5808d78a50da269d78b0646c2c29aa",
     "benchmark/run_process_phase_b_v01.py": "c626fd9e69b8c97585bdc655f071fa42add0fac0",
     "benchmark/run_process_phase_b_v01_exec.py": "9c10598d4681bf542ad6c72fcfc66058c04c6a54",
-    "benchmark/run_process_phase_b_v01_reviewed.py": "e8822b50b545ef344cf9c1682218a490c03d2ede",
+    "benchmark/run_process_phase_b_v01_reviewed.py": "a0becab390035aab7ea518a9e2caf90c2fd0aaae",
+    "benchmark/test_process_phase_b_blinding_v01.py": "d1364358c8c48c9d760b551e59525a6d3540c55f",
     "benchmark/reasoning_policies_v02.py": "504ca9ac63ba10fc7833c36230787aafdf02920e",
     "benchmark/zai_adapter.py": "23ddda51d542980c4b421d8d4384ebb4d7d2c78b",
     "benchmark/requirements_process_phase_b_v01.txt": "cb79ae0e73363bfed430016b245bcb8a8396ccce",
     "benchmark/validate_process_phase_b_freeze_v01.py": "a1ff36bae89f518a368cc1ec13169e03eb37d4ee"
   },
-  "orchestrator_boundary": "The manual paid workflow is reviewed separately and must run only from main while checking out one exact frozen source commit before validation and execution.",
+  "orchestrator_boundary": "The manual paid workflow is reviewed separately and must run only from main while checking out one exact frozen source commit before validation and execution. The one authorized main dispatch is consumed even by a technical interruption; any continuation requires a separately frozen recovery.",
   "primary_contrast": "SPECIALIST_minus_MATCHED_SCAFFOLD",
   "family_gate": {
     "minimum_mean_lift": 0.10,
