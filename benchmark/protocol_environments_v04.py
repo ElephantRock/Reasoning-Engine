@@ -1,8 +1,10 @@
 """Corrected deterministic environments for Process-Constrained Phase B v0.2.
 
-v0.4 preserves the hardened v0.3 diagnostic, planning, and decision environments.
-The deductive environment is replaced with an explicitly defined service-restoration
-endpoint so restart start time cannot be confused with restart completion time.
+v0.4 preserves the hardened v0.3 causal mechanics for diagnostic, planning, and
+decision tasks while giving the fresh v0.2 diagnostic/planning cases distinct
+public scenario surfaces. The deductive environment is replaced with an explicitly
+defined service-restoration endpoint so restart start time cannot be confused with
+restart completion time.
 """
 
 from __future__ import annotations
@@ -13,8 +15,8 @@ from typing import Any, Mapping
 from protocol_runtime_v03 import EnvironmentError
 from protocol_environments_v03 import (
     DecisionEnvironmentV3 as DecisionEnvironmentV4,
-    DiagnosticEnvironmentV3 as DiagnosticEnvironmentV4,
-    PlanningEnvironmentV3 as PlanningEnvironmentV4,
+    DiagnosticEnvironmentV3,
+    PlanningEnvironmentV3,
 )
 
 
@@ -111,3 +113,30 @@ class FeasibilityEnvironmentV4:
             "constraint_checks": self.checks,
             "normalized_score": 1.0 if exact and deadline_claim_correct else 0.0,
         }
+
+
+@dataclass
+class DiagnosticEnvironmentV4(DiagnosticEnvironmentV3):
+    scenario: str = "edge-api"
+
+    def task_text(self) -> str:
+        return (
+            f"The {self.scenario} production service began timing out after several overnight changes: a client-library "
+            "deployment, provider network maintenance, a connection-pool configuration rollout, and an upstream policy "
+            "update. The initial symptoms are compatible with more than one change. You may request targeted checks "
+            "before committing to the dominant cause. Identify the cause with the least unnecessary investigation."
+        )
+
+
+@dataclass
+class PlanningEnvironmentV4(PlanningEnvironmentV3):
+    scenario: str = "orders"
+
+    def task_text(self) -> str:
+        return (
+            f"The {self.scenario} database must migrate to a new shard without planned downtime. Dual-write, backfill, "
+            "checksum verification, gradual read shifting, health probing, rollback, finalization, and abort are "
+            "available. The new shard's behavior under full production reads is not yet known. Finalization is "
+            "irreversible. Complete the migration if the new shard is healthy; otherwise return safely to the old "
+            "shard and abort."
+        )
