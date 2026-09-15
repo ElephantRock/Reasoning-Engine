@@ -53,7 +53,8 @@ jobs:
           assert f'PHASE_B_FROZEN_SOURCE_SHA: {frozen}' in text
           assert f'ref: {frozen}' in text
           assert 'persist-credentials: false' in text
-          assert 'CURRENT_RUN_ATTEMPT: ${{ github.run_attempt }}' in text
+          assert 'CURRENT_RUN_ATTEMPT:' in text
+          assert 'github.run_attempt' in text
           assert 'run_attempt != 1' in text
           assert 'run_id != min(ids)' in text
           assert 'validate_process_phase_b_freeze_v01.py' in text
