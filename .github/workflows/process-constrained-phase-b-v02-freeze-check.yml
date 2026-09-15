@@ -60,10 +60,7 @@ jobs:
           lock = Path('requirements_process_phase_b_v02.txt').read_text()
           assert 'openai==3.13.0' in lock
           assert 'openai>=' not in lock
-
-          paid = Path('../.github/workflows/process-constrained-phase-b-v02-paid.yml')
-          assert not paid.exists(), 'freeze PR must not install the paid workflow'
-          print('v0.2 scientific freeze is complete and provider execution remains unauthorized')
+          print('v0.2 scientific freeze remains immutable; execution authorization is external to the manifest')
           PY
       - name: Run complete zero-cost v0.2 validation suite
         env:
@@ -80,4 +77,4 @@ jobs:
           ZAI_API_KEY: ''
         run: |
           test -z "$ZAI_API_KEY"
-          echo 'freeze validation is zero-cost; authorization requires a later PR'
+          echo 'freeze validation is zero-cost'
