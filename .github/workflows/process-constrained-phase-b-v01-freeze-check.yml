@@ -30,15 +30,22 @@ jobs:
           import json
           from pathlib import Path
 
-          frozen_source = '607113d8be11dfeebf3230a264aa846b1ed10817'
+          frozen_source = 'febffa5c9bd277136a78bfaa02aa365ee04a11b1'
           text = Path('../.github/workflows/process-constrained-phase-b-v01-paid.yml').read_text()
           required = [
               'workflow_dispatch:',
+              'actions: read',
               "if: github.ref == 'refs/heads/main'",
               f'PHASE_B_FROZEN_SOURCE_SHA: {frozen_source}',
               f'ref: {frozen_source}',
               'persist-credentials: false',
               'git rev-parse HEAD',
+              'CURRENT_RUN_ID: ${{ github.run_id }}',
+              'CURRENT_RUN_ATTEMPT: ${{ github.run_attempt }}',
+              'run_attempt != 1',
+              'actions/workflows/{workflow}/runs',
+              'event=workflow_dispatch&branch=main&per_page=100',
+              'run_id != min(ids)',
               'ZAI_TARGET_MODEL: glm-5.1',
               'ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4',
               'ZAI_TEMPERATURE: 0',
@@ -55,6 +62,9 @@ jobs:
               assert item in text, item
           assert 'pull_request:' not in text
           assert 'push:' not in text
+          top_level = text.split('\njobs:', 1)[0]
+          assert 'ZAI_API_KEY' not in top_level
+          assert 'ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}' in text
 
           lock = Path('requirements_process_phase_b_v01.txt').read_text()
           assert 'openai==3.13.0' in lock
@@ -62,16 +72,20 @@ jobs:
 
           manifest = json.loads(Path('process_phase_b_freeze_v01.json').read_text())
           assert '.github/workflows/process-constrained-phase-b-v01-paid.yml' not in manifest['files']
-          assert 'exact frozen source commit' in manifest['orchestrator_boundary']
-          print('paid workflow main-only/exact-source safety boundary validated')
+          assert manifest['execution_order']['condition_order'] == 'family_balanced_cyclic_rotation_v1'
+          assert manifest['execution_order']['within_family_position_count_range'] == [1, 2]
+          assert manifest['execution_order']['global_position_count_per_condition'] == 6
+          assert 'one authorized main dispatch' in manifest['orchestrator_boundary']
+          print('paid workflow one-shot/main-only/exact-source safety boundary validated')
           PY
       - name: Validate exact frozen source snapshot
         run: |
-          frozen=607113d8be11dfeebf3230a264aa846b1ed10817
+          frozen=febffa5c9bd277136a78bfaa02aa365ee04a11b1
           git cat-file -e "${frozen}^{commit}"
           rm -rf /tmp/phase-b-frozen
           git worktree add --detach /tmp/phase-b-frozen "$frozen"
           (cd /tmp/phase-b-frozen/benchmark && python validate_process_phase_b_freeze_v01.py)
+          (cd /tmp/phase-b-frozen/benchmark && python -m unittest -v test_process_phase_b_blinding_v01.py)
           git worktree remove /tmp/phase-b-frozen
       - name: Run complete zero-cost validation suite
         env:
