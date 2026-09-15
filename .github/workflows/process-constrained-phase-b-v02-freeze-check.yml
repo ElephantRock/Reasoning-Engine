@@ -1,0 +1,156 @@
+name: Process-Constrained Phase B v0.2 Freeze Check
+
+on:
+  pull_request:
+    paths:
+      - 'benchmark/process_phase_b_freeze_v02.json'
+      - 'benchmark/requirements_process_phase_b_v02.txt'
+      - 'benchmark/validate_process_phase_b_freeze_v02.py'
+      - '.github/workflows/process-constrained-phase-b-v02-paid.yml'
+      - '.github/workflows/process-constrained-phase-b-v02-freeze-check.yml'
+      - 'benchmark/process_phase_b_cases_v02.json'
+      - 'benchmark/protocol_environments_v04.py'
+      - 'benchmark/protocol_runtime_v03.py'
+      - 'benchmark/protocol_runtime_v04.py'
+      - 'benchmark/process_phase_b_suite_v02.py'
+      - 'benchmark/process_phase_b_interface_v02.py'
+      - 'benchmark/run_process_phase_b_v02.py'
+      - 'benchmark/run_process_phase_b_v02_reviewed.py'
+      - 'benchmark/reasoning_policies_v02.py'
+      - 'benchmark/zai_adapter.py'
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: benchmark
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12.14'
+      - name: Validate frozen Git blobs
+        run: python validate_process_phase_b_freeze_v02.py
+      - name: Validate manual paid-workflow safety boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          frozen_source = '1ab4be89479c2f3e3a51417441f818deb5b9bc60'
+          workflow_path = Path('../.github/workflows/process-constrained-phase-b-v02-paid.yml')
+          text = workflow_path.read_text()
+          required = [
+              'workflow_dispatch:',
+              'authorization_phrase:',
+              'AUTHORIZE_PHASE_B_V02_PAID_RUN',
+              'actions: read',
+              "if: github.ref == 'refs/heads/main' && inputs.authorization_phrase == 'AUTHORIZE_PHASE_B_V02_PAID_RUN'",
+              f'PHASE_B_V02_FROZEN_SOURCE_SHA: {frozen_source}',
+              f'ref: {frozen_source}',
+              'persist-credentials: false',
+              'git rev-parse HEAD',
+              'CURRENT_RUN_ID:',
+              'github.run_id',
+              'CURRENT_RUN_ATTEMPT:',
+              'github.run_attempt',
+              'run_attempt != 1',
+              'conclusion') != "skipped"' if False else 'conclusion') != "skipped"',
+          ]
+          PY
+      - name: Validate paid workflow structure and frozen policy
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          frozen_source = '1ab4be89479c2f3e3a51417441f818deb5b9bc60'
+          text = Path('../.github/workflows/process-constrained-phase-b-v02-paid.yml').read_text()
+          required = [
+              'workflow_dispatch:',
+              'authorization_phrase:',
+              'AUTHORIZE_PHASE_B_V02_PAID_RUN',
+              'actions: read',
+              "if: github.ref == 'refs/heads/main' && inputs.authorization_phrase == 'AUTHORIZE_PHASE_B_V02_PAID_RUN'",
+              f'PHASE_B_V02_FROZEN_SOURCE_SHA: {frozen_source}',
+              f'ref: {frozen_source}',
+              'persist-credentials: false',
+              'git rev-parse HEAD',
+              'CURRENT_RUN_ID:',
+              'github.run_id',
+              'CURRENT_RUN_ATTEMPT:',
+              'github.run_attempt',
+              'run_attempt != 1',
+              'actions/workflows/{workflow}/runs',
+              'event=workflow_dispatch&branch=main&per_page=100',
+              'item.get("conclusion") != "skipped"',
+              'run_id != accepted_ids[0]',
+              'ZAI_TARGET_MODEL: glm-5.1',
+              'ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4',
+              'ZAI_TEMPERATURE: 0',
+              'ZAI_MAX_TOKENS: 16384',
+              'PHASE_B_ENFORCE_RUNTIME_ENV: 1',
+              'PHASE_B_V02_EXECUTION_AUTHORIZED: 1',
+              "python-version: '3.12.14'",
+              'requirements_process_phase_b_v02.txt',
+              'actions/checkout@11d5960a326750d5838078e36cf38b85af677262',
+              'actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065',
+              'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02',
+              'validate_process_phase_b_freeze_v02.py',
+              'test_process_phase_b_v02_final_review.py',
+              'run_process_phase_b_v02_reviewed.py',
+              'secrets.ZAI_API_KEY',
+          ]
+          for item in required:
+              assert item in text, item
+          assert 'pull_request:' not in text
+          assert '\n  push:' not in text
+          top_level = text.split('\njobs:', 1)[0]
+          assert 'ZAI_API_KEY' not in top_level
+
+          lock = Path('requirements_process_phase_b_v02.txt').read_text()
+          assert 'openai==3.13.0' in lock
+          assert 'openai>=' not in lock
+
+          manifest = json.loads(Path('process_phase_b_freeze_v02.json').read_text())
+          assert manifest['scientific_base_commit'] == '642a7160e75fae1a03faf5139f83c87cabf9d0e0'
+          assert manifest['study_classification'] == 'corrected_development_study'
+          assert manifest['authorization_state'] == 'NOT_AUTHORIZED_BY_MANIFEST'
+          assert '.github/workflows/process-constrained-phase-b-v02-paid.yml' not in manifest['files']
+          assert manifest['execution_order']['condition_order'] == 'family_balanced_cyclic_rotation_v1'
+          assert manifest['execution_order']['within_family_position_count_range'] == [1, 2]
+          assert manifest['execution_order']['global_position_count_per_condition'] == 6
+          assert manifest['family_gate']['comparison_access_must_be_valid'] is True
+          assert 'does not authorize provider spend' in manifest['orchestrator_boundary']
+          assert 'one accepted main dispatch' in manifest['orchestrator_boundary']
+          print('v0.2 manual one-shot/main-only/exact-source safety boundary validated')
+          PY
+      - name: Validate exact frozen source snapshot
+        run: |
+          frozen=1ab4be89479c2f3e3a51417441f818deb5b9bc60
+          git cat-file -e "${frozen}^{commit}"
+          rm -rf /tmp/phase-b-v02-frozen
+          git worktree add --detach /tmp/phase-b-v02-frozen "$frozen"
+          (cd /tmp/phase-b-v02-frozen/benchmark && python validate_process_phase_b_freeze_v02.py)
+          (cd /tmp/phase-b-v02-frozen/benchmark && python process_phase_b_suite_v02.py)
+          (cd /tmp/phase-b-v02-frozen/benchmark && python -m unittest -v \
+            test_process_phase_b_v02_corrections.py \
+            test_process_phase_b_runner_v02.py \
+            test_process_phase_b_v02_final_review.py)
+          git worktree remove --force /tmp/phase-b-v02-frozen
+      - name: Verify provider key is absent from zero-cost freeze validation
+        env:
+          ZAI_API_KEY: ''
+        run: |
+          test -z "$ZAI_API_KEY"
+          echo 'freeze validation is zero-cost; paid workflow remains manual-only'
