@@ -10,9 +10,10 @@ import run_process_phase_b_v02 as core
 class RecoveryClassificationTests(unittest.TestCase):
     def test_budget_exhaustion_is_scientific_failure_and_preserves_calls(self) -> None:
         case = next(case for case in core.CASES if case["case_id"] == "PCB2-AD01")
+        actions = iter(("check_network", "compare_zones", "inspect_pool", "diagnose"))
 
-        def always_act(_system, request):
-            action = next(iter(request["action_catalog"]))
+        def exhaust_budget_without_repeating_environment_checks(_system, request):
+            action = next(actions)
             response = {
                 "to_state": request["legal_next_states"][0],
                 "payload": {"analysis": "public state"},
@@ -29,7 +30,7 @@ class RecoveryClassificationTests(unittest.TestCase):
         run = recovery.run_protocol_condition_recovery(
             case,
             "MATCHED_SCAFFOLD",
-            always_act,
+            exhaust_budget_without_repeating_environment_checks,
         )
         self.assertEqual(run["status"], "execution_failure")
         self.assertIn("BudgetExceeded", run["error"])
