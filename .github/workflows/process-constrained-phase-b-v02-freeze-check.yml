@@ -47,7 +47,7 @@ jobs:
           import json
           from pathlib import Path
 
-          frozen_source = '21bf33d7d7f5d36aa224e938bc3fca9f3cc7e5be'
+          frozen_source = 'c46d8bfc3a5eecf6c47b2a1366e6c557f4cc9c8a'
           text = Path('../.github/workflows/process-constrained-phase-b-v02-paid.yml').read_text()
           required = [
               'workflow_dispatch:',
@@ -66,8 +66,7 @@ jobs:
               'run_attempt != 1',
               'actions/workflows/{workflow}/runs',
               'event=workflow_dispatch&branch=main&per_page=100',
-              'item.get("conclusion") != "skipped"',
-              'run_id != accepted_ids[0]',
+              'run_id != min(ids)',
               'ZAI_TARGET_MODEL: glm-5.1',
               'ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4',
               'ZAI_TEMPERATURE: 0',
@@ -105,12 +104,13 @@ jobs:
           assert manifest['execution_order']['global_position_count_per_condition'] == 6
           assert manifest['family_gate']['comparison_access_must_be_valid'] is True
           assert 'does not authorize provider spend' in manifest['orchestrator_boundary']
-          assert 'one accepted main dispatch' in manifest['orchestrator_boundary']
+          assert 'one main workflow dispatch' in manifest['orchestrator_boundary']
+          assert 'confirmation phrase is wrong' in manifest['orchestrator_boundary']
           print('v0.2 manual one-shot/main-only/exact-source safety boundary validated')
           PY
       - name: Validate exact frozen source snapshot
         run: |
-          frozen=21bf33d7d7f5d36aa224e938bc3fca9f3cc7e5be
+          frozen=c46d8bfc3a5eecf6c47b2a1366e6c557f4cc9c8a
           git cat-file -e "${frozen}^{commit}"
           rm -rf /tmp/phase-b-v02-frozen
           git worktree add --detach /tmp/phase-b-v02-frozen "$frozen"
