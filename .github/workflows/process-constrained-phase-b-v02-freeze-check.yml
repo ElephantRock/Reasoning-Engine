@@ -47,7 +47,7 @@ jobs:
           import json
           from pathlib import Path
 
-          frozen_source = '1ab4be89479c2f3e3a51417441f818deb5b9bc60'
+          frozen_source = '21bf33d7d7f5d36aa224e938bc3fca9f3cc7e5be'
           text = Path('../.github/workflows/process-constrained-phase-b-v02-paid.yml').read_text()
           required = [
               'workflow_dispatch:',
@@ -110,7 +110,7 @@ jobs:
           PY
       - name: Validate exact frozen source snapshot
         run: |
-          frozen=1ab4be89479c2f3e3a51417441f818deb5b9bc60
+          frozen=21bf33d7d7f5d36aa224e938bc3fca9f3cc7e5be
           git cat-file -e "${frozen}^{commit}"
           rm -rf /tmp/phase-b-v02-frozen
           git worktree add --detach /tmp/phase-b-v02-frozen "$frozen"
