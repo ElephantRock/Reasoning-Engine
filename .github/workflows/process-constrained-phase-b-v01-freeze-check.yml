@@ -40,8 +40,10 @@ jobs:
               f'ref: {frozen_source}',
               'persist-credentials: false',
               'git rev-parse HEAD',
-              'CURRENT_RUN_ID: ${{ github.run_id }}',
-              'CURRENT_RUN_ATTEMPT: ${{ github.run_attempt }}',
+              'CURRENT_RUN_ID:',
+              'github.run_id',
+              'CURRENT_RUN_ATTEMPT:',
+              'github.run_attempt',
               'run_attempt != 1',
               'actions/workflows/{workflow}/runs',
               'event=workflow_dispatch&branch=main&per_page=100',
@@ -64,7 +66,8 @@ jobs:
           assert 'push:' not in text
           top_level = text.split('\njobs:', 1)[0]
           assert 'ZAI_API_KEY' not in top_level
-          assert 'ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}' in text
+          assert 'ZAI_API_KEY:' in text
+          assert 'secrets.ZAI_API_KEY' in text
 
           lock = Path('requirements_process_phase_b_v01.txt').read_text()
           assert 'openai==3.13.0' in lock
