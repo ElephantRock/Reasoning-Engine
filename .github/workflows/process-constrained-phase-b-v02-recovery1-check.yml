@@ -59,4 +59,14 @@ jobs:
       - name: Enforce zero-cost recovery check
         run: |
           test -z "${ZAI_API_KEY:-}"
-          ! grep -Eq '^[[:space:]]*PHASE_B_V02_RECOVERY1_AUTHORIZED:[[:space:]]*["'"']?1(["'"']?[[:space:]]*)$' ../.github/workflows/process-constrained-phase-b-v02-recovery1-check.yml
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('../.github/workflows/process-constrained-phase-b-v02-recovery1-check.yml')
+          key = 'PHASE_B_V02_RECOVERY1_AUTHORIZED:'
+          for line in path.read_text(encoding='utf-8').splitlines():
+              stripped = line.strip()
+              if stripped.startswith(key):
+                  value = stripped.split(':', 1)[1].strip().strip("'\"")
+                  if value == '1':
+                      raise SystemExit('zero-cost Recovery 1 CI must not authorize provider execution')
+          PY
