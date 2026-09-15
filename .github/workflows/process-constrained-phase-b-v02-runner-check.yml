@@ -34,10 +34,10 @@ jobs:
         env:
           ZAI_TARGET_MODEL: glm-5.1
         run: python -m unittest -v test_process_phase_b_v02_corrections.py test_process_phase_b_runner_v02.py
-      - name: Enforce no-paid-execution boundary
+      - name: Enforce runner authorization boundary
         run: |
-          test ! -f ../.github/workflows/process-constrained-phase-b-v02-paid.yml
           python - <<'PY'
+          import json
           from pathlib import Path
           core = Path('run_process_phase_b_v02.py').read_text()
           reviewed = Path('run_process_phase_b_v02_reviewed.py').read_text()
@@ -47,5 +47,7 @@ jobs:
           assert 'family_balanced_cyclic_rotation_v1' in reviewed
           assert 'round_robin_four_families' in reviewed
           assert 'process-constrained-phase-b-v0.2' in core
-          print('v0.2 runner is reviewed/testable but remains blocked from paid execution')
+          manifest = json.loads(Path('process_phase_b_freeze_v02.json').read_text())
+          assert manifest['authorization_state'] == 'NOT_AUTHORIZED_BY_MANIFEST'
+          print('v0.2 runner remains hard-gated; authorization is supplied only by the manual orchestration layer')
           PY
