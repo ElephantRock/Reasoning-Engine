@@ -33,8 +33,9 @@ The execution review verified or corrected the following:
 6. Completion-cap/provider interruptions stop scientific aggregation and preserve partial call records for a separately frozen recovery if needed.
 7. Family order is round-robin and condition order uses a four-position cyclic rotation so family/condition are not mechanically confounded with execution time.
 8. The provider adapter and dependency surface are frozen. The paid workflow uses Python 3.12.14, OpenAI Python package 3.13.0 and the exact dependency lock in `benchmark/requirements_process_phase_b_v01.txt`.
-9. The paid workflow is manual (`workflow_dispatch`) only, validates frozen blobs and runtime settings before the first model call, and pins the GitHub Actions used for checkout, Python setup and artifact upload by commit SHA.
-10. The runtime environment is recorded into the resulting artifact for auditability.
+9. The paid workflow is manual (`workflow_dispatch`) only, is job-gated to `refs/heads/main`, and checks out the exact frozen source commit `607113d8be11dfeebf3230a264aa846b1ed10817` rather than the dispatch-selected branch head. It verifies that exact checkout before frozen-artifact validation or any model call.
+10. GitHub Actions used for checkout, Python setup and artifact upload are pinned by commit SHA, and checkout credentials are not persisted into the frozen source worktree.
+11. The runtime environment and frozen source SHA are recorded into the resulting artifact for auditability.
 
 ## Frozen execution configuration
 
@@ -42,12 +43,13 @@ The execution review verified or corrected the following:
 - provider base URL: `https://api.z.ai/api/coding/paas/v4`
 - temperature: `0`
 - per-call completion ceiling: `16384`
+- frozen source commit: `607113d8be11dfeebf3230a264aa846b1ed10817`
 - one generation per `(case, condition)`
 - 24 cases × 4 conditions = 96 case-condition executions
 - primary outcome: environment-derived `normalized_score`
 - no LLM judge in the eligibility decision
 
-Exact source identities are recorded and mechanically checked by `benchmark/process_phase_b_freeze_v01.json` and `benchmark/validate_process_phase_b_freeze_v01.py`.
+Exact scientific source identities are recorded and mechanically checked by `benchmark/process_phase_b_freeze_v01.json` and `benchmark/validate_process_phase_b_freeze_v01.py`. The paid workflow is an orchestration boundary reviewed separately: it may run only from `main` and must execute the exact frozen source commit above.
 
 ## Frozen family eligibility gate
 
@@ -73,4 +75,4 @@ If the authorized run is technically interrupted, preserve every completed recor
 
 ## Authorization
 
-After merge and successful CI, one manual execution of `.github/workflows/process-constrained-phase-b-v01-paid.yml` is authorized. Scientific interpretation must wait for an independent raw-artifact audit that reproduces all family-level effects, gates and the program decision from `runs.jsonl` rather than trusting `summary.json` alone.
+After merge and successful CI, one manual execution of `.github/workflows/process-constrained-phase-b-v01-paid.yml` from the `main` branch is authorized. The workflow must execute frozen source commit `607113d8be11dfeebf3230a264aa846b1ed10817`; selecting any other dispatch branch must result in a skipped paid job. Scientific interpretation must wait for an independent raw-artifact audit that reproduces all family-level effects, gates and the program decision from `runs.jsonl` rather than trusting `summary.json` alone.
