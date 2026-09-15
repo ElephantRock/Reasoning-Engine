@@ -30,7 +30,7 @@
     "benchmark/reasoning_policies_v02.py": "504ca9ac63ba10fc7833c36230787aafdf02920e",
     "benchmark/zai_adapter.py": "23ddda51d542980c4b421d8d4384ebb4d7d2c78b",
     "benchmark/requirements_process_phase_b_v02.txt": "5eaa29c49c0ad721c7a85e10535d91854f58c8ad",
-    "benchmark/validate_process_phase_b_freeze_v02.py": "9e7bc12916b8bff61cc39eff613a00042c98f5b9",
+    "benchmark/validate_process_phase_b_freeze_v02.py": "a30066485630ae97b8887d23e0e6da13b553c264",
     "docs/PROCESS_CONSTRAINED_PHASE_B_V0_2_DESIGN.md": "98393441b888dca1035c1355c991560398c551a3"
   },
   "primary_contrast": "SPECIALIST_minus_MATCHED_SCAFFOLD",
