@@ -1,0 +1,127 @@
+name: Process-Constrained Phase B v0.2 Authorization Check
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/process-constrained-phase-b-v02-paid.yml'
+      - '.github/workflows/process-constrained-phase-b-v02-authorization-check.yml'
+      - '.github/workflows/process-constrained-phase-b-v02-freeze-check.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/process-constrained-phase-b-v02-paid.yml'
+      - '.github/workflows/process-constrained-phase-b-v02-authorization-check.yml'
+      - '.github/workflows/process-constrained-phase-b-v02-freeze-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: benchmark
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12.14'
+      - name: Validate current frozen manifest
+        run: python validate_process_phase_b_freeze_v02.py
+      - name: Validate authorization workflow statically
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          frozen = '73be077cf52a31a15ebcb1fcec37dd24b5cd21c9'
+          path = Path('../.github/workflows/process-constrained-phase-b-v02-paid.yml')
+          text = path.read_text()
+
+          required = [
+              'workflow_dispatch:',
+              'authorization_phrase:',
+              'AUTHORIZE_PHASE_B_V02_PAID_RUN',
+              'actions: read',
+              "if: github.ref == 'refs/heads/main' && inputs.authorization_phrase == 'AUTHORIZE_PHASE_B_V02_PAID_RUN'",
+              'group: process-constrained-phase-b-v02-paid',
+              'cancel-in-progress: false',
+              f'PHASE_B_V02_FROZEN_SOURCE_SHA: {frozen}',
+              f'ref: {frozen}',
+              'persist-credentials: false',
+              'fetch-depth: 0',
+              'git rev-parse HEAD',
+              'CURRENT_RUN_ID:',
+              'github.run_id',
+              'CURRENT_RUN_ATTEMPT:',
+              'github.run_attempt',
+              'run_attempt != 1',
+              'actions/workflows/{workflow}/runs',
+              'event=workflow_dispatch&branch=main&per_page=100',
+              'run_id != min(ids)',
+              'ZAI_TARGET_MODEL: glm-5.1',
+              'ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4',
+              'ZAI_TEMPERATURE: 0',
+              'ZAI_MAX_TOKENS: 16384',
+              'PHASE_B_ENFORCE_RUNTIME_ENV: 1',
+              'PHASE_B_V02_EXECUTION_AUTHORIZED: 1',
+              "python-version: '3.12.14'",
+              'requirements_process_phase_b_v02.txt',
+              'actions/checkout@11d5960a326750d5838078e36cf38b85af677262',
+              'actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065',
+              'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02',
+              'validate_process_phase_b_freeze_v02.py',
+              'test_process_phase_b_v02_corrections.py',
+              'test_process_phase_b_runner_v02.py',
+              'test_process_phase_b_v02_final_review.py',
+              'run_process_phase_b_v02_reviewed.py',
+              'secrets.ZAI_API_KEY',
+          ]
+          for item in required:
+              assert item in text, item
+
+          assert 'pull_request:' not in text, 'paid workflow must not auto-run on PRs'
+          assert '\n  push:' not in text, 'paid workflow must not auto-run on pushes'
+          top_level = text.split('\njobs:', 1)[0]
+          assert 'ZAI_API_KEY' not in top_level, 'provider key must not be top-level'
+
+          zero_cost = text.index('Re-run complete zero-cost v0.2 validation before provider calls')
+          secret = text.index('secrets.ZAI_API_KEY')
+          execution = text.index('Run frozen Process-Constrained Phase B v0.2')
+          assert zero_cost < execution < secret, 'secret exposure must occur only at the final provider step'
+
+          manifest = json.loads(Path('process_phase_b_freeze_v02.json').read_text())
+          assert manifest['authorization_state'] == 'NOT_AUTHORIZED_BY_MANIFEST'
+          assert manifest['scientific_base_commit'] == '642a7160e75fae1a03faf5139f83c87cabf9d0e0'
+          assert manifest['primary_contrast'] == 'SPECIALIST_minus_MATCHED_SCAFFOLD'
+          assert '.github/workflows/process-constrained-phase-b-v02-paid.yml' not in manifest['files']
+          print('v0.2 manual authorization workflow static boundary validated')
+          PY
+      - name: Validate exact durable frozen source
+        env:
+          ZAI_API_KEY: ''
+          ZAI_TARGET_MODEL: glm-5.1
+        run: |
+          frozen=73be077cf52a31a15ebcb1fcec37dd24b5cd21c9
+          git cat-file -e "${frozen}^{commit}"
+          test "$(git merge-base --is-ancestor "$frozen" origin/main; echo $?)" = "0"
+          rm -rf /tmp/phase-b-v02-authorized-source
+          git worktree add --detach /tmp/phase-b-v02-authorized-source "$frozen"
+          (cd /tmp/phase-b-v02-authorized-source/benchmark && python validate_process_phase_b_freeze_v02.py)
+          (cd /tmp/phase-b-v02-authorized-source/benchmark && python process_phase_b_suite_v02.py)
+          (cd /tmp/phase-b-v02-authorized-source/benchmark && python -m unittest -v \
+            test_process_phase_b_v02_corrections.py \
+            test_process_phase_b_runner_v02.py \
+            test_process_phase_b_v02_final_review.py)
+          git worktree remove --force /tmp/phase-b-v02-authorized-source
+      - name: Verify authorization check is zero-cost
+        env:
+          ZAI_API_KEY: ''
+        run: |
+          test -z "$ZAI_API_KEY"
+          echo 'authorization validation completed without provider calls'
