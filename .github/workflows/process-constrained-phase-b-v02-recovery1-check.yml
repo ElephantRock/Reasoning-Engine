@@ -1,0 +1,72 @@
+name: Process-Constrained Phase B v0.2 Recovery 1 Check
+
+on:
+  pull_request:
+    paths:
+      - 'benchmark/recover_process_phase_b_v02_r1.py'
+      - 'benchmark/test_process_phase_b_v02_recovery1.py'
+      - 'docs/PROCESS_CONSTRAINED_PHASE_B_V02_RECOVERY_1.md'
+      - '.github/workflows/process-constrained-phase-b-v02-recovery1-check.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'benchmark/recover_process_phase_b_v02_r1.py'
+      - 'benchmark/test_process_phase_b_v02_recovery1.py'
+      - 'docs/PROCESS_CONSTRAINED_PHASE_B_V02_RECOVERY_1.md'
+      - '.github/workflows/process-constrained-phase-b-v02-recovery1-check.yml'
+
+permissions:
+  contents: read
+
+env:
+  ZAI_TARGET_MODEL: glm-5.1
+  ZAI_BASE_URL: https://api.z.ai/api/coding/paas/v4
+  ZAI_TEMPERATURE: 0
+  ZAI_MAX_TOKENS: 16384
+  PHASE_B_ENFORCE_RUNTIME_ENV: 1
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: benchmark
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12.14'
+      - name: Compile Recovery 1 sources
+        run: python -m py_compile recover_process_phase_b_v02_r1.py test_process_phase_b_v02_recovery1.py
+      - name: Validate unchanged Phase B v0.2 scientific surface
+        run: |
+          python process_phase_b_suite_v02.py
+          python - <<'PY'
+          import recover_process_phase_b_v02_r1 as recovery
+          recovery.validate_recovery_design()
+          print('Recovery 1 design validated')
+          PY
+      - name: Run complete zero-cost recovery regression suite
+        env:
+          ZAI_API_KEY: ''
+          PHASE_B_V02_RECOVERY1_AUTHORIZED: '0'
+        run: |
+          python -m unittest -v \
+            test_process_phase_b_v02_corrections.py \
+            test_process_phase_b_runner_v02.py \
+            test_process_phase_b_v02_final_review.py \
+            test_process_phase_b_v02_recovery1.py
+      - name: Enforce zero-cost recovery check
+        run: |
+          test -z "${ZAI_API_KEY:-}"
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('../.github/workflows/process-constrained-phase-b-v02-recovery1-check.yml')
+          key = 'PHASE_B_V02_RECOVERY1_AUTHORIZED:'
+          for line in path.read_text(encoding='utf-8').splitlines():
+              stripped = line.strip()
+              if stripped.startswith(key):
+                  value = stripped.split(':', 1)[1].strip().strip("'\"")
+                  if value == '1':
+                      raise SystemExit('zero-cost Recovery 1 CI must not authorize provider execution')
+          PY
