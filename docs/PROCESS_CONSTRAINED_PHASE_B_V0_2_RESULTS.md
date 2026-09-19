@@ -154,7 +154,7 @@ This matters for interpretation. In deductive and decision-theoretic tasks, all 
 
 The abductive family was not ceiling-saturated, but specialist, FULL, and CONTROL each averaged only 0.3333 and the specialist beat the matched scaffold on only one of six cases. The process did not produce the persistent advantage required by the frozen gate.
 
-This pattern satisfies two prospectively identified Phase-B stop concerns in `ADAPTIVE_REASONING_CONTROLLER_V0_2_PLAN.md`: specialist effects largely disappear against the matched scaffold, and several environment families determine the answer strongly enough that reasoning policy has little measurable headroom.
+This pattern matches two prospectively identified Phase-B stop concerns in `ADAPTIVE_REASONING_CONTROLLER_V0_2_PLAN.md`: specialist effects largely disappear against the matched scaffold, and several environment families determine the answer strongly enough that reasoning policy has little measurable headroom.
 
 ## 8. Contextual FULL and CONTROL results
 
@@ -173,7 +173,7 @@ These are development-environment outcomes, not replacements for the earlier bli
 
 Usage is descriptive only and is not part of the frozen eligibility gate.
 
-Mean logged usage per record:
+Descriptive condition metrics are:
 
 | Condition | Model calls | Input tokens | Output tokens | Environment actions | Execution failure rate |
 |---|---:|---:|---:|---:|---:|
@@ -182,7 +182,7 @@ Mean logged usage per record:
 | FULL | 3.208 | 3052.6 | 2723.0 | 3.167 | 4.2% |
 | CONTROL | 2.958 | 1977.3 | 1964.1 | 2.958 | 0.0% |
 
-Matched-scaffold call/token/latency means cover 23/24 records because the original `PCB2-AD01` provider-call log was lost. Its execution-failure classification and primary score remain included.
+For `MATCHED_SCAFFOLD`, model-call/token/latency means cover the 23/24 records with complete cost logs; environment-action and execution-failure statistics still cover all 24 records. The original `PCB2-AD01` call log was lost, but its execution-failure classification and primary score remain included.
 
 The specialist process consumed substantially more model output than the matched scaffold and fixed-policy comparators while failing to meet any family eligibility gate. No cost-optimality claim is warranted from this development study.
 
@@ -192,8 +192,8 @@ The corrected v0.2 study answers a narrower question than the original FULL-vs-C
 
 Supported by this experiment:
 
-- the corrected specialist protocols can be executed reliably under explicit state/action contracts on `glm-5.1`;
-- isolated process constraints can prevent some generic-scaffold execution failures;
+- the corrected specialist protocols completed valid terminal executions on all 24 specialist cells under explicit state/action contracts on `glm-5.1`;
+- on two development cases, the specialist condition completed successfully where the matched scaffold did not;
 - none of the four tested families showed the persistent specialist-over-matched advantage required for Phase-C selector development;
 - the frozen selector-path stop rule therefore triggers.
 
@@ -206,7 +206,7 @@ Not supported:
 - that more difficult or externally sourced environments could not reveal process effects;
 - that hidden cognition has been measured or decomposed.
 
-The strongest interpretation is methodological: once extra structure/computation was controlled by a matched scaffold, the tested specialist processes did not produce sufficiently frequent task-conditional objective gains on this development suite, and three of four environment families offered substantial ceiling-limited headroom.
+The strongest interpretation is methodological: once extra structure/computation was controlled by a matched scaffold, the tested specialist processes did not produce sufficiently frequent task-conditional objective gains on this development suite, and three of four environment families were substantially ceiling-limited.
 
 ## 11. Program consequence
 
